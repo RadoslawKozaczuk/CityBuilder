@@ -7,14 +7,13 @@ namespace Assets.Scripts
         public GridCell[,] Cells;
 
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
-        [SerializeField] int _cellSize = 10;
 
         // to allow designers to put the plane in an arbitrary position in the world space
         float _gridOffsetX, _gridOffsetZ;
 
         void Start()
         {
-            Cells = new GridCell[12, 12];
+            Cells = new GridCell[_gridSizeX, _gridSizeY];
             for (int i = 0; i < _gridSizeX; i++)
                 for (int j = 0; j < _gridSizeY; j++)
                     Cells[i, j] = new GridCell() { X = i, Y = j };
