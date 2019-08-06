@@ -1,4 +1,6 @@
-﻿namespace Assets.Scripts
+﻿using Assets.Scripts.DataModels;
+
+namespace Assets.Scripts
 {
     public struct GridCell
     {

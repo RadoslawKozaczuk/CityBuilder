@@ -22,6 +22,7 @@ namespace Assets.Scripts
         public event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
         readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceTypes)).Length];
+        public Sprite[] ResourceIcons;
 
         #region Unity Life Cycle Methods
         void Awake() => Instance = this;
