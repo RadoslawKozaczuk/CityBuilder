@@ -42,7 +42,8 @@ namespace Assets.Scripts
                 if (hit.transform == null)
                     return;
 
-                Debug.Log("Hit the " + hit.transform.gameObject.name);
+                GameMap.GetCell(ray, out GridCell cell);
+                Debug.Log("Hit the " + cell.X + " " + cell.Y);
             }
         }
 

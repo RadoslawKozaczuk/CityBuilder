@@ -5,6 +5,7 @@ namespace Assets.Scripts
 {
     public class Grid : MonoBehaviour
     {
+        const float CELL_SIZE = 1;
         public GridCell[,] Cells;
 
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
@@ -41,8 +42,8 @@ namespace Assets.Scripts
         public Vector3 GetCellPosition(GridCell cell)
         {
             Vector3 pos = transform.position;
-            pos.x += cell.X * 10f - _gridOffsetX;
-            pos.z += cell.Y * 10f + _gridOffsetZ;
+            pos.x += cell.X * CELL_SIZE - _gridOffsetX;
+            pos.z += cell.Y * CELL_SIZE + _gridOffsetZ;
 
             return pos;
         }
@@ -113,8 +114,8 @@ namespace Assets.Scripts
         {
             position = transform.InverseTransformPoint(position);
 
-            int coordX = (int)Mathf.Floor(Map(0, 12, -5, 5, position.x));
-            int coordY = (int)Mathf.Floor(Map(0, 12, -5, 5, position.z));
+            int coordX = (int)Mathf.Floor(Map(0, _gridSizeX, -5, 5, position.x));
+            int coordY = (int)Mathf.Floor(Map(0, _gridSizeY, -5, 5, position.z));
             Debug.Log("CellCoord: x: " + coordX + ", z: " + coordY);
 
             return Cells[coordX, coordY];
