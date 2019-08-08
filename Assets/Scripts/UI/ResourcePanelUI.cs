@@ -8,7 +8,7 @@ public class ResourcePanelUI : MonoBehaviour
 {
     [SerializeField] GameObject ResourceElementPrefab;
 
-    readonly ResourceElementUI[] _resources = new ResourceElementUI[Enum.GetNames(typeof(ResourceTypes)).Length];
+    readonly ResourceElementUI[] _resources = new ResourceElementUI[Enum.GetNames(typeof(ResourceType)).Length];
 
     void Start()
     {
@@ -16,7 +16,7 @@ public class ResourcePanelUI : MonoBehaviour
         ResourceManager.Instance.ResourceChangedEventHandler += ResourceUpdate;
 
         // for now all resource types are displayed
-        for (int i = 0; i < Enum.GetNames(typeof(ResourceTypes)).Length; i++)
+        for (int i = 0; i < Enum.GetNames(typeof(ResourceType)).Length; i++)
         {
             var ui = Instantiate(ResourceElementPrefab, transform).GetComponent<ResourceElementUI>();
             ui.Image.sprite = ResourceManager.Instance.ResourceIcons[i];

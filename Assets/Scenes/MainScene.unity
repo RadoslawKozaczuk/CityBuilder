@@ -764,8 +764,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -370.67, y: -2.2999878}
-  m_SizeDelta: {x: -741.33, y: -195.3}
+  m_AnchoredPosition: {x: -370.66748, y: -2.3249817}
+  m_SizeDelta: {x: -741.335, y: -195.35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1455072503
 MonoBehaviour:
@@ -784,6 +784,7 @@ MonoBehaviour:
     type: 3}
   ResourceElementPrefab: {fileID: 2262382387427899780, guid: 83a6d7711d4c2374d8577cc9ff227b87,
     type: 3}
+  GameEngine: {fileID: 1685839696}
 --- !u!114 &1455072504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1049,7 +1050,12 @@ MonoBehaviour:
   _buildingPanel: {fileID: 0}
   _buildingUIElement: {fileID: 0}
   _resourceUIElement: {fileID: 0}
-  _buildingPrefabs: []
+  _buildingPrefabs:
+  - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}
+  - {fileID: 177548, guid: 8ced8772a0380c643a2733f587421c1c, type: 3}
+  - {fileID: 180750, guid: d68ef7a2a7a25ca499eb4d0024f2ff0d, type: 3}
+  - {fileID: 108142, guid: cc05c3e29b3319444aeeca588e9f3511, type: 3}
+  - {fileID: 186398, guid: 6f298296ef5bf9b46a11aa44bde063d9, type: 3}
   GameMap: {fileID: 286872029}
 --- !u!1 &2119002039
 GameObject:

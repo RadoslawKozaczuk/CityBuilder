@@ -7,5 +7,6 @@ namespace Assets.Scripts.UI
     {
         public TextMeshProUGUI Title;
         public Transform Resources;
+        public BuildingType BuildingType;
     }
 }

@@ -9,5 +9,6 @@ namespace Assets.Scripts.DataSource
         public string Name;
         public int SizeX, SizeY;
         public List<Resource> Cost;
+        public BuildingType Type;
     }
 }

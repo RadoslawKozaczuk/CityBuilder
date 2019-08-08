@@ -44,6 +44,26 @@ namespace Assets.Scripts
 
                 GameMap.GetCell(ray, out GridCell cell);
                 Debug.Log("Hit the " + cell.X + " " + cell.Y);
+
+                if (_interfacePendingAction != null)
+                {
+                    _interfacePendingAction.AddOrReplaceParameter(InterfacePendingActionParamType.CurrentCell, cell);
+                    _interfacePendingAction.PendingAction.Invoke(_interfacePendingAction.Parameters);
+                    _interfacePendingAction = null;
+                    return;
+                }
+
+                // regular mode
+                if (cell.IsOccupied)
+                    BuildingSelected(cell);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (_interfacePendingAction != null)
+                    _interfacePendingAction = null;
+                else
+                    Application.Quit();
             }
         }
 
@@ -63,7 +83,7 @@ namespace Assets.Scripts
             }
         }
 
-        void BuildingConstructionAction(BuildingType type)
+        public void BuildingConstructionAction(BuildingType type)
         {
             // check if player has enough resources
             BuildingData data = BuildingDataSource.Buildings[(int)type];
@@ -111,6 +131,15 @@ namespace Assets.Scripts
             _constructedBuildings.Add(building);
 
             GameMap.MarkAreaAsOccupied(cell.X, cell.Y, data.SizeX, data.SizeY, building);
+        }
+
+        void BuildingSelected(GridCell cell)
+        {
+            //_buildingInfoUI.gameObject.SetActive(true);
+            //_buildingInfoUI.gameObject.transform.position = Input.mousePosition;
+
+            //Building b = cell.Building;
+            //_buildingInfoUI.Building = b;
         }
     }
 }

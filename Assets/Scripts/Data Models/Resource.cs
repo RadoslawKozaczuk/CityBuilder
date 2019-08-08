@@ -2,10 +2,10 @@
 {
     public struct Resource
     {
-        public ResourceTypes ResourceType;
+        public ResourceType ResourceType;
         public int Quantity;
 
-        public Resource(ResourceTypes type, int quantity)
+        public Resource(ResourceType type, int quantity)
         {
             ResourceType = type;
             Quantity = quantity;

@@ -21,7 +21,7 @@ namespace Assets.Scripts
         // subscribers
         public event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
-        readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceTypes)).Length];
+        readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
         public Sprite[] ResourceIcons;
 
         #region Unity Life Cycle Methods
@@ -31,9 +31,9 @@ namespace Assets.Scripts
         {
             var startResources = new List<Resource>(3)
             {
-                new Resource(ResourceTypes.Gold, 400),
-                new Resource(ResourceTypes.Wood, 200),
-                new Resource(ResourceTypes.Iron, 200)
+                new Resource(ResourceType.Gold, 400),
+                new Resource(ResourceType.Wood, 200),
+                new Resource(ResourceType.Iron, 200)
             };
 
             AddResources(startResources);
