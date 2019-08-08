@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using TMPro;
+using UnityEngine;
 
 namespace Assets.Scripts.UI
 {
     public class BuildingButtonUI : MonoBehaviour
     {
-        public Text Title;
-        public Transform HorizontalGroup;
+        public TextMeshProUGUI Title;
+        public Transform Resources;
     }
 }

@@ -57,7 +57,7 @@ namespace Assets.Scripts
 
             foreach (Resource cost in data.Cost)
             {
-                ResourceElementUI resourceUI = Instantiate(_resourceUIElement, buildingUI.HorizontalGroup).GetComponent<ResourceElementUI>();
+                ResourceElementUI resourceUI = Instantiate(_resourceUIElement, buildingUI.Resources).GetComponent<ResourceElementUI>();
                 resourceUI.Image.sprite = ResourceManager.Instance.ResourceIcons[(int)cost.ResourceType];
                 resourceUI.Amount.text = cost.Quantity.ToString();
             }
