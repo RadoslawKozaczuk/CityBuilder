@@ -189,7 +189,7 @@ MonoBehaviour:
     m_Right: 5
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
+  m_ChildAlignment: 0
   m_Spacing: 5
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
@@ -292,8 +292,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 286872024}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 20, y: 1, z: 20}
+  m_LocalPosition: {x: 80, y: 0, z: 80}
+  m_LocalScale: {x: 16, y: 1, z: 16}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
@@ -310,8 +310,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e8227758a8d49f42956f57f1a89e354, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gridSizeX: 20
-  _gridSizeY: 20
+  _gridSizeX: 16
+  _gridSizeY: 16
+  _debugDrawOccupied: 1
+  _localOffsetX: 0
+  _localOffsetZ: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -621,8 +624,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: -0.45003942, y: -0.00080626446, z: 0.00040648802, w: -0.89300823}
-  m_LocalPosition: {x: -2.0695457, y: 199.82281, z: -153.4267}
+  m_LocalRotation: {x: 0.3364766, y: 0.013554424, z: -0.0048519634, w: 0.94158185}
+  m_LocalPosition: {x: 48.26833, y: 107.2727, z: -58.07071}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -764,8 +767,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -370.66748, y: -2.3249817}
-  m_SizeDelta: {x: -741.335, y: -195.35}
+  m_AnchoredPosition: {x: -384.40002, y: -10.299988}
+  m_SizeDelta: {x: -768.7, y: -179.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1455072503
 MonoBehaviour:
@@ -1047,9 +1050,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d52836d269ef9114fb4759ab3f74f9f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _buildingPanel: {fileID: 0}
-  _buildingUIElement: {fileID: 0}
-  _resourceUIElement: {fileID: 0}
   _buildingPrefabs:
   - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}
   - {fileID: 177548, guid: 8ced8772a0380c643a2733f587421c1c, type: 3}

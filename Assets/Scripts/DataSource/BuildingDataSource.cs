@@ -31,8 +31,8 @@ namespace Assets.Scripts.DataSource
 
             new BuildingData {
                 Name = "Tree",
-                SizeX = 2,
-                SizeY = 2,
+                SizeX = 1,
+                SizeY = 1,
                 Cost = new List<Resource>() {
                     new Resource(ResourceType.Gold, 150),
                     new Resource(ResourceType.Iron, 50) },
