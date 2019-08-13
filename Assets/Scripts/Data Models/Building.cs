@@ -16,6 +16,12 @@ namespace Assets.Scripts.DataModels
         public GameObject GameObjectInstance;
         public bool Finished = false;
         public bool ProductionStarted;
+        public BuildingTask ScheduledTask;
+
+        readonly Resource _resource;
+        readonly float _productionTime;
+        readonly bool _imidiatelyStartProduction;
+        readonly bool _loopProduction;
 
         public Building(int posX, int posY, BuildingType type, BuildingData data, GameObject instance)
         {
@@ -26,6 +32,42 @@ namespace Assets.Scripts.DataModels
             Name = data.Name;
             BuildingType = type;
             GameObjectInstance = instance;
+
+            _resource = data.ResourceProductionData.Resource;
+            _productionTime = data.ResourceProductionData.ProductionTime;
+            _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
+            _loopProduction = data.ResourceProductionData.Loop;
+
+            // schedule construction task
+            BuildingTask task = new BuildingTask(ConstructionTime, FinishConstruction);
+            ScheduledTask = task;
+            GameEngine.Instance.ScheduleTask(task);
+        }
+
+        public void FinishConstruction()
+        {
+            Finished = true;
+
+            if (_imidiatelyStartProduction)
+                StartProduction();
+        }
+
+        public void AddResource()
+        {
+            ResourceManager.Instance.AddResource(_resource);
+            ProductionStarted = false;
+
+            if (_loopProduction)
+                StartProduction();
+        }
+
+        public void StartProduction()
+        {
+            // schedule production task
+            BuildingTask task = new BuildingTask(_productionTime, AddResource);
+            ScheduledTask = task;
+            GameEngine.Instance.ScheduleTask(task);
+            ProductionStarted = true;
         }
     }
 }

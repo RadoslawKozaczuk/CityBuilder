@@ -10,5 +10,6 @@ namespace Assets.Scripts.DataSource
         public int SizeX, SizeY;
         public List<Resource> Cost;
         public BuildingType Type;
+        public ResourceProductionData ResourceProductionData;
     }
 }

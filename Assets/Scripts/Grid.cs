@@ -6,21 +6,21 @@ namespace Assets.Scripts
 {
     public class Grid : MonoBehaviour
     {
-        public const float CELL_SIZE = 10f;
-        public GridCell[,] Cells;
+        const float CELL_SIZE = 10f;
 
+        // to allow designers to put the plane in an arbitrary position in the world space
+        [SerializeField] float _localOffsetX, _localOffsetZ;
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
         [SerializeField] bool _debugDrawOccupied;
 
-        // to allow designers to put the plane in an arbitrary position in the world space
-        public float _localOffsetX, _localOffsetZ;
+        GridCell[,] _cells;
 
         void Start()
         {
-            Cells = new GridCell[_gridSizeX, _gridSizeY];
+            _cells = new GridCell[_gridSizeX, _gridSizeY];
             for (int i = 0; i < _gridSizeX; i++)
                 for (int j = 0; j < _gridSizeY; j++)
-                    Cells[i, j] = new GridCell() { X = i, Y = j };
+                    _cells[i, j] = new GridCell() { X = i, Y = j };
 
             _localOffsetX = _gridSizeX * CELL_SIZE / 2;
             _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
@@ -110,21 +110,12 @@ namespace Assets.Scripts
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY)
         {
-            if (x < 0 || y < 0)
-            {
-                Debug.LogError("Invalid argument. X and y coordinates must be equal or greater than zero.");
+            if (!AreArgumentsCool(x, y, sizeX, sizeY))
                 return false;
-            }
-
-            if (x + sizeX > _gridSizeX || y + sizeY > _gridSizeY)
-            {
-                Debug.LogError("Argument out of bounds. The given area should not be out of the grid's bounds.");
-                return false;
-            }
 
             for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j > y + sizeY; j++)
-                    if (Cells[i, j].IsOccupied)
+                for (int j = y; j < y + sizeY; j++)
+                    if (_cells[i, j].IsOccupied)
                         return false;
 
             return true;
@@ -137,6 +128,19 @@ namespace Assets.Scripts
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude)
         {
+            if (!AreArgumentsCool(x, y, sizeX, sizeY))
+                return false;
+
+            for (int i = x; i < x + sizeX; i++)
+                for (int j = y; j < y + sizeY; j++)
+                    if (_cells[i, j].IsOccupied && _cells[i, j].Building != exclude)
+                        return false;
+
+            return true;
+        }
+
+        bool AreArgumentsCool(int x, int y, int sizeX, int sizeY)
+        {
             if (x < 0 || y < 0)
             {
                 Debug.LogError("Invalid argument. X and y coordinates must be equal or greater than zero.");
@@ -148,11 +152,6 @@ namespace Assets.Scripts
                 Debug.LogError("Argument out of bounds. The given area should not be out of the grid's bounds.");
                 return false;
             }
-
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j > y + sizeY; j++)
-                    if (Cells[i, j].IsOccupied && Cells[i, j].Building != exclude)
-                        return false;
 
             return true;
         }
@@ -160,54 +159,23 @@ namespace Assets.Scripts
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building)
-        {
-            if (x < 0 || y < 0)
-            {
-                Debug.LogError("Invalid argument. X and y coordinates must be equal or greater than zero.");
-                return;
-            }
-
-            if (x + sizeX > _gridSizeX || y + sizeY > _gridSizeY)
-            {
-                Debug.LogError("Argument out of bounds. The given area should not be out of the grid's bounds.");
-                return;
-            }
-
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j > y + sizeY; j++)
-                    Cells[i, j].Building = building;
-        }
+        public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building) 
+            => ExecuteActionPerCell(x, y, sizeX, sizeY, (i, j) => _cells[i, j].Building = building);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY)
-        {
-            if (x < 0 || y < 0)
-            {
-                Debug.LogError("Invalid argument. X and y coordinates must be equal or greater than zero.");
-                return;
-            }
+        public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY) 
+            => ExecuteActionPerCell(x, y, sizeX, sizeY, (i, j) => _cells[i, j].Building = null);
 
-            if (x + sizeX > _gridSizeX || y + sizeY > _gridSizeY)
-            {
-                Debug.LogError("Argument out of bounds. The given area should not be out of the grid's bounds.");
+        void ExecuteActionPerCell(int x, int y, int sizeX, int sizeY, Action<int, int> action)
+        {
+            if (!AreArgumentsCool(x, y, sizeX, sizeY))
                 return;
-            }
 
             for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j > y + sizeY; j++)
-                    Cells[i, j].Building = null;
-        }
-
-        void AreaActionExecutionInternal(int x, int y, int sizeX, int sizeY, Action action)
-        {
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j > y + sizeY; j++)
-                {
-
-                }
+                for (int j = y; j < y + sizeY; j++)
+                    action(i, j);
         }
 
         // Get cell returns cell from a given position
@@ -215,32 +183,19 @@ namespace Assets.Scripts
         {
             position = transform.InverseTransformPoint(position);
 
-            int coordX = (int)Mathf.Floor(Map(0, _gridSizeX, -5, 5, position.x));
-            int coordY = (int)Mathf.Floor(Map(0, _gridSizeY, -5, 5, position.z));
+            int coordX = (int)Mathf.Floor(Utils.Map(0, _gridSizeX, -5, 5, position.x));
+            int coordY = (int)Mathf.Floor(Utils.Map(0, _gridSizeY, -5, 5, position.z));
             Debug.Log("CellCoord: x: " + coordX + ", z: " + coordY);
 
-            var v3 = GetCellMiddlePosition(coordX, coordY);
-            Debug.Log("central point = " + v3.x + ", " + v3.z);
-
-
-            var v33 = GetCellLeftBottomPosition(coordX, coordY);
-            Debug.Log("left bot point = " + v33.x + ", " + v33.z);
-
-            return Cells[coordX, coordY];
+            return _cells[coordX, coordY];
         }
-
-        /// <summary>
-        /// Map value from one range to another.
-        /// </summary>
-        float Map(float newMin, float newMax, float origMin, float origMax, float value) =>
-            Mathf.Lerp(newMin, newMax, Mathf.InverseLerp(origMin, origMax, value));
 
         void DebugDrawOccupied()
         {
-            for (int i = 0; i < _gridSizeX; i++)
-                for (int j = 0; j < _gridSizeY; j++)
+            for (int x = 0; x < _gridSizeX; x++)
+                for (int y = 0; y < _gridSizeY; y++)
                 {
-                    GridCell cell = Cells[i, j];
+                    GridCell cell = _cells[x, y];
 
                     if (cell.IsOccupied)
                     {

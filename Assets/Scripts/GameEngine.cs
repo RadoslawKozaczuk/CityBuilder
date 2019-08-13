@@ -8,15 +8,45 @@ namespace Assets.Scripts
 {
     public class GameEngine : MonoBehaviour
     {
+        public static GameEngine Instance { get; private set; }
+
         readonly List<Building> _constructedBuildings = new List<Building>();
         InterfacePendingAction _interfacePendingAction;
         [SerializeField] GameObject[] _buildingPrefabs;
 
+        readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
+        readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
+
         public Grid GameMap;
+
+        void Awake() => Instance = this;
 
         void Update()
         {
             ProcessInput();
+            UpdateTasks();
+        }
+
+        void LateUpdate()
+        {
+            _scheduledTasks.AddRange(_taskBuffer);
+            _taskBuffer.Clear();
+        }
+
+        void UpdateTasks()
+        {
+            for (int i = 0; i < _scheduledTasks.Count; i++)
+            {
+                BuildingTask task = _scheduledTasks[i];
+                task.TimeLeft -= Time.deltaTime;
+
+                if (task.TimeLeft <= 0)
+                {
+                    task.ActionOnFinish();
+                    _scheduledTasks.RemoveAt(i);
+                    i--;
+                }
+            }
         }
 
         void ProcessInput()
@@ -61,6 +91,11 @@ namespace Assets.Scripts
                     Application.Quit();
             }
         }
+
+        /// <summary>
+        /// Add BuildingTask object to the task buffer.
+        /// </summary>
+        public void ScheduleTask(BuildingTask task) => _taskBuffer.Add(task);
 
         public void BuildingConstructionAction(BuildingType type)
         {

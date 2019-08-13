@@ -33,15 +33,6 @@ namespace Assets.Scripts.UI
                     resUI.Amount.text = r.Quantity.ToString();
                     resUI.Image.sprite = ResourceManager.Instance.ResourceIcons[(int)r.ResourceType];
                 }
-
-                GameObject go1 = Instantiate(ResourceElementPrefab, buttonUI.Resources);
-                ResourceElementUI resUI1 = go1.GetComponent<ResourceElementUI>();
-                Transform t1 = go1.GetComponent<Transform>();
-
-                t1.localScale = new Vector3(0.6f, 0.6f);
-
-                resUI1.Amount.text = "123";
-                resUI1.Image.sprite = ResourceManager.Instance.ResourceIcons[0];
             }
         }
     }

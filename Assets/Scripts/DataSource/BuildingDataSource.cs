@@ -11,23 +11,26 @@ namespace Assets.Scripts.DataSource
                 Name = "Residence",
                 SizeX = 3, SizeY = 3,
                 Cost = new List<Resource> { new Resource(ResourceType.Gold, 100) },
-                Type = BuildingType.Residence },
+                Type = BuildingType.Residence,
+                ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Gold, 50), 10f, true, true) },
 
             new BuildingData {
                 Name = "Wood production building",
-                SizeX = 2,
+                SizeX = 3,
                 SizeY = 2,
                 Cost = new List<Resource> { new Resource(ResourceType.Gold, 150) },
-                Type = BuildingType.WoodProduction },
+                Type = BuildingType.WoodProduction,
+                ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Wood, 50), 10f, false, false) },
 
             new BuildingData {
                 Name = "Steel production building",
-                SizeX = 3,
+                SizeX = 2,
                 SizeY = 2,
                 Cost = new List<Resource>() {
                     new Resource(ResourceType.Gold, 150),
                     new Resource(ResourceType.Wood, 100) },
-                Type = BuildingType.SteelProduction },
+                Type = BuildingType.SteelProduction,
+                ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Iron, 50), 10f, false, false) },
 
             new BuildingData {
                 Name = "Tree",
