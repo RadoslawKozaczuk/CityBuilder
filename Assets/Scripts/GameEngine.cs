@@ -13,6 +13,9 @@ namespace Assets.Scripts
         readonly List<Building> _constructedBuildings = new List<Building>();
         InterfacePendingAction _interfacePendingAction;
         [SerializeField] GameObject[] _buildingPrefabs;
+        [SerializeField] Material _holographicMaterialGreen;
+        [SerializeField] Material _holographicMaterialRed;
+        Material _tempMaterial;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
@@ -25,6 +28,48 @@ namespace Assets.Scripts
         {
             ProcessInput();
             UpdateTasks();
+
+            // this violates good principles a bit
+            if(_interfacePendingAction != null)
+            {
+                if(_interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out object obj))
+                {
+                    GameObject instance = (GameObject)obj;
+                    instance.SetActive(false);
+
+                    // Check if the mouse is over the UI
+                    if (EventSystem.current.IsPointerOverGameObject())
+                        return;
+
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (!Physics.Raycast(ray, out RaycastHit hit, 1000f))
+                        return;
+
+                    if (hit.transform == null)
+                        return;
+
+                    if (!GameMap.GetCell(ray, out GridCell cell))
+                        return;
+
+                    instance.SetActive(true);
+
+                    _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
+                    BuildingData data = (BuildingData)obj;
+
+                    _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingType, out obj);
+                    BuildingType type = (BuildingType)obj;
+
+                    Vector3 targetPos = ApplyPrefabOffset(
+                        GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY), 
+                        type);
+
+                    instance.GetComponent<MeshRenderer>().material = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY) 
+                        ? _holographicMaterialGreen 
+                        : _holographicMaterialRed;
+
+                    instance.transform.position = targetPos;
+                }
+            }
         }
 
         void LateUpdate()
@@ -73,7 +118,7 @@ namespace Assets.Scripts
                 if (_interfacePendingAction != null)
                 {
                     _interfacePendingAction.AddOrReplaceParameter(InterfacePendingActionParamType.CurrentCell, cell);
-                    _interfacePendingAction.PendingAction.Invoke(_interfacePendingAction.Parameters);
+                    _interfacePendingAction.PendingAction(_interfacePendingAction.Parameters);
                     _interfacePendingAction = null;
                     return;
                 }
@@ -109,9 +154,17 @@ namespace Assets.Scripts
 
             Debug.Log($"Started building action , building type {type}");
 
+            GameObject prefab = _buildingPrefabs[(int)type];
+            GameObject instance = Instantiate(prefab, Vector3.zero, prefab.transform.rotation);
+            MeshRenderer mr = instance.GetComponent<MeshRenderer>();
+            _tempMaterial = mr.material;
+            mr.material = _holographicMaterialGreen;
+            instance.SetActive(false);
+
             _interfacePendingAction = new InterfacePendingAction();
             _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingType, type);
             _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingData, data);
+            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingInstance, instance);
             _interfacePendingAction.PendingAction = BuildingConstructionFollowUpAction;
         }
 
@@ -123,6 +176,8 @@ namespace Assets.Scripts
             BuildingType type = (BuildingType)obj;
             parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
             BuildingData data = (BuildingData)obj;
+            parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out obj);
+            GameObject instance = (GameObject)obj;
 
             //Debug.Log($"Check if there is enough space cell={cell.X}, {cell.Y}, size={data.SizeX}, {data.SizeY}");
             if (!GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY))
@@ -134,22 +189,37 @@ namespace Assets.Scripts
             // enough space
             ResourceManager.Instance.RemoveResources(data.Cost);
 
-            GameObject prefab = _buildingPrefabs[(int)type];
-            Vector3 targetPos = GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY);
-
-            // prefab position may be adjusted and he have to take it into account
-            targetPos.x += prefab.transform.position.x;
-            targetPos.y = prefab.transform.position.y;
-            targetPos.z += prefab.transform.position.z;
-
-            Debug.Log("Building instantiated at x=" + targetPos.x + " y=" + targetPos.z);
+            instance.SetActive(true);
+            instance.GetComponent<MeshRenderer>().material = _tempMaterial;
 
             // create object representation
-            var building = new Building(cell.X, cell.Y, type, data, Instantiate(prefab, targetPos, prefab.transform.rotation));
+            var building = new Building(cell.X, cell.Y, type, data, instance);
 
             _constructedBuildings.Add(building);
 
             GameMap.MarkAreaAsOccupied(cell.X, cell.Y, data.SizeX, data.SizeY, building);
+        }
+
+        // prefab position may be adjusted and he have to take it into account
+        Vector3 ApplyPrefabOffset(Vector3 position, GameObject prefab)
+        {
+            position.x += prefab.transform.position.x;
+            position.y = prefab.transform.position.y;
+            position.z += prefab.transform.position.z;
+
+            return position;
+        }
+
+        // prefab position may be adjusted and he have to take it into account
+        Vector3 ApplyPrefabOffset(Vector3 position, BuildingType type)
+        {
+            GameObject prefab = _buildingPrefabs[(int)type];
+
+            position.x += prefab.transform.position.x;
+            position.y = prefab.transform.position.y;
+            position.z += prefab.transform.position.z;
+
+            return position;
         }
 
         void BuildingSelected(GridCell cell)

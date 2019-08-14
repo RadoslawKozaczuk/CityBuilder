@@ -310,11 +310,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e8227758a8d49f42956f57f1a89e354, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _localOffsetX: 0
+  _localOffsetZ: 0
   _gridSizeX: 16
   _gridSizeY: 16
   _debugDrawOccupied: 1
-  _localOffsetX: 0
-  _localOffsetZ: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1056,6 +1056,10 @@ MonoBehaviour:
   - {fileID: 180750, guid: d68ef7a2a7a25ca499eb4d0024f2ff0d, type: 3}
   - {fileID: 108142, guid: cc05c3e29b3319444aeeca588e9f3511, type: 3}
   - {fileID: 186398, guid: 6f298296ef5bf9b46a11aa44bde063d9, type: 3}
+  _holographicMaterialGreen: {fileID: 2100000, guid: d7ecc146dc414984e9ef46eee320ffc7,
+    type: 2}
+  _holographicMaterialRed: {fileID: 2100000, guid: 919edd8a961482643b931621c118cf0a,
+    type: 2}
   GameMap: {fileID: 286872029}
 --- !u!1 &2119002039
 GameObject:

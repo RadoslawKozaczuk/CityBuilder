@@ -14,5 +14,5 @@
     /// <summary>
     /// Set of keys used by the pending action parameter dictionary.
     /// </summary>
-    public enum InterfacePendingActionParamType { PreviousCell, CurrentCell, BuildingType, BuildingData }
+    public enum InterfacePendingActionParamType { PreviousCell, CurrentCell, BuildingType, BuildingData, BuildingInstance }
 }
