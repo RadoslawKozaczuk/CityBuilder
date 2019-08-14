@@ -12,7 +12,7 @@ namespace Assets.Scripts
 
     /// <summary>
     /// ResourceManager is a singleton class responsible for storing resources.
-    /// Subscribe to ResourceChangedEventHandler to be informed about any changes (Observer pattern).
+    /// Subscribe to ResourceChangedEventHandler to be informed about any changes.
     /// </summary>
     class ResourceManager : MonoBehaviour
     {
@@ -21,10 +21,11 @@ namespace Assets.Scripts
         // subscribers
         public event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
-        readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
         public Sprite[] ResourceIcons;
 
-        #region Unity Life Cycle Methods
+        readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
+
+        #region Unity life-cycle methods
         void Awake() => Instance = this;
 
         void Start()
@@ -88,7 +89,6 @@ namespace Assets.Scripts
 
         /// <summary>
         /// Removes resource and broadcasts the ResourceChanged event.
-        /// Only for internal usage.
         /// </summary>
         public void RemoveResource(Resource resource)
         {

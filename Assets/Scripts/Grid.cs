@@ -8,12 +8,17 @@ namespace Assets.Scripts
     {
         const float CELL_SIZE = 10f;
 
+        public static Grid Instance { get; private set; }
+
         // to allow designers to put the plane in an arbitrary position in the world space
         [SerializeField] float _localOffsetX, _localOffsetZ;
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
         [SerializeField] bool _debugDrawOccupied;
 
         GridCell[,] _cells;
+
+        #region Unity life-cycle methods
+        void Awake() => Instance = this;
 
         void Start()
         {
@@ -31,6 +36,7 @@ namespace Assets.Scripts
             if (Debug.isDebugBuild && _debugDrawOccupied)
                 DebugDrawOccupied();
         }
+        #endregion
 
         public bool GetCell(Ray ray, out GridCell cell)
         {
@@ -109,17 +115,9 @@ namespace Assets.Scripts
         /// X and y are at the bottom (perspective camera).
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY)
-        {
-            if (!AreArgumentsCool(x, y, sizeX, sizeY))
-                return false;
-
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j < y + sizeY; j++)
-                    if (_cells[i, j].IsOccupied)
-                        return false;
-
-            return true;
-        }
+            => AreAreaArgumentsValid(x, y, sizeX, sizeY)
+            ? _cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied)
+            : false;
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
@@ -127,19 +125,11 @@ namespace Assets.Scripts
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude)
-        {
-            if (!AreArgumentsCool(x, y, sizeX, sizeY))
-                return false;
+            => AreAreaArgumentsValid(x, y, sizeX, sizeY)
+            ? _cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied && cell.Building != exclude)
+            : false;
 
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j < y + sizeY; j++)
-                    if (_cells[i, j].IsOccupied && _cells[i, j].Building != exclude)
-                        return false;
-
-            return true;
-        }
-
-        bool AreArgumentsCool(int x, int y, int sizeX, int sizeY)
+        bool AreAreaArgumentsValid(int x, int y, int sizeX, int sizeY)
         {
             if (x < 0 || y < 0)
             {
@@ -159,23 +149,23 @@ namespace Assets.Scripts
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building) 
-            => ExecuteActionPerCell(x, y, sizeX, sizeY, (i, j) => _cells[i, j].Building = building);
+        public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building)
+        {
+            if (!AreAreaArgumentsValid(x, y, sizeX, sizeY))
+                return;
+
+            _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = building);
+        }
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY) 
-            => ExecuteActionPerCell(x, y, sizeX, sizeY, (i, j) => _cells[i, j].Building = null);
-
-        void ExecuteActionPerCell(int x, int y, int sizeX, int sizeY, Action<int, int> action)
+        public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY)
         {
-            if (!AreArgumentsCool(x, y, sizeX, sizeY))
+            if (!AreAreaArgumentsValid(x, y, sizeX, sizeY))
                 return;
 
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j < y + sizeY; j++)
-                    action(i, j);
+            _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = null);
         }
 
         // Get cell returns cell from a given position
