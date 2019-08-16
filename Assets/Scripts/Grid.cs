@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.DataModels;
-using System;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -7,8 +6,6 @@ namespace Assets.Scripts
     public class Grid : MonoBehaviour
     {
         const float CELL_SIZE = 10f;
-
-        public static Grid Instance { get; private set; }
 
         // to allow designers to put the plane in an arbitrary position in the world space
         [SerializeField] float _localOffsetX, _localOffsetZ;
@@ -18,8 +15,6 @@ namespace Assets.Scripts
         GridCell[,] _cells;
 
         #region Unity life-cycle methods
-        void Awake() => Instance = this;
-
         void Start()
         {
             _cells = new GridCell[_gridSizeX, _gridSizeY];
@@ -115,9 +110,7 @@ namespace Assets.Scripts
         /// X and y are at the bottom (perspective camera).
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY)
-            => AreAreaArgumentsValid(x, y, sizeX, sizeY)
-            ? _cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied)
-            : false;
+            => !_cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied);
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
@@ -125,48 +118,22 @@ namespace Assets.Scripts
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude)
-            => AreAreaArgumentsValid(x, y, sizeX, sizeY)
-            ? _cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied && cell.Building != exclude)
-            : false;
+            => !_cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied && cell.Building != exclude);
 
-        bool AreAreaArgumentsValid(int x, int y, int sizeX, int sizeY)
-        {
-            if (x < 0 || y < 0)
-            {
-                Debug.LogError("Invalid argument. X and y coordinates must be equal or greater than zero.");
-                return false;
-            }
-
-            if (x + sizeX > _gridSizeX || y + sizeY > _gridSizeY)
-            {
-                Debug.LogError("Argument out of bounds. The given area should not be out of the grid's bounds.");
-                return false;
-            }
-
-            return true;
-        }
+        public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
+            => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building)
-        {
-            if (!AreAreaArgumentsValid(x, y, sizeX, sizeY))
-                return;
-
-            _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = building);
-        }
+            => _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = building);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
         public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY)
-        {
-            if (!AreAreaArgumentsValid(x, y, sizeX, sizeY))
-                return;
-
-            _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = null);
-        }
+            => _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = null);
 
         // Get cell returns cell from a given position
         GridCell GetCell(Vector3 position)

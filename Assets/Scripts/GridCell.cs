@@ -2,7 +2,7 @@
 
 namespace Assets.Scripts
 {
-    public struct GridCell
+    public class GridCell
     {
         public bool IsOccupied { get => Building != null; }
 

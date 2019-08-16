@@ -29,7 +29,5 @@ public class ResourcePanelUI : MonoBehaviour
     {
         foreach (Resource r in eventArgs.Resources)
             _resources[(int)r.ResourceType].Amount.text = r.Quantity.ToString();
-
-        //Debug.Log("successfully observed the ResourceManager");
     }
 }

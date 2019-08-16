@@ -10,12 +10,14 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
-        readonly List<Building> _constructedBuildings = new List<Building>();
-        InterfacePendingAction _interfacePendingAction;
         [SerializeField] GameObject[] _buildingPrefabs;
         [SerializeField] Material _holographicMaterialGreen;
         [SerializeField] Material _holographicMaterialRed;
+
+        readonly List<Building> _constructedBuildings = new List<Building>();
+        InterfacePendingAction _interfacePendingAction;
         Material _tempMaterial;
+        bool _pendingActionCanBeProcessed;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
@@ -51,10 +53,13 @@ namespace Assets.Scripts
                     if (!GameMap.GetCell(ray, out GridCell cell))
                         return;
 
-                    instance.SetActive(true);
-
                     _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
                     BuildingData data = (BuildingData)obj;
+
+                    if (GameMap.IsAreaOutOfBounds(cell.X, cell.Y, data.SizeX, data.SizeY))
+                        return;
+
+                    instance.SetActive(true);
 
                     _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingType, out obj);
                     BuildingType type = (BuildingType)obj;
@@ -63,9 +68,17 @@ namespace Assets.Scripts
                         GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY), 
                         type);
 
-                    instance.GetComponent<MeshRenderer>().material = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY) 
-                        ? _holographicMaterialGreen 
-                        : _holographicMaterialRed;
+                    bool areaFreeCheck = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY);
+                    if(areaFreeCheck)
+                    {
+                        instance.GetComponent<MeshRenderer>().material = _holographicMaterialGreen;
+                        _pendingActionCanBeProcessed = true;
+                    }
+                    else
+                    {
+                        instance.GetComponent<MeshRenderer>().material = _holographicMaterialRed;
+                        _pendingActionCanBeProcessed = false;
+                    }
 
                     instance.transform.position = targetPos;
                 }
@@ -117,6 +130,9 @@ namespace Assets.Scripts
 
                 if (_interfacePendingAction != null)
                 {
+                    if (!_pendingActionCanBeProcessed)
+                        return;
+
                     _interfacePendingAction.AddOrReplaceParameter(InterfacePendingActionParamType.CurrentCell, cell);
                     _interfacePendingAction.PendingAction(_interfacePendingAction.Parameters);
                     _interfacePendingAction = null;
