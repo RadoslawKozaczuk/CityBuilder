@@ -1,5 +1,7 @@
 ﻿using Assets.Scripts.DataModels;
 using Assets.Scripts.DataSource;
+using Assets.Scripts.UI;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,6 +12,7 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
+        [SerializeField] BuildingInfoUI _buildingInfoUI;
         [SerializeField] GameObject[] _buildingPrefabs;
         [SerializeField] Material _holographicMaterialGreen;
         [SerializeField] Material _holographicMaterialRed;
@@ -142,6 +145,8 @@ namespace Assets.Scripts
                 // regular mode
                 if (cell.IsOccupied)
                     BuildingSelected(cell);
+                else
+                    DeselectBuilding();
             }
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -240,11 +245,16 @@ namespace Assets.Scripts
 
         void BuildingSelected(GridCell cell)
         {
-            //_buildingInfoUI.gameObject.SetActive(true);
-            //_buildingInfoUI.gameObject.transform.position = Input.mousePosition;
+            _buildingInfoUI.gameObject.SetActive(true);
+            _buildingInfoUI.gameObject.transform.position = Input.mousePosition;
 
-            //Building b = cell.Building;
-            //_buildingInfoUI.Building = b;
+            Building b = cell.Building;
+            _buildingInfoUI.Building = b;
+        }
+
+        void DeselectBuilding()
+        {
+            _buildingInfoUI.gameObject.SetActive(false);
         }
     }
 }
