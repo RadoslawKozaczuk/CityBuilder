@@ -1,7 +1,6 @@
 ﻿using Assets.Scripts.DataModels;
 using Assets.Scripts.DataSource;
 using Assets.Scripts.UI;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,6 +15,7 @@ namespace Assets.Scripts
         [SerializeField] GameObject[] _buildingPrefabs;
         [SerializeField] Material _holographicMaterialGreen;
         [SerializeField] Material _holographicMaterialRed;
+        [SerializeField] GameObject _explosionPrefab;
 
         readonly List<Building> _constructedBuildings = new List<Building>();
         InterfacePendingAction _interfacePendingAction;
@@ -149,6 +149,11 @@ namespace Assets.Scripts
                     DeselectBuilding();
             }
 
+            if(Input.GetKeyDown(KeyCode.Space))
+            {
+                SpawnRandomExplosion();
+            }
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (_interfacePendingAction != null)
@@ -156,6 +161,33 @@ namespace Assets.Scripts
                 else
                     Application.Quit();
             }
+        }
+
+        // this should be moved to a separate singleton
+        void SpawnRandomExplosion()
+        {
+            // instantiate random explosion
+            GameObject explosion = Instantiate(_explosionPrefab) as GameObject;
+            explosion.transform.position = new Vector3(
+                Random.Range(0f, 80f), // make proportional to grid
+                Random.Range(5f, 10f),
+                Random.Range(0f, 80f));
+
+            // we make a separate copy of a material for each instance to apply slightly different parameters
+            Renderer renderer = explosion.GetComponent<Renderer>();
+            Material material = new Material(renderer.sharedMaterial);
+
+            var script = explosion.GetComponent<Explosion>();
+            script.Material = material;
+
+            material.SetFloat("_RampOffset", Random.Range(-0.25f, -0.15f));
+
+            float period = Random.Range(0.75f, 0.85f);
+            material.SetFloat("_Period", period);
+            script.ShaderDisappearnceThreshold = Utils.Map(1.4f, 1.6f, 0.75f, 0.85f, period);
+
+            material.SetFloat("_Amount", Random.Range(0.7f, 0.9f));
+            renderer.material = material;
         }
 
         /// <summary>
