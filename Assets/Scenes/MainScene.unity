@@ -175,9 +175,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _startProductionButton: {fileID: 1264411796}
+  _reallocateButton: {fileID: 754746690}
   _buildingName: {fileID: 915533336}
   _slider: {fileID: 587251572}
   _fill: {fileID: 818140507}
+  _gameEngine: {fileID: 1685839696}
 --- !u!114 &144037855
 MonoBehaviour:
   m_ObjectHideFlags: 0

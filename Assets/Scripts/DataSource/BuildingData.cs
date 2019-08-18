@@ -11,5 +11,7 @@ namespace Assets.Scripts.DataSource
         public List<Resource> Cost;
         public BuildingType Type;
         public ResourceProductionData ResourceProductionData;
+        public bool AbleToReallocate;
+        public Resource? ReallocationCost;
     }
 }

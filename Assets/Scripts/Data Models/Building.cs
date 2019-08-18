@@ -17,21 +17,25 @@ namespace Assets.Scripts.DataModels
         public bool Finished = false;
         public bool ProductionStarted;
         public BuildingTask ScheduledTask;
+        public bool AbleToReallocate;
+        public Resource? ReallocationCost;
 
         readonly Resource _resource;
         readonly float _productionTime;
         readonly bool _imidiatelyStartProduction;
         readonly bool _loopProduction;
 
-        public Building(int posX, int posY, BuildingType type, BuildingData data, GameObject instance)
+        public Building(int posX, int posY, BuildingData data, GameObject instance)
         {
             PositionX = posX;
             PositionY = posY;
             SizeX = data.SizeX;
             SizeY = data.SizeY;
             Name = data.Name;
-            BuildingType = type;
+            BuildingType = data.Type;
             GameObjectInstance = instance;
+            AbleToReallocate = data.AbleToReallocate;
+            ReallocationCost = data.ReallocationCost;
 
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;

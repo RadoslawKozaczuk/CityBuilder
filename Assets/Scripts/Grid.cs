@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.DataModels;
+using Assets.Scripts.DataSource;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -47,6 +48,14 @@ namespace Assets.Scripts
 
             cell = new GridCell(); // dummy
             return false;
+        }
+
+        public ref GridCell GetCell(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= _gridSizeX || y >= _gridSizeY)
+                throw new System.Exception("Index out of bounds");
+
+            return ref _cells[x, y];
         }
 
         /// <summary>
@@ -138,6 +147,12 @@ namespace Assets.Scripts
 
         public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
             => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
+
+        public void MoveBuilding(ref GridCell currentCell, ref GridCell targetCell, ref BuildingData data, Building building)
+        {
+            MarkAreaAsFree(currentCell.X, currentCell.Y, data.SizeX, data.SizeY);
+            MarkAreaAsOccupied(targetCell.X, targetCell.Y, data.SizeX, data.SizeY, building);
+        }
 
         // Get cell returns cell from a given position
         GridCell GetCell(Vector3 position)

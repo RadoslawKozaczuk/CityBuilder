@@ -106,6 +106,30 @@ namespace Assets.Scripts
         }
 
         /// <summary>
+        /// Removes resource and broadcasts the ResourceChanged event.
+        /// </summary>
+        public void RemoveResource(Resource? resource)
+        {
+            if (!resource.HasValue)
+                throw new Exception("Resource should not be null in this context.");
+
+            ResourceType resourceType = resource.Value.ResourceType;
+            int quantity = resource.Value.Quantity;
+
+            if (_playerResources[(int)resourceType] < quantity)
+            {
+                Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
+                return;
+            }
+
+            // update value
+            _playerResources[(int)resourceType] -= quantity;
+
+            // inform subscribers
+            ResourceChanged(new Resource(resourceType, _playerResources[(int)resourceType]));
+        }
+
+        /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
         public bool IsEnoughResources(List<Resource> resources)
@@ -121,6 +145,11 @@ namespace Assets.Scripts
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
         public bool IsEnoughResource(Resource resource) => _playerResources[(int)resource.ResourceType] >= resource.Quantity;
+
+        /// <summary>
+        /// Returns true if the player has this amount of resources, false otherwise.
+        /// </summary>
+        public bool IsEnoughResource(Resource? resource) => _playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity;
 
         /// <summary>
         /// Adds resource without broadcasting the ResourceChanged event.
