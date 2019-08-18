@@ -6,10 +6,11 @@ namespace Assets.Scripts
     {
         const float LIFE_TIME = 5f;
 
-        [SerializeField] ParticleSystem _smoke;
         public Material Material;
-
         public float ShaderDisappearnceThreshold = 1.5f;
+
+        [SerializeField] ParticleSystem _smoke;
+        [SerializeField] Light _pointLight;
 
         float _lifeTime = 0;
 
@@ -21,6 +22,7 @@ namespace Assets.Scripts
             {
                 // temporary solution
                 Material.SetFloat("_ClipRange", 0f);
+                _pointLight.gameObject.SetActive(false);
             }
 
             if (_lifeTime > LIFE_TIME)

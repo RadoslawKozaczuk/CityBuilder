@@ -5,6 +5,7 @@
         /// <summary>
         /// Executes the given function on every cell in the given area. 
         /// Immediately returns true if the function result is true, otherwise false.
+        /// This method does not check parameters validity.
         /// </summary>
         public static bool Any(this GridCell[,] cells, int x, int y, int sizeX, int sizeY, Grid.FunctionRefStruct<GridCell> func)
         {
@@ -17,7 +18,8 @@
         }
 
         /// <summary>
-        /// Executes the given action on every cell in the given area. 
+        /// Executes the given action on every cell in the given area.
+        /// This method does not check parameters validity.
         /// </summary>
         public static void All(this GridCell[,] cells, int x, int y, int sizeX, int sizeY, Grid.ActionRefStruct<GridCell> action)
         {
