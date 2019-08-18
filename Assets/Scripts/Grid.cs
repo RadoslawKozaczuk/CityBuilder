@@ -5,6 +5,10 @@ namespace Assets.Scripts
 {
     public class Grid : MonoBehaviour
     {
+        // to circumnavigate the regular anonymous method declaration limitation
+        public delegate void ActionRefStruct<T1>(ref GridCell cell);
+        public delegate bool FunctionRefStruct<T1>(ref GridCell cell);
+
         const float CELL_SIZE = 10f;
 
         // to allow designers to put the plane in an arbitrary position in the world space
@@ -110,7 +114,12 @@ namespace Assets.Scripts
         /// X and y are at the bottom (perspective camera).
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY)
-            => !_cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied);
+        {
+            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
+                throw new System.Exception("Given area is out of bounds");
+
+            return !_cells.Any(x, y, sizeX, sizeY, (ref GridCell cell) => cell.IsOccupied);
+        }
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
@@ -118,22 +127,42 @@ namespace Assets.Scripts
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude)
-            => !_cells.Any(x, y, sizeX, sizeY, (cell) => cell.IsOccupied && cell.Building != exclude);
+        {
+            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
+                throw new System.Exception("Given area is out of bounds");
 
-        public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
-            => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
+            return !_cells.Any(x, y, sizeX, sizeY, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
+        }
+
+        public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY)
+        {
+            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
+                throw new System.Exception("Given area is out of bounds");
+
+            return x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
+        }
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building)
-            => _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = building);
+        {
+            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
+                throw new System.Exception("Given area is out of bounds");
+
+            _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = building);
+        }
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
         public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY)
-            => _cells.All(x, y, sizeX, sizeY, (cell) => cell.Building = null);
+        {
+            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
+                throw new System.Exception("Given area is out of bounds");
+
+            _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
+        }
 
         // Get cell returns cell from a given position
         GridCell GetCell(Vector3 position)
