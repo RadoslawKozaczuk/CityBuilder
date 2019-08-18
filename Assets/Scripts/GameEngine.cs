@@ -52,47 +52,35 @@ namespace Assets.Scripts
                 if (_interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out object obj))
                 {
                     GameObject instance = (GameObject)obj;
-                    instance.SetActive(false);
 
                     // Check if the mouse is over the UI
-                    if (EventSystem.current.IsPointerOverGameObject())
+                    if (EventSystem.current.IsPointerOverGameObject()
+                        || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+                    {
+                        instance.SetActive(false);
                         return;
-
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    if (!Physics.Raycast(ray, out RaycastHit hit, 1000f))
-                        return;
-
-                    if (hit.transform == null)
-                        return;
-
-                    if (!GameMap.GetCell(ray, out GridCell cell))
-                        return;
+                    }
 
                     _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
                     BuildingData data = (BuildingData)obj;
 
                     if (GameMap.IsAreaOutOfBounds(cell.X, cell.Y, data.SizeX, data.SizeY))
+                    {
+                        instance.SetActive(false);
                         return;
+                    }
 
                     instance.SetActive(true);
 
-                    BuildingType type = data.Type;
-
                     Vector3 targetPos = ApplyPrefabOffset(
                         GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY),
-                        type);
+                        data.Type);
 
                     bool areaFreeCheck = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY);
-                    if (areaFreeCheck)
-                    {
-                        instance.GetComponent<MeshRenderer>().material = _holographicMaterialGreen;
-                        _pendingActionCanBeProcessed = true;
-                    }
-                    else
-                    {
-                        instance.GetComponent<MeshRenderer>().material = _holographicMaterialRed;
-                        _pendingActionCanBeProcessed = false;
-                    }
+                    _pendingActionCanBeProcessed = areaFreeCheck;
+                    instance.GetComponent<MeshRenderer>().material = areaFreeCheck 
+                        ? _holographicMaterialGreen 
+                        : _holographicMaterialRed;
 
                     instance.transform.position = targetPos;
                 }
@@ -106,12 +94,11 @@ namespace Assets.Scripts
                 BuildingTask task = _scheduledTasks[i];
                 task.TimeLeft -= Time.deltaTime;
 
-                if (task.TimeLeft <= 0)
-                {
-                    task.ActionOnFinish();
-                    _scheduledTasks.RemoveAt(i);
-                    i--;
-                }
+                if (task.TimeLeft > 0)
+                    return;
+
+                task.ActionOnFinish();
+                _scheduledTasks.RemoveAt(i--);
             }
         }
 
@@ -149,9 +136,9 @@ namespace Assets.Scripts
 
                 // regular mode
                 if (cell.IsOccupied)
-                    BuildingSelected(cell);
+                    ShowBuildingInfo(cell);
                 else
-                    DeselectBuilding();
+                    HideBuildingInfo();
             }
 
             if(Input.GetKeyDown(KeyCode.Space))
@@ -160,7 +147,7 @@ namespace Assets.Scripts
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (_interfacePendingAction != null)
-                    _interfacePendingAction = null;
+                    ClearInterfacePendingActionVariables();
                 else
                     Application.Quit();
             }
@@ -212,12 +199,8 @@ namespace Assets.Scripts
             parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out obj);
             GameObject instance = (GameObject)obj;
 
-            //Debug.Log($"Check if there is enough space cell={cell.X}, {cell.Y}, size={data.SizeX}, {data.SizeY}");
             if (!GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY))
-            {
-                //Debug.Log($"Not enough room for the given building ({data.SizeX}, {data.SizeY})");
                 return; // action will still be pending
-            }
 
             // enough space
             ResourceManager.Instance.RemoveResources(data.Cost);
@@ -285,6 +268,15 @@ namespace Assets.Scripts
             GameMap.MoveBuilding(ref currentCell, ref targetCell, ref data, b);
         }
 
+        void ClearInterfacePendingActionVariables()
+        {
+            if (_interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out object obj))
+                Destroy((GameObject)obj);
+
+            _interfacePendingAction = null;
+            _tempMaterial = null;
+        }
+
         // prefab position may be adjusted and he have to take it into account
         Vector3 ApplyPrefabOffset(Vector3 position, GameObject prefab)
         {
@@ -307,7 +299,7 @@ namespace Assets.Scripts
             return position;
         }
 
-        void BuildingSelected(GridCell cell)
+        void ShowBuildingInfo(GridCell cell)
         {
             _buildingInfoUI.gameObject.SetActive(true);
             _buildingInfoUI.gameObject.transform.position = Input.mousePosition;
@@ -318,6 +310,6 @@ namespace Assets.Scripts
             _buildingInfoUI.Initialize();
         }
 
-        void DeselectBuilding() => _buildingInfoUI.gameObject.SetActive(false);
+        void HideBuildingInfo() => _buildingInfoUI.gameObject.SetActive(false);
     }
 }
