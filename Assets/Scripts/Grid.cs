@@ -134,14 +134,6 @@ namespace Assets.Scripts
             return !_cells.Any(x, y, sizeX, sizeY, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
         }
 
-        public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY)
-        {
-            if (!IsAreaOutOfBounds(x, y, sizeX, sizeY))
-                throw new System.Exception("Given area is out of bounds");
-
-            return x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
-        }
-
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
@@ -163,6 +155,8 @@ namespace Assets.Scripts
 
             _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
         }
+
+        bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
 
         // Get cell returns cell from a given position
         GridCell GetCell(Vector3 position)
