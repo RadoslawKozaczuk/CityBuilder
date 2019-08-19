@@ -10,6 +10,7 @@ namespace Assets.Scripts
 
         void Awake() => Instance = this;
 
+        
         // this should be moved to a separate singleton
         public void SpawnRandomExplosion()
         {
@@ -29,12 +30,22 @@ namespace Assets.Scripts
 
             material.SetFloat("_RampOffset", Random.Range(-0.25f, -0.15f));
 
-            float period = Random.Range(0.75f, 0.85f);
-            material.SetFloat("_Period", period);
-            script.ShaderDisappearnceThreshold = Utils.Map(1.4f, 1.6f, 0.75f, 0.85f, period);
-
             material.SetFloat("_Amount", Random.Range(0.7f, 0.9f));
+            material.SetFloat("_TimeOffset", GetTimeOffset());
             renderer.material = material;
+        }
+
+        /// <summary>
+        /// Returns the explosion time animation offset in seconds.
+        /// </summary>
+        float GetTimeOffset()
+        {
+            float totalTime = Time.time;
+            float animDur = 6.28f;
+            float c = Mathf.Floor(totalTime / animDur);
+            float timeOfsset = totalTime - c * animDur;
+
+            return timeOfsset;
         }
     }
 }

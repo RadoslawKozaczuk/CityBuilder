@@ -93,7 +93,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Material: {fileID: 0}
-  ShaderDisappearnceThreshold: 1.5
+  ShaderDisappearnceThreshold: 15
   _smoke: {fileID: 414320583121569248}
   _pointLight: {fileID: 2617288741698851469}
 --- !u!1 &6317649773449252202

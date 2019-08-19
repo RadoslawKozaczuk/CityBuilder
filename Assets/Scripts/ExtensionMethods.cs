@@ -32,7 +32,7 @@ namespace Assets.Scripts
 
         public static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
         {
-            GameObject prefab = GameEngine.Instance._buildingPrefabs[(int)type];
+            GameObject prefab = GameEngine.Instance.BuildingPrefabs[(int)type];
             position.x += prefab.transform.position.x;
             position.y = prefab.transform.position.y;
             position.z += prefab.transform.position.z;

@@ -1513,8 +1513,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.3364766, y: 0.013554424, z: -0.0048519634, w: 0.94158185}
-  m_LocalPosition: {x: 48.26833, y: 107.2727, z: -58.07071}
+  m_LocalRotation: {x: 0.23939946, y: 0.021838546, z: -0.005388446, w: 0.97066057}
+  m_LocalPosition: {x: 57.366318, y: 70.205826, z: -69.498344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2304,8 +2304,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d52836d269ef9114fb4759ab3f74f9f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GameMap: {fileID: 286872029}
   _buildingInfoUI: {fileID: 144037854}
-  _buildingPrefabs:
+  BuildingPrefabs:
   - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}
   - {fileID: 177548, guid: 8ced8772a0380c643a2733f587421c1c, type: 3}
   - {fileID: 180750, guid: d68ef7a2a7a25ca499eb4d0024f2ff0d, type: 3}
@@ -2315,7 +2316,6 @@ MonoBehaviour:
     type: 2}
   _holographicMaterialRed: {fileID: 2100000, guid: 919edd8a961482643b931621c118cf0a,
     type: 2}
-  GameMap: {fileID: 286872029}
 --- !u!1 &2093995763
 GameObject:
   m_ObjectHideFlags: 0

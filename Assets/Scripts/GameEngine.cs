@@ -14,7 +14,7 @@ namespace Assets.Scripts
         public Grid GameMap;
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
-        public GameObject[] _buildingPrefabs;
+        public GameObject[] BuildingPrefabs;
         [SerializeField] Material _holographicMaterialGreen;
         [SerializeField] Material _holographicMaterialRed;
 
@@ -125,7 +125,7 @@ namespace Assets.Scripts
                     HideBuildingInfo();
             }
 
-            if(Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Space))
                 ExplosionManager.Instance.SpawnRandomExplosion();
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -164,7 +164,7 @@ namespace Assets.Scripts
 
         GameObject InstanciateHologram(BuildingType type)
         {
-            GameObject prefab = _buildingPrefabs[(int)type];
+            GameObject prefab = BuildingPrefabs[(int)type];
             GameObject instance = Instantiate(prefab);
             MeshRenderer mr = instance.GetComponent<MeshRenderer>();
             _tempMaterial = mr.material;
