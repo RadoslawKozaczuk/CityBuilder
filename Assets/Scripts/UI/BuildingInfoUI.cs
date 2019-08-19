@@ -20,24 +20,22 @@ namespace Assets.Scripts.UI
 
         void Update()
         {
-            if (Building.ScheduledTask == null || (Building.Finished && !Building.ProductionStarted))
+            if (Building.ScheduledTask == null || (Building.Constructed && !Building.ProductionStarted))
             {
                 _slider.value = 0f;
                 _fill.gameObject.SetActive(false);
             }
             else
             {
+                _slider.value = 1 - Utils.Map(0, 1, 0, Building.ScheduledTask.TotalTime, Building.ScheduledTask.TimeLeft);
                 _fill.gameObject.SetActive(true);
-                float p = 10f;
-                float t = Building.ScheduledTask.TimeLeft;
-                _slider.value = 1 - t / p;
             }
 
-            _buildingName.text = Building.Finished
+            _buildingName.text = Building.Constructed
                 ? Building.Name
                 : "Building " + Building.Name;
 
-            _startProductionButton.interactable = Building.Finished && !Building.ProductionStarted;
+            _startProductionButton.interactable = Building.Constructed && !Building.ProductionStarted;
 
             // check if player has enough resources to reallocate
             if(Building.AbleToReallocate)

@@ -14,7 +14,7 @@ namespace Assets.Scripts
         public Grid GameMap;
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
-        [SerializeField] GameObject[] _buildingPrefabs;
+        public GameObject[] _buildingPrefabs;
         [SerializeField] Material _holographicMaterialGreen;
         [SerializeField] Material _holographicMaterialRed;
 
@@ -72,13 +72,12 @@ namespace Assets.Scripts
 
                     instance.SetActive(true);
 
-                    Vector3 targetPos = ApplyPrefabOffset(
-                        GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY),
-                        data.Type);
+                    Vector3 targetPos = GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY)
+                        .ApplyPrefabPositionOffset(data.Type);
 
-                    bool areaFreeCheck = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY);
-                    _pendingActionCanBeProcessed = areaFreeCheck;
-                    instance.GetComponent<MeshRenderer>().material = areaFreeCheck 
+                    bool enoughSpace = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY);
+                    _pendingActionCanBeProcessed = enoughSpace;
+                    instance.GetComponent<MeshRenderer>().material = enoughSpace 
                         ? _holographicMaterialGreen 
                         : _holographicMaterialRed;
 
@@ -107,27 +106,12 @@ namespace Assets.Scripts
             if (Input.GetMouseButtonDown(0))
             {
                 // Check if the mouse was clicked over a UI element
-                if (EventSystem.current.IsPointerOverGameObject())
+                if (EventSystem.current.IsPointerOverGameObject()
+                    || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+                    return;
+
+                if (_interfacePendingAction != null && _pendingActionCanBeProcessed)
                 {
-                    Debug.Log("Clicked on the UI");
-                    return;
-                }
-
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (!Physics.Raycast(ray, out RaycastHit hit, 1000f))
-                    return;
-
-                if (hit.transform == null)
-                    return;
-
-                GameMap.GetCell(ray, out GridCell cell);
-                Debug.Log("Hit the " + cell.X + " " + cell.Y);
-
-                if (_interfacePendingAction != null)
-                {
-                    if (!_pendingActionCanBeProcessed)
-                        return;
-
                     _interfacePendingAction.AddOrReplaceParameter(InterfacePendingActionParamType.CurrentCell, cell);
                     _interfacePendingAction.PendingAction(_interfacePendingAction.Parameters);
                     _interfacePendingAction = null;
@@ -181,7 +165,7 @@ namespace Assets.Scripts
         GameObject InstanciateHologram(BuildingType type)
         {
             GameObject prefab = _buildingPrefabs[(int)type];
-            GameObject instance = Instantiate(prefab, Vector3.zero, prefab.transform.rotation);
+            GameObject instance = Instantiate(prefab);
             MeshRenderer mr = instance.GetComponent<MeshRenderer>();
             _tempMaterial = mr.material;
             mr.material = _holographicMaterialGreen;
@@ -255,15 +239,10 @@ namespace Assets.Scripts
             GameObject instance = (GameObject)obj;
             Destroy(instance);
 
-            Vector3 currentPos = b.GameObjectInstance.transform.position;
-            Vector3 targetPos = ApplyPrefabOffset(
-                GameMap.GetMiddlePoint(targetCell.X, targetCell.Y, data.SizeX, data.SizeY),
-                data.Type);
-
-            targetPos.y = currentPos.y;
             b.PositionX = targetCell.X;
             b.PositionY = targetCell.Y;
-            b.GameObjectInstance.transform.position = targetPos;
+            b.GameObjectInstance.transform.position = GameMap.GetMiddlePoint(targetCell.X, targetCell.Y, data.SizeX, data.SizeY)
+                .ApplyPrefabPositionOffset(data.Type);
 
             GameMap.MoveBuilding(ref currentCell, ref targetCell, ref data, b);
         }
@@ -275,28 +254,6 @@ namespace Assets.Scripts
 
             _interfacePendingAction = null;
             _tempMaterial = null;
-        }
-
-        // prefab position may be adjusted and he have to take it into account
-        Vector3 ApplyPrefabOffset(Vector3 position, GameObject prefab)
-        {
-            position.x += prefab.transform.position.x;
-            position.y = prefab.transform.position.y;
-            position.z += prefab.transform.position.z;
-
-            return position;
-        }
-
-        // prefab position may be adjusted and he have to take it into account
-        Vector3 ApplyPrefabOffset(Vector3 position, BuildingType type)
-        {
-            GameObject prefab = _buildingPrefabs[(int)type];
-
-            position.x += prefab.transform.position.x;
-            position.y = prefab.transform.position.y;
-            position.z += prefab.transform.position.z;
-
-            return position;
         }
 
         void ShowBuildingInfo(GridCell cell)

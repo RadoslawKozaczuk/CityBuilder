@@ -1,4 +1,6 @@
-﻿namespace Assets.Scripts
+﻿using UnityEngine;
+
+namespace Assets.Scripts
 {
     static class ExtensionMethods
     {
@@ -26,6 +28,25 @@
             for (int i = x; i < x + sizeX; i++)
                 for (int j = y; j < y + sizeY; j++)
                     action(ref cells[i, j]);
+        }
+
+        public static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
+        {
+            GameObject prefab = GameEngine.Instance._buildingPrefabs[(int)type];
+            position.x += prefab.transform.position.x;
+            position.y = prefab.transform.position.y;
+            position.z += prefab.transform.position.z;
+
+            return position;
+        }
+
+        public static Vector3 ApplyPrefabPositionOffset(this Vector3 position, GameObject prefab)
+        {
+            position.x += prefab.transform.position.x;
+            position.y = prefab.transform.position.y;
+            position.z += prefab.transform.position.z;
+
+            return position;
         }
     }
 }

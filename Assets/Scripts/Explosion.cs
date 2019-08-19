@@ -26,9 +26,7 @@ namespace Assets.Scripts
             }
 
             if (_lifeTime > LIFE_TIME)
-            {
                 Destroy(gameObject);
-            }
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Assets.Scripts.DataModels
         public int PositionX, PositionY, SizeX, SizeY;
         public BuildingType BuildingType;
         public GameObject GameObjectInstance;
-        public bool Finished = false;
+        public bool Constructed = false;
         public bool ProductionStarted;
         public BuildingTask ScheduledTask;
         public bool AbleToReallocate;
@@ -50,7 +50,7 @@ namespace Assets.Scripts.DataModels
 
         public void FinishConstruction()
         {
-            Finished = true;
+            Constructed = true;
 
             if (_imidiatelyStartProduction)
                 StartProduction();

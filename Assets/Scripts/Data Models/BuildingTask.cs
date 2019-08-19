@@ -7,10 +7,10 @@ namespace Assets.Scripts.DataModels
         public float TotalTime, TimeLeft;
         public Action ActionOnFinish;
 
-        public BuildingTask(float taskExecutionTime, Action onCompleteAction)
+        public BuildingTask(float executionDelay, Action onCompleteAction)
         {
-            TotalTime = taskExecutionTime;
-            TimeLeft = taskExecutionTime;
+            TotalTime = executionDelay;
+            TimeLeft = executionDelay;
             ActionOnFinish = onCompleteAction;
         }
     }
