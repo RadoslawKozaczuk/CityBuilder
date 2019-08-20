@@ -8,9 +8,29 @@ namespace Assets.Scripts.DataModels
     {
         const float ConstructionTime = 10f; // hardcoded
 
+        Vector2Int? _position;
+
+        public Vector2Int? Position
+        {
+            get { return _position; }
+            set
+            {
+                if (_position.HasValue)
+                    Grid.Instance.MarkAreaAsFree(_position.Value, SizeX, SizeY);
+
+                if (value.HasValue)
+                {
+                    _position = value.Value;
+                    Grid.Instance.MarkAreaAsOccupied(this);
+                }
+                else
+                    _position = null;
+            }
+        }
+
         public string Name;
-        public int PositionX, PositionY, SizeX, SizeY; // X and Y always point at the left bottom corner of the building
-        public BuildingType Type;
+        public int SizeX, SizeY; // X and Y always point at the left bottom corner of the building
+        public BuildingType Type { get; private set; }
         public GameObject GameObject;
         public bool Constructed = false;
         public bool ProductionStarted;
@@ -36,7 +56,7 @@ namespace Assets.Scripts.DataModels
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
             _loopProduction = data.ResourceProductionData.Loop;
 
-            InnerConstructorLogic(-1, -1, ref data, instance);
+            InnerConstructorLogic(ref data, instance);
         }
 
         public Building(int posX, int posY, ref BuildingData data, GameObject instance)
@@ -45,8 +65,9 @@ namespace Assets.Scripts.DataModels
             _productionTime = data.ResourceProductionData.ProductionTime;
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
             _loopProduction = data.ResourceProductionData.Loop;
+            Position = new Vector2Int(posX, posY);
 
-            InnerConstructorLogic(posX, posY, ref data, instance);
+            InnerConstructorLogic(ref data, instance);
         }
 
         public Building(ref GridCell cell, ref BuildingData data, GameObject instance)
@@ -55,8 +76,22 @@ namespace Assets.Scripts.DataModels
             _productionTime = data.ResourceProductionData.ProductionTime;
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
             _loopProduction = data.ResourceProductionData.Loop;
+            Position = new Vector2Int(cell.X, cell.Y);
 
-            InnerConstructorLogic(cell.X, cell.Y, ref data, instance);
+            InnerConstructorLogic(ref data, instance);
+        }
+
+        public Building(BuildingType type)
+        {
+            BuildingData data = GameEngine.Instance.Db[type];
+            GameObject instance = GameObject.Instantiate(GameEngine.Instance.BuildingPrefabs[(int)type]);
+
+            _resource = data.ResourceProductionData.Resource;
+            _productionTime = data.ResourceProductionData.ProductionTime;
+            _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
+            _loopProduction = data.ResourceProductionData.Loop;
+
+            InnerConstructorLogic(ref data, instance);
         }
         #endregion
 
@@ -90,10 +125,8 @@ namespace Assets.Scripts.DataModels
             ProductionStarted = true;
         }
 
-        void InnerConstructorLogic(int posX, int posY, ref BuildingData data, GameObject instance)
+        void InnerConstructorLogic(ref BuildingData data, GameObject instance)
         {
-            PositionX = posX;
-            PositionY = posY;
             SizeX = data.SizeX;
             SizeY = data.SizeY;
             Name = data.Name;

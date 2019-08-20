@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.DataModels;
-using Assets.Scripts.DataSource;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -11,6 +10,8 @@ namespace Assets.Scripts
         public delegate bool FunctionRefStruct<T1>(ref GridCell cell);
 
         const float CELL_SIZE = 10f;
+
+        public static Grid Instance { get; private set; }
 
         // to allow designers to put the plane in an arbitrary position in the world space
         [SerializeField] float _localOffsetX, _localOffsetZ;
@@ -32,6 +33,8 @@ namespace Assets.Scripts
         Material _material;
 
         #region Unity life-cycle methods
+        void Awake() => Instance = this;
+
         void Start()
         {
             _cells = new GridCell[_gridSizeX, _gridSizeY];
@@ -78,12 +81,12 @@ namespace Assets.Scripts
             return false;
         }
 
-        public ref GridCell GetCell(int x, int y)
+        public ref GridCell GetCell(Vector2Int positon)
         {
-            if (x < 0 || y < 0 || x >= _gridSizeX || y >= _gridSizeY)
+            if (positon.x < 0 || positon.y < 0 || positon.x >= _gridSizeX || positon.y >= _gridSizeY)
                 throw new System.Exception("Index out of bounds");
 
-            return ref _cells[x, y];
+            return ref _cells[positon.x, positon.y];
         }
 
         /// <summary>
@@ -150,14 +153,20 @@ namespace Assets.Scripts
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        public void MarkAreaAsOccupied(int x, int y, Building building) 
-            => _cells.All(x, y, building.SizeX, building.SizeY, (ref GridCell cell) => cell.Building = building);
+        public void MarkAreaAsOccupied(Building b) 
+            => _cells.All(b.Position.Value.x, b.Position.Value.y, b.SizeX, b.SizeY, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
         public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY) 
             => _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
+
+        /// <summary>
+        /// Mark all the cells in the given area as free.
+        /// </summary>
+        public void MarkAreaAsFree(Vector2Int position, int sizeX, int sizeY)
+            => _cells.All(position.x, position.y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
 
         public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
             => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
@@ -168,13 +177,9 @@ namespace Assets.Scripts
         public void MoveBuilding(ref GridCell from, ref GridCell to)
         {
             Building b = from.Building;
-            b.PositionX = to.X;
-            b.PositionY = to.Y;
+            b.Position = new Vector2Int(to.X, to.Y);
             b.GameObject.transform.position = GetMiddlePoint(to.X, to.Y, b.SizeX, b.SizeY)
                .ApplyPrefabPositionOffset(b.Type);
-
-            MarkAreaAsFree(from.X, from.Y, b.SizeX, b.SizeY);
-            MarkAreaAsOccupied(to.X, to.Y, b);
         }
 
         // Get cell returns cell from a given position

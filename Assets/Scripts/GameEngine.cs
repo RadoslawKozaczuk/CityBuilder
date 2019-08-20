@@ -21,6 +21,7 @@ namespace Assets.Scripts
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
+        public readonly DummyDatabase Db = new DummyDatabase();
 
         #region Unity life-cycle methods
         void Awake() => Instance = this;
@@ -116,7 +117,7 @@ namespace Assets.Scripts
 
                 GameMap.SelectCell(ref cell);
 
-                if (cell.IsOccupied && _interfacePendingAction != null)
+                if (cell.IsOccupied && _interfacePendingAction == null)
                     ShowBuildingInfo(cell);
                 else
                     HideBuildingInfo();
@@ -142,7 +143,7 @@ namespace Assets.Scripts
         public void BuildingConstructionAction(BuildingType type)
         {
             // check if player has enough resources
-            BuildingData data = BuildingDataSource.Building(type);
+            BuildingData data = Db[type];
             if (!ResourceManager.Instance.IsEnoughResources(data.Cost))
                 return;
 
@@ -172,24 +173,21 @@ namespace Assets.Scripts
             var b = (Building)obj;
 
             // enough space
-            ResourceManager.Instance.RemoveResources(BuildingDataSource.Building(b.Type).Cost);
+            ResourceManager.Instance.RemoveResources(Db[b.Type].Cost);
 
             b.GameObject.SetActive(true);
-            b.PositionX = cell.X;
-            b.PositionY = cell.Y;
+            b.Position = new Vector2Int(cell.X, cell.Y);
             b.UseDefaultMaterial();
-
-            GameMap.MarkAreaAsOccupied(cell.X, cell.Y, b);
         }
 
         public void BuildingReallocationAction(Building b)
         {
-            BuildingData data = BuildingDataSource.Building(b.Type);
+            BuildingData data = Db[b.Type];
             var hologram = new Building(ref data);
             hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.PositionX, b.PositionY));
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.Position.Value));
             _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
             _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
         }

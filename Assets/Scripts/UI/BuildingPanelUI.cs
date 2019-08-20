@@ -12,10 +12,12 @@ namespace Assets.Scripts.UI
         public GameObject ResourceElementPrefab;
         public GameEngine GameEngine;
 
+        readonly DummyDatabase _db = new DummyDatabase();
+
         void Start()
         {
             // initialize buildings
-            foreach (BuildingData b in BuildingDataSource.Buildings)
+            foreach (BuildingData b in _db.AllBuildings)
             {
                 BuildingButtonUI buttonUI = Instantiate(BuildingElementPrefab, Resources).GetComponent<BuildingButtonUI>();
                 buttonUI.Title.text = b.Name;
