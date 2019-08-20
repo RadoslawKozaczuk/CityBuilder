@@ -1,4 +1,4 @@
-﻿Shader "PDT Shaders/TestGrid" 
+﻿Shader "Custom/Grid" 
 {
 	Properties
 	{
@@ -80,7 +80,7 @@
 				clip(c.a - 1.0);
 			}
 
-			o.Albedo = float4(color.x * brightness,color.y * brightness,color.z * brightness,brightness);
+			o.Albedo = float4(color.x * brightness, color.y * brightness, color.z * brightness, brightness);
 			// Metallic and smoothness come from slider variables
 			o.Metallic = 0.0;
 			o.Smoothness = 0.0;

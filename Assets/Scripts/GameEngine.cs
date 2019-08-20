@@ -118,6 +118,8 @@ namespace Assets.Scripts
                     return;
                 }
 
+                GameMap.SelectCell(ref cell);
+
                 // regular mode
                 if (cell.IsOccupied)
                     ShowBuildingInfo(cell);

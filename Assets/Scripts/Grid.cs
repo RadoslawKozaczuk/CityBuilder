@@ -19,6 +19,9 @@ namespace Assets.Scripts
 
         GridCell[,] _cells;
 
+        Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
+        Material _material;
+
         #region Unity life-cycle methods
         void Start()
         {
@@ -29,6 +32,8 @@ namespace Assets.Scripts
 
             _localOffsetX = _gridSizeX * CELL_SIZE / 2;
             _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
+
+            _material = gameObject.GetComponent<MeshRenderer>().material;
         }
 
         void Update()
@@ -37,6 +42,43 @@ namespace Assets.Scripts
                 DebugDrawOccupied();
         }
         #endregion
+
+        /// <summary>
+        /// Highlights the given cell.
+        /// If the coordinates points at already selected cell then the cell is deselected.
+        /// </summary>
+        public void SelectCell(int x, int y)
+        {
+            _selectedArea = x == _selectedArea.x && y == _selectedArea.y 
+                ? new Vector4(-1, -1, -1, -1) 
+                : new Vector4(x, y, x, y);
+
+            ApplyShaderParams();
+        }
+
+        /// <summary>
+        /// Highlights the given cell.
+        /// If the given cell is already selected then the cell is deselected.
+        /// </summary>
+        public void SelectCell(ref GridCell cell)
+        {
+            _selectedArea = cell.X == _selectedArea.x && cell.Y == _selectedArea.y
+                ? new Vector4(-1, -1, -1, -1)
+                : new Vector4(cell.X, cell.Y, cell.X, cell.Y);
+
+            ApplyShaderParams();
+        }
+
+        public void ResetSelection()
+        {
+            _selectedArea = new Vector4(-1, -1, -1, -1);
+            ApplyShaderParams();
+        }
+
+        void ApplyShaderParams()
+        {
+            _material.SetVector("_SelectedArea", _selectedArea);
+        }
 
         public bool GetCell(Ray ray, out GridCell cell)
         {
