@@ -15,12 +15,8 @@ namespace Assets.Scripts
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         public GameObject[] BuildingPrefabs;
-        [SerializeField] Material _holographicMaterialGreen;
-        [SerializeField] Material _holographicMaterialRed;
 
-        readonly List<Building> _constructedBuildings = new List<Building>();
         InterfacePendingAction _interfacePendingAction;
-        Material _tempMaterial;
         bool _pendingActionCanBeProcessed;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
@@ -49,39 +45,39 @@ namespace Assets.Scripts
             // this violates good principles a bit
             if (_interfacePendingAction != null)
             {
-                if (_interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out object obj))
+                if (_interfacePendingAction.Parameters.TryGetValue(UIPendingActionParam.Building, out object obj))
                 {
-                    GameObject instance = (GameObject)obj;
+                    Building b = (Building)obj;
+
+                    _pendingActionCanBeProcessed = false;
 
                     // Check if the mouse is over the UI
                     if (EventSystem.current.IsPointerOverGameObject()
                         || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
                     {
-                        instance.SetActive(false);
+                        b.GameObject.SetActive(false);
                         return;
                     }
 
-                    _interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
-                    BuildingData data = (BuildingData)obj;
-
-                    if (GameMap.IsAreaOutOfBounds(cell.X, cell.Y, data.SizeX, data.SizeY))
+                    if (GameMap.IsAreaOutOfBounds(cell.X, cell.Y, b.SizeX, b.SizeY))
                     {
-                        instance.SetActive(false);
+                        b.GameObject.SetActive(false);
                         return;
                     }
 
-                    instance.SetActive(true);
+                    b.GameObject.SetActive(true);
 
-                    Vector3 targetPos = GameMap.GetMiddlePoint(cell.X, cell.Y, data.SizeX, data.SizeY)
-                        .ApplyPrefabPositionOffset(data.Type);
+                    Vector3 targetPos = GameMap.GetMiddlePoint(cell.X, cell.Y, b.SizeX, b.SizeY)
+                        .ApplyPrefabPositionOffset(b.Type);
 
-                    bool enoughSpace = GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY);
+                    bool enoughSpace = GameMap.IsAreaFree(cell.X, cell.Y, b.SizeX, b.SizeY);
                     _pendingActionCanBeProcessed = enoughSpace;
-                    instance.GetComponent<MeshRenderer>().material = enoughSpace 
-                        ? _holographicMaterialGreen 
-                        : _holographicMaterialRed;
 
-                    instance.transform.position = targetPos;
+                    b.UseCommonMaterial(enoughSpace 
+                        ? CommonMaterialType.HolographicGreen 
+                        : CommonMaterialType.HolographicRed);
+
+                    b.GameObject.transform.position = targetPos;
                 }
             }
         }
@@ -112,7 +108,7 @@ namespace Assets.Scripts
 
                 if (_interfacePendingAction != null && _pendingActionCanBeProcessed)
                 {
-                    _interfacePendingAction.AddOrReplaceParameter(InterfacePendingActionParamType.CurrentCell, cell);
+                    _interfacePendingAction.AddOrReplaceParameter(UIPendingActionParam.CurrentCell, cell);
                     _interfacePendingAction.PendingAction(_interfacePendingAction.Parameters);
                     _interfacePendingAction = null;
                     return;
@@ -120,8 +116,7 @@ namespace Assets.Scripts
 
                 GameMap.SelectCell(ref cell);
 
-                // regular mode
-                if (cell.IsOccupied)
+                if (cell.IsOccupied && _interfacePendingAction != null)
                     ShowBuildingInfo(cell);
                 else
                     HideBuildingInfo();
@@ -133,7 +128,7 @@ namespace Assets.Scripts
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (_interfacePendingAction != null)
-                    ClearInterfacePendingActionVariables();
+                    ClearPendingActionParams();
                 else
                     Application.Quit();
             }
@@ -147,20 +142,15 @@ namespace Assets.Scripts
         public void BuildingConstructionAction(BuildingType type)
         {
             // check if player has enough resources
-            BuildingData data = BuildingDataSource.Buildings[(int)type];
+            BuildingData data = BuildingDataSource.Building(type);
             if (!ResourceManager.Instance.IsEnoughResources(data.Cost))
-            {
-                Debug.Log("Not enough resources!!!");
                 return;
-            }
 
-            Debug.Log($"Started building action , building type {type}");
-
-            GameObject instance = InstanciateHologram(type);
+            var building = new Building(ref data);
+            building.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingData, data);
-            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingInstance, instance);
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, building);
             _interfacePendingAction.PendingAction = BuildingConstructionFollowUpAction;
         }
 
@@ -168,94 +158,57 @@ namespace Assets.Scripts
         {
             GameObject prefab = BuildingPrefabs[(int)type];
             GameObject instance = Instantiate(prefab);
-            MeshRenderer mr = instance.GetComponent<MeshRenderer>();
-            _tempMaterial = mr.material;
-            mr.material = _holographicMaterialGreen;
+            instance.GetComponent<Building>().UseCommonMaterial(CommonMaterialType.HolographicGreen);
             instance.SetActive(false);
 
             return instance;
         }
 
-        void BuildingConstructionFollowUpAction(Dictionary<InterfacePendingActionParamType, object> parameters)
+        void BuildingConstructionFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
         {
-            parameters.TryGetValue(InterfacePendingActionParamType.CurrentCell, out object obj);
+            parameters.TryGetValue(UIPendingActionParam.CurrentCell, out object obj);
             GridCell cell = (GridCell)obj;
-            parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
-            BuildingData data = (BuildingData)obj;
-            parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out obj);
-            GameObject instance = (GameObject)obj;
-
-            if (!GameMap.IsAreaFree(cell.X, cell.Y, data.SizeX, data.SizeY))
-                return; // action will still be pending
+            parameters.TryGetValue(UIPendingActionParam.Building, out obj);
+            var b = (Building)obj;
 
             // enough space
-            ResourceManager.Instance.RemoveResources(data.Cost);
+            ResourceManager.Instance.RemoveResources(BuildingDataSource.Building(b.Type).Cost);
 
-            instance.SetActive(true);
-            instance.GetComponent<MeshRenderer>().material = _tempMaterial;
+            b.GameObject.SetActive(true);
+            b.PositionX = cell.X;
+            b.PositionY = cell.Y;
+            b.UseDefaultMaterial();
 
-            // create object representation
-            var building = new Building(cell.X, cell.Y, data, instance);
-
-            _constructedBuildings.Add(building);
-
-            GameMap.MarkAreaAsOccupied(cell.X, cell.Y, data.SizeX, data.SizeY, building);
+            GameMap.MarkAreaAsOccupied(cell.X, cell.Y, b);
         }
 
-        public void BuildingReallocationAction(Building building)
+        public void BuildingReallocationAction(Building b)
         {
-            Debug.Log("Started building reallocation action");
-            BuildingData data = BuildingDataSource.Buildings[(int)building.BuildingType];
-
-            // we need corner cell not the one that we clicked on
-            GridCell currentCell = GameMap.GetCell(building.PositionX, building.PositionY);
-
-            GameObject instance = InstanciateHologram(data.Type);
+            BuildingData data = BuildingDataSource.Building(b.Type);
+            var hologram = new Building(ref data);
+            hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.PreviousCell, currentCell);
-            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingData, data);
-            _interfacePendingAction.Parameters.Add(InterfacePendingActionParamType.BuildingInstance, instance);
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.PositionX, b.PositionY));
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
             _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
         }
 
-        void BuildingReallocationFollowUpAction(Dictionary<InterfacePendingActionParamType, object> parameters)
+        void BuildingReallocationFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
         {
-            parameters.TryGetValue(InterfacePendingActionParamType.PreviousCell, out object obj);
+            parameters.TryGetValue(UIPendingActionParam.PreviousCell, out object obj);
             GridCell currentCell = (GridCell)obj;
-            parameters.TryGetValue(InterfacePendingActionParamType.CurrentCell, out obj);
+            parameters.TryGetValue(UIPendingActionParam.CurrentCell, out obj);
             GridCell targetCell = (GridCell)obj;
-            parameters.TryGetValue(InterfacePendingActionParamType.BuildingData, out obj);
-            BuildingData data = (BuildingData)obj;
+            parameters.TryGetValue(UIPendingActionParam.Building, out obj);
+            Building hologram = (Building)obj;
 
-            Building b = currentCell.Building;
-            if (!GameMap.IsAreaFree(targetCell.X, targetCell.Y, data.SizeX, data.SizeY, b))
-            {
-                Debug.Log($"Not enough room for the given building ({data.SizeX}, {data.SizeY})");
-                return; // action will still be pending
-            }
+            ResourceManager.Instance.RemoveResource(hologram.ReallocationCost);
 
-            ResourceManager.Instance.RemoveResource(data.ReallocationCost);
+            hologram.GameObject.SetActive(false);
+            Destroy(hologram.GameObject);
 
-            parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out obj);
-            GameObject instance = (GameObject)obj;
-            Destroy(instance);
-
-            b.PositionX = targetCell.X;
-            b.PositionY = targetCell.Y;
-            b.GameObjectInstance.transform.position = GameMap.GetMiddlePoint(targetCell.X, targetCell.Y, data.SizeX, data.SizeY)
-                .ApplyPrefabPositionOffset(data.Type);
-
-            GameMap.MoveBuilding(ref currentCell, ref targetCell, ref data, b);
-        }
-
-        void ClearInterfacePendingActionVariables()
-        {
-            if (_interfacePendingAction.Parameters.TryGetValue(InterfacePendingActionParamType.BuildingInstance, out object obj))
-                Destroy((GameObject)obj);
-
-            _interfacePendingAction = null;
-            _tempMaterial = null;
+            GameMap.MoveBuilding(ref currentCell, ref targetCell);
         }
 
         void ShowBuildingInfo(GridCell cell)
@@ -270,5 +223,14 @@ namespace Assets.Scripts
         }
 
         void HideBuildingInfo() => _buildingInfoUI.gameObject.SetActive(false);
+
+        void ClearPendingActionParams()
+        {
+            if (_interfacePendingAction.Parameters.TryGetValue(UIPendingActionParam.Building, out object obj))
+                Destroy(((Building)obj).GameObject);
+
+            _interfacePendingAction.Parameters.Clear();
+            _interfacePendingAction = null;
+        }
     }
 }

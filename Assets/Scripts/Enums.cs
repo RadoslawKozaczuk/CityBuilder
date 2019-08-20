@@ -1,11 +1,5 @@
 ﻿namespace Assets.Scripts
 {
-    /// <summary>
-    /// Regular mode allows to inspect building and schedule tasks.
-    /// Build mode allows to build and reallocate buildings.
-    /// </summary>
-    public enum GameMode { RegularMode, BuildMode }
-
     // I am not sure if all will be used in game but I decided to have a bit more just in case
     public enum ResourceType { Clothes, Coal, Gold, Hammer, Iron, Rocks, Wood };
 
@@ -14,5 +8,7 @@
     /// <summary>
     /// Set of keys used by the pending action parameter dictionary.
     /// </summary>
-    public enum InterfacePendingActionParamType { PreviousCell, CurrentCell, BuildingData, BuildingInstance }
+    public enum UIPendingActionParam { PreviousCell, CurrentCell, Building }
+
+    public enum CommonMaterialType { HolographicGreen, HolographicRed }
 }

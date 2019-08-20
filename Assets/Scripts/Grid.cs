@@ -17,9 +17,18 @@ namespace Assets.Scripts
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
         [SerializeField] bool _debugDrawOccupied;
 
-        GridCell[,] _cells;
-
         Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
+        Vector4 SelectedArea
+        {
+            get => _selectedArea;
+            set
+            {
+                _selectedArea = value;
+                _material.SetVector("_SelectedArea", _selectedArea);
+            }
+        }
+
+        GridCell[,] _cells;
         Material _material;
 
         #region Unity life-cycle methods
@@ -47,38 +56,15 @@ namespace Assets.Scripts
         /// Highlights the given cell.
         /// If the coordinates points at already selected cell then the cell is deselected.
         /// </summary>
-        public void SelectCell(int x, int y)
-        {
-            _selectedArea = x == _selectedArea.x && y == _selectedArea.y 
-                ? new Vector4(-1, -1, -1, -1) 
-                : new Vector4(x, y, x, y);
-
-            ApplyShaderParams();
-        }
+        public void SelectCell(int x, int y) => SelectCellInternal(x, y);
 
         /// <summary>
         /// Highlights the given cell.
         /// If the given cell is already selected then the cell is deselected.
         /// </summary>
-        public void SelectCell(ref GridCell cell)
-        {
-            _selectedArea = cell.X == _selectedArea.x && cell.Y == _selectedArea.y
-                ? new Vector4(-1, -1, -1, -1)
-                : new Vector4(cell.X, cell.Y, cell.X, cell.Y);
+        public void SelectCell(ref GridCell cell) => SelectCellInternal(cell.X, cell.Y);
 
-            ApplyShaderParams();
-        }
-
-        public void ResetSelection()
-        {
-            _selectedArea = new Vector4(-1, -1, -1, -1);
-            ApplyShaderParams();
-        }
-
-        void ApplyShaderParams()
-        {
-            _material.SetVector("_SelectedArea", _selectedArea);
-        }
+        public void ResetSelection() => SelectedArea = new Vector4(-1, -1, -1, -1);
 
         public bool GetCell(Ray ray, out GridCell cell)
         {
@@ -127,26 +113,12 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public Vector3 GetCellLeftBottomPosition(GridCell cell)
-        {
-            Vector3 pos = transform.position;
-            pos.x += cell.X * CELL_SIZE - _localOffsetX;
-            pos.z += cell.Y * CELL_SIZE - _localOffsetZ;
-
-            return pos;
-        }
+        public Vector3 GetCellLeftBottomPosition(ref GridCell cell) => GetCellLeftBottomPositionInternal(cell.X, cell.Y);
 
         /// <summary>
         /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public Vector3 GetCellLeftBottomPosition(int coordX, int coordY)
-        {
-            Vector3 pos = transform.position;
-            pos.x += coordX * CELL_SIZE - _localOffsetX;
-            pos.z += coordY * CELL_SIZE - _localOffsetZ;
-
-            return pos;
-        }
+        public Vector3 GetCellLeftBottomPosition(int x, int y) => GetCellLeftBottomPositionInternal(x, y);
 
         public Vector3 GetMiddlePoint(int coordX, int coordY, int sizeX, int sizeY)
         {
@@ -178,8 +150,8 @@ namespace Assets.Scripts
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        public void MarkAreaAsOccupied(int x, int y, int sizeX, int sizeY, Building building) 
-            => _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = building);
+        public void MarkAreaAsOccupied(int x, int y, Building building) 
+            => _cells.All(x, y, building.SizeX, building.SizeY, (ref GridCell cell) => cell.Building = building);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
@@ -190,10 +162,19 @@ namespace Assets.Scripts
         public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
             => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
 
-        public void MoveBuilding(ref GridCell currentCell, ref GridCell targetCell, ref BuildingData data, Building building)
+        /// <summary>
+        /// Moves building located in the current cell to target cell.
+        /// </summary>
+        public void MoveBuilding(ref GridCell from, ref GridCell to)
         {
-            MarkAreaAsFree(currentCell.X, currentCell.Y, data.SizeX, data.SizeY);
-            MarkAreaAsOccupied(targetCell.X, targetCell.Y, data.SizeX, data.SizeY, building);
+            Building b = from.Building;
+            b.PositionX = to.X;
+            b.PositionY = to.Y;
+            b.GameObject.transform.position = GetMiddlePoint(to.X, to.Y, b.SizeX, b.SizeY)
+               .ApplyPrefabPositionOffset(b.Type);
+
+            MarkAreaAsFree(from.X, from.Y, b.SizeX, b.SizeY);
+            MarkAreaAsOccupied(to.X, to.Y, b);
         }
 
         // Get cell returns cell from a given position
@@ -208,16 +189,30 @@ namespace Assets.Scripts
             return _cells[coordX, coordY];
         }
 
+        Vector3 GetCellLeftBottomPositionInternal(int x, int y)
+        {
+            Vector3 pos = transform.position;
+            pos.x += x * CELL_SIZE - _localOffsetX;
+            pos.z += y * CELL_SIZE - _localOffsetZ;
+
+            return pos;
+        }
+
+        void SelectCellInternal(int x, int y) 
+            => SelectedArea = x == SelectedArea.x && y == SelectedArea.y
+                ? new Vector4(-1, -1, -1, -1)
+                : new Vector4(x, y, x, y);
+
         void DebugDrawOccupied()
         {
             for (int x = 0; x < _gridSizeX; x++)
                 for (int y = 0; y < _gridSizeY; y++)
                 {
-                    GridCell cell = _cells[x, y];
+                    ref GridCell cell = ref _cells[x, y];
 
                     if (cell.IsOccupied)
                     {
-                        Vector3 leftBottomCorner = GetCellLeftBottomPosition(cell);
+                        Vector3 leftBottomCorner = GetCellLeftBottomPosition(ref cell);
                         Vector3 rightBottomCorner = new Vector3() { x = leftBottomCorner.x + CELL_SIZE, z = leftBottomCorner.z };
                         Vector3 leftTopCorner = new Vector3() { x = leftBottomCorner.x, z = leftBottomCorner.z + CELL_SIZE };
                         Vector3 rightTopCorner = new Vector3() { x = leftBottomCorner.x + CELL_SIZE, z = leftBottomCorner.z + CELL_SIZE };

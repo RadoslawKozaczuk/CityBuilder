@@ -5,7 +5,9 @@ namespace Assets.Scripts.DataSource
 {
     public static class BuildingDataSource
     {
-        public static BuildingData[] Buildings = new BuildingData[]
+        public static BuildingData Building(BuildingType type) => Buildings[(int)type];
+
+        public static BuildingData[] Buildings { get; } = new BuildingData[]
         {
             new BuildingData {
                 Name = "Residence",

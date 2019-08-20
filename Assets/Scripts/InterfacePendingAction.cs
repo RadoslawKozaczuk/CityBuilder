@@ -5,15 +5,15 @@ namespace Assets.Scripts
 {
     public class InterfacePendingAction
     {
-        public Dictionary<InterfacePendingActionParamType, object> Parameters = new Dictionary<InterfacePendingActionParamType, object>();
-        public Action<Dictionary<InterfacePendingActionParamType, object>> PendingAction;
+        public Dictionary<UIPendingActionParam, object> Parameters = new Dictionary<UIPendingActionParam, object>();
+        public Action<Dictionary<UIPendingActionParam, object>> PendingAction;
 
-        public void AddOrReplaceParameter(InterfacePendingActionParamType type, object value)
+        public void AddOrReplaceParameter(UIPendingActionParam type, object value)
         {
             if (Parameters.TryGetValue(type, out object _))
-                Parameters[InterfacePendingActionParamType.CurrentCell] = value;
+                Parameters[UIPendingActionParam.CurrentCell] = value;
             else
-                Parameters.Add(InterfacePendingActionParamType.CurrentCell, value);
+                Parameters.Add(UIPendingActionParam.CurrentCell, value);
         }
     }
 }
