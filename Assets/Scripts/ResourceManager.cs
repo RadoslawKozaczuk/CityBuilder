@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.DataModels;
+using Assets.Scripts.DataSource;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,17 +17,18 @@ namespace Assets.Scripts
     /// </summary>
     class ResourceManager : MonoBehaviour
     {
-        public static ResourceManager Instance { get; private set; }
+        static ResourceManager _instance;
 
         // subscribers
-        public event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
+        public static event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
-        public Sprite[] ResourceIcons;
+        [SerializeField] Sprite[] _resourceIcons;
 
         readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
+        readonly DummyDatabase _db = new DummyDatabase();
 
         #region Unity life-cycle methods
-        void Awake() => Instance = this;
+        void Awake() => _instance = this;
 
         void Start()
         {
@@ -41,38 +43,46 @@ namespace Assets.Scripts
         }
         #endregion
 
+        public static Sprite GetResourceIcon(ResourceType type) => _instance._resourceIcons[(int)type];
+        public static Sprite GetResourceIcon(int id) => _instance._resourceIcons[id];
+
         /// <summary>
         /// Adds resources and broadcasts the ResourceChanged event.
         /// </summary>
-        public void AddResources(List<Resource> resources)
+        public static void AddResources(List<Resource> resources)
         {
             var newResources = new List<Resource>(resources.Count);
 
             foreach (Resource resource in resources)
             {
                 AddResourceNoEventCall(resource);
-                newResources.Add(new Resource(resource.ResourceType, _playerResources[(int)resource.ResourceType]));
+                newResources.Add(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
             }
 
             ResourceChanged(newResources);
         }
 
         /// <summary>
-        /// Adds resource and broadcasts the resource changed event.
+        /// Adds resources and broadcasts the ResourceChanged event.
         /// </summary>
-        public void AddResource(Resource resource)
+        public static void AddResources(BuildingType type) => AddResources(_instance._db[type].Cost);
+
+        /// <summary>
+        /// Adds resource and broadcasts ResourceChanged event to all subscribers.
+        /// </summary>
+        public static void AddResource(Resource resource)
         {
             // update value
-            _playerResources[(int)resource.ResourceType] += resource.Quantity;
+            _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resource.ResourceType, _playerResources[(int)resource.ResourceType]));
+            ResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
         }
 
         /// <summary>
-        /// Removes resources and broadcasts the ResourceChanged event.
+        /// Removes resources and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public void RemoveResources(List<Resource> resources)
+        public static void RemoveResources(List<Resource> resources)
         {
             var newResources = new List<Resource>(resources.Count);
 
@@ -80,7 +90,7 @@ namespace Assets.Scripts
             {
                 // update value
                 RemoveResourceNoEventCall(resource);
-                newResources.Add(new Resource(resource.ResourceType, _playerResources[(int)resource.ResourceType]));
+                newResources.Add(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
             }
 
             // inform subscribers
@@ -88,27 +98,27 @@ namespace Assets.Scripts
         }
 
         /// <summary>
-        /// Removes resource and broadcasts the ResourceChanged event.
+        /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public void RemoveResource(Resource resource)
+        public static void RemoveResource(Resource resource)
         {
-            if (_playerResources[(int)resource.ResourceType] < resource.Quantity)
+            if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
             {
                 Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
                 return;
             }
 
             // update value
-            _playerResources[(int)resource.ResourceType] -= resource.Quantity;
+            _instance._playerResources[(int)resource.ResourceType] -= resource.Quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resource.ResourceType, _playerResources[(int)resource.ResourceType]));
+            ResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
         }
 
         /// <summary>
-        /// Removes resource and broadcasts the ResourceChanged event.
+        /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public void RemoveResource(Resource? resource)
+        public static void RemoveResource(Resource? resource)
         {
             if (!resource.HasValue)
                 throw new Exception("Resource should not be null in this context.");
@@ -116,23 +126,23 @@ namespace Assets.Scripts
             ResourceType resourceType = resource.Value.ResourceType;
             int quantity = resource.Value.Quantity;
 
-            if (_playerResources[(int)resourceType] < quantity)
+            if (_instance._playerResources[(int)resourceType] < quantity)
             {
                 Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
                 return;
             }
 
             // update value
-            _playerResources[(int)resourceType] -= quantity;
+            _instance._playerResources[(int)resourceType] -= quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resourceType, _playerResources[(int)resourceType]));
+            ResourceChanged(new Resource(resourceType, _instance._playerResources[(int)resourceType]));
         }
 
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public bool IsEnoughResources(List<Resource> resources)
+        public static bool IsEnoughResources(List<Resource> resources)
         {
             foreach (Resource resource in resources)
                 if (!IsEnoughResource(resource))
@@ -144,42 +154,45 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public bool IsEnoughResource(Resource resource) => _playerResources[(int)resource.ResourceType] >= resource.Quantity;
+        public static bool IsEnoughResources(BuildingType type) => IsEnoughResources(_instance._db[type].Cost);
 
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public bool IsEnoughResource(Resource? resource) => _playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity;
+        public static bool IsEnoughResource(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
+
+        /// <summary>
+        /// Returns true if the player has this amount of resources, false otherwise.
+        /// </summary>
+        public static bool IsEnoughResource(Resource? resource) => _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity;
 
         /// <summary>
         /// Adds resource without broadcasting the ResourceChanged event.
-        /// Only for internal usage.
         /// </summary>
-        void AddResourceNoEventCall(Resource resource) => _playerResources[(int)resource.ResourceType] += resource.Quantity;
+        static void AddResourceNoEventCall(Resource resource) => _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
 
         /// <summary>
         /// Removes resource without broadcasting the ResourceChanged event.
-        /// Only for internal usage.
         /// </summary>
-        void RemoveResourceNoEventCall(Resource resource)
+        static void RemoveResourceNoEventCall(Resource resource)
         {
-            if (_playerResources[(int)resource.ResourceType] < resource.Quantity)
+            if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
             {
                 Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
                 return;
             }
 
-            _playerResources[(int)resource.ResourceType] -= resource.Quantity;
+            _instance._playerResources[(int)resource.ResourceType] -= resource.Quantity;
         }
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        void ResourceChanged(List<Resource> resources) => ResourceChangedEventHandler?.Invoke(
-            this, 
+        static void ResourceChanged(List<Resource> resources) => ResourceChangedEventHandler?.Invoke(
+            _instance, 
             new ResourceChangedEventArgs { Resources = resources });
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        void ResourceChanged(Resource resource) => ResourceChangedEventHandler?.Invoke(
-            this, 
+        static void ResourceChanged(Resource resource) => ResourceChangedEventHandler?.Invoke(
+            _instance, 
             new ResourceChangedEventArgs { Resources = new List<Resource>(1) { resource } });
     }
 }

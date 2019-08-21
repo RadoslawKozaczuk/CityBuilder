@@ -93,6 +93,20 @@ namespace Assets.Scripts.DataModels
 
             InnerConstructorLogic(ref data, instance);
         }
+
+        public Building(BuildingType type, Vector2Int position)
+        {
+            BuildingData data = GameEngine.Instance.Db[type];
+            GameObject instance = GameObject.Instantiate(GameEngine.Instance.BuildingPrefabs[(int)type]);
+
+            _resource = data.ResourceProductionData.Resource;
+            _productionTime = data.ResourceProductionData.ProductionTime;
+            _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
+            _loopProduction = data.ResourceProductionData.Loop;
+            Position = position;
+
+            InnerConstructorLogic(ref data, instance);
+        }
         #endregion
 
         public void UseCommonMaterial(CommonMaterialType type) => _meshRenderer.material = MaterialManager.Instance.GetMaterial(type);
@@ -109,7 +123,7 @@ namespace Assets.Scripts.DataModels
 
         public void AddResource()
         {
-            ResourceManager.Instance.AddResource(_resource);
+            ResourceManager.AddResource(_resource);
             ProductionStarted = false;
 
             if (_loopProduction)

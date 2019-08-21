@@ -74,8 +74,8 @@ namespace Assets.Scripts
                     bool enoughSpace = GameMap.IsAreaFree(cell.X, cell.Y, b.SizeX, b.SizeY);
                     _pendingActionCanBeProcessed = enoughSpace;
 
-                    b.UseCommonMaterial(enoughSpace 
-                        ? CommonMaterialType.HolographicGreen 
+                    b.UseCommonMaterial(enoughSpace
+                        ? CommonMaterialType.HolographicGreen
                         : CommonMaterialType.HolographicRed);
 
                     b.GameObject.transform.position = targetPos;
@@ -144,7 +144,7 @@ namespace Assets.Scripts
         {
             // check if player has enough resources
             BuildingData data = Db[type];
-            if (!ResourceManager.Instance.IsEnoughResources(data.Cost))
+            if (!ResourceManager.IsEnoughResources(data.Cost))
                 return;
 
             var building = new Building(ref data);
@@ -153,6 +153,19 @@ namespace Assets.Scripts
             _interfacePendingAction = new InterfacePendingAction();
             _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, building);
             _interfacePendingAction.PendingAction = BuildingConstructionFollowUpAction;
+        }
+
+        public bool TryGibMeClickedCell(out Vector2Int cellCoord)
+        {
+            if (EventSystem.current.IsPointerOverGameObject()
+                    || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+            {
+                cellCoord = Vector2Int.zero;
+                return false;
+            }
+
+            cellCoord = new Vector2Int(cell.X, cell.Y);
+            return true;
         }
 
         GameObject InstanciateHologram(BuildingType type)
@@ -168,12 +181,12 @@ namespace Assets.Scripts
         void BuildingConstructionFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
         {
             parameters.TryGetValue(UIPendingActionParam.CurrentCell, out object obj);
-            GridCell cell = (GridCell)obj;
+            var cell = (GridCell)obj;
             parameters.TryGetValue(UIPendingActionParam.Building, out obj);
             var b = (Building)obj;
 
             // enough space
-            ResourceManager.Instance.RemoveResources(Db[b.Type].Cost);
+            ResourceManager.RemoveResources(Db[b.Type].Cost);
 
             b.GameObject.SetActive(true);
             b.Position = new Vector2Int(cell.X, cell.Y);
@@ -195,13 +208,13 @@ namespace Assets.Scripts
         void BuildingReallocationFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
         {
             parameters.TryGetValue(UIPendingActionParam.PreviousCell, out object obj);
-            GridCell currentCell = (GridCell)obj;
+            var currentCell = (GridCell)obj;
             parameters.TryGetValue(UIPendingActionParam.CurrentCell, out obj);
-            GridCell targetCell = (GridCell)obj;
+            var targetCell = (GridCell)obj;
             parameters.TryGetValue(UIPendingActionParam.Building, out obj);
-            Building hologram = (Building)obj;
+            var hologram = (Building)obj;
 
-            ResourceManager.Instance.RemoveResource(hologram.ReallocationCost);
+            ResourceManager.RemoveResource(hologram.ReallocationCost);
 
             hologram.GameObject.SetActive(false);
             Destroy(hologram.GameObject);

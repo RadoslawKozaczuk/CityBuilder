@@ -9,7 +9,7 @@ namespace Assets.Scripts.DataSource
 
         public DummyDatabase()
         {
-            // monostate pattern - many instances, one data
+            // monostate pattern - many instances, one data - this is to imitate real db
             if (_buildings != null)
                 return;
 

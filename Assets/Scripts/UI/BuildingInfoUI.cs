@@ -39,7 +39,7 @@ namespace Assets.Scripts.UI
 
             // check if player has enough resources to reallocate
             if(Building.AbleToReallocate)
-                _reallocateButton.interactable = ResourceManager.Instance.IsEnoughResource(Building.ReallocationCost);
+                _reallocateButton.interactable = ResourceManager.IsEnoughResource(Building.ReallocationCost);
         }
 
         public void Initialize() => _reallocateButton.gameObject.SetActive(Building.AbleToReallocate);

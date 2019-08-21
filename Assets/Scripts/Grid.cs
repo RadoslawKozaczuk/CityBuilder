@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.DataModels;
+using Assets.Scripts.DataSource;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -31,6 +32,7 @@ namespace Assets.Scripts
 
         GridCell[,] _cells;
         Material _material;
+        readonly DummyDatabase _db = new DummyDatabase();
 
         #region Unity life-cycle methods
         void Awake() => Instance = this;
@@ -145,6 +147,13 @@ namespace Assets.Scripts
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
+        /// </summary>
+        public bool IsAreaFree(Vector2Int location, BuildingType type) 
+            => !_cells.Any(location.x, location.y, _db[type].SizeX, _db[type].SizeY, (ref GridCell cell) => cell.IsOccupied);
+
+        /// <summary>
+        /// Checks if there is a free area of the given size under the given cell. 
+        /// X and y are at the bottom (perspective camera).
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
         public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude) 
@@ -179,6 +188,16 @@ namespace Assets.Scripts
             Building b = from.Building;
             b.Position = new Vector2Int(to.X, to.Y);
             b.GameObject.transform.position = GetMiddlePoint(to.X, to.Y, b.SizeX, b.SizeY)
+               .ApplyPrefabPositionOffset(b.Type);
+        }
+
+        /// <summary>
+        /// Moves building located in the current cell to target cell.
+        /// </summary>
+        public void MoveBuilding(Building b, Vector2Int to)
+        {
+            b.Position = to;
+            b.GameObject.transform.position = GetMiddlePoint(to.x, to.y, b.SizeX, b.SizeY)
                .ApplyPrefabPositionOffset(b.Type);
         }
 

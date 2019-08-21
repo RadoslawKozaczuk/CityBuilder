@@ -33,7 +33,7 @@ namespace Assets.Scripts.UI
                     t.localScale = new Vector3(0.6f, 0.6f);
 
                     resUI.Amount.text = r.Quantity.ToString();
-                    resUI.Image.sprite = ResourceManager.Instance.ResourceIcons[(int)r.ResourceType];
+                    resUI.Image.sprite = ResourceManager.GetResourceIcon(r.ResourceType);
                 }
             }
         }
