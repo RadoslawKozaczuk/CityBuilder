@@ -164,7 +164,8 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public static bool IsEnoughResource(Resource? resource) => _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity;
+        public static bool IsEnoughResource(Resource? resource) 
+            => resource.HasValue ? _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity : true;
 
         /// <summary>
         /// Adds resource without broadcasting the ResourceChanged event.

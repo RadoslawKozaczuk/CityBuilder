@@ -9,10 +9,10 @@ namespace Assets.Scripts
         /// Immediately returns true if the function result is true, otherwise false.
         /// This method does not check parameters validity.
         /// </summary>
-        public static bool Any(this GridCell[,] cells, int x, int y, Vector2Int areaSize, GameMap.FunctionRefStruct<GridCell> func)
+        public static bool Any(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.FunctionRefStruct<GridCell> func)
         {
-            for (int i = x; i < x + areaSize.x; i++)
-                for (int j = y; j < y + areaSize.y; j++)
+            for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
+                for (int j = leftBotCell.y; j < leftBotCell.y + areaSize.y; j++)
                     if (func(ref cells[i, j]))
                         return true;
 
@@ -23,10 +23,10 @@ namespace Assets.Scripts
         /// Executes the given action on every cell in the given area.
         /// This method does not check parameters validity.
         /// </summary>
-        public static void All(this GridCell[,] cells, int x, int y, Vector2Int areaSize, GameMap.ActionRefStruct<GridCell> action)
+        public static void All(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.ActionRefStruct<GridCell> action)
         {
-            for (int i = x; i < x + areaSize.x; i++)
-                for (int j = y; j < y + areaSize.y; j++)
+            for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
+                for (int j = leftBotCell.y; j < leftBotCell.y + areaSize.y; j++)
                     action(ref cells[i, j]);
         }
 

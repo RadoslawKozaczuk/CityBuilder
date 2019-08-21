@@ -27,7 +27,7 @@ namespace Assets.Scripts.UI
 
             CheckConditions();
 
-            _to = new Vector2Int(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y);
+            _to = GameEngine.Instance.CachedCurrentCell.Value.Coordinates;
             _building = new Building(_type, _to);
             _succeeded = true;
 
@@ -49,42 +49,24 @@ namespace Assets.Scripts.UI
         public bool CheckExecutionContext()
         {
             if(EventSystem.current.IsPointerOverGameObject())
-            {
-                // cursor is over the UI
-                return false;
-            }
+                return false; // cursor is over the UI
 
             if(!GameEngine.Instance.CachedCurrentCell.HasValue)
-            {
-                // cursor is not over the map
-                return false;
-            }
+                return false; // cursor is not over the map
 
-            // sprawdź czy area within the game map
-            if(GameMap.Instance.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y, _type))
-            {
-                // area is out of the map
-                return false;
-            }
+            if(GameMap.Instance.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
+                return false; // area is out of the map
 
             return true;
         }
 
         public bool CheckConditions()
         {
-            if (!GameMap.Instance.IsAreaFree(
-                new Vector2Int(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y), _type))
-            {
-                Debug.Log("Not enough space");
-                return false;
-            }
+            if (!GameMap.Instance.IsAreaFree(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
+                return false; // not enough space
 
-            // check money
             if (!ResourceManager.IsEnoughResources(_type))
-            {
-                Debug.Log("No resources");
-                return false;
-            }
+                return false; // not enough resources
 
             return true;
         }

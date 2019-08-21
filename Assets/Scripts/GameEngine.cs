@@ -15,7 +15,6 @@ namespace Assets.Scripts
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         public GameObject[] BuildingPrefabs;
 
-        InterfacePendingAction _interfacePendingAction;
         ICommand _pendingAction;
         GameObject _hologram;
         BuildingType _type;
@@ -34,7 +33,9 @@ namespace Assets.Scripts
         {
             // some often used values are cached for performance reasons
             CachedMousePositionRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            CachedCurrentCell = GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell) ? (GridCell?)cell : null;
+            CachedCurrentCell = EventSystem.current.IsPointerOverGameObject() || !GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell)
+                ? null
+                : (GridCell?)cell;
 
             ProcessInput();
             UpdateTasks();
@@ -64,8 +65,8 @@ namespace Assets.Scripts
 
                 bool conditionsMet = _pendingAction.CheckConditions();
 
-                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, new Vector2Int(3, 3))
-                    .ApplyPrefabPositionOffset(BuildingType.Residence);
+                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.Coordinates, Db[_type].Size)
+                    .ApplyPrefabPositionOffset(_type);
 
                 _hologram.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(conditionsMet
                     ? CommonMaterialType.HolographicGreen
@@ -102,6 +103,13 @@ namespace Assets.Scripts
                         _pendingAction = null;
                     }
                 }
+                else if(CachedCurrentCell.HasValue)
+                {
+                    if (CachedCurrentCell.Value.IsOccupied)
+                        ShowBuildingInfo(CachedCurrentCell.Value);
+                    else
+                        HideBuildingInfo();
+                }
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
@@ -109,8 +117,11 @@ namespace Assets.Scripts
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (_interfacePendingAction != null)
-                    ClearPendingActionParams();
+                if (_pendingAction != null)
+                {
+                    Destroy(_hologram);
+                    _pendingAction = null;
+                }
                 else
                     Application.Quit();
             }
@@ -121,28 +132,18 @@ namespace Assets.Scripts
         /// </summary>
         public void ScheduleTask(BuildingTask task) => _taskBuffer.Add(task);
 
-        public void BuildingConstructionAction(BuildingType type)
+        public void StartBuildingConstruction(BuildingType type)
         {
-            // check if player has enough resources
-            BuildingData data = Db[type];
-            if (!ResourceManager.IsEnoughResources(data.Cost))
-                return;
-
+            _type = type;
             _hologram = InstanciateHologram(type);
             _pendingAction = new ConstructBuildingCommand(type);
         }
 
-        public bool TryGibMeClickedCell(out Vector2Int cellCoord)
+        public void StartBuildingReallocation(Building b)
         {
-            if (EventSystem.current.IsPointerOverGameObject()
-                || !GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell))
-            {
-                cellCoord = Vector2Int.zero;
-                return false;
-            }
-
-            cellCoord = new Vector2Int(cell.X, cell.Y);
-            return true;
+            _type = b.Type;
+            _hologram = InstanciateHologram(b.Type);
+            _pendingAction = new MoveBuildingCommand(b);
         }
 
         GameObject InstanciateHologram(BuildingType type)
@@ -155,55 +156,17 @@ namespace Assets.Scripts
             return instance;
         }
 
-        public void BuildingReallocationAction(Building b)
-        {
-            BuildingData data = Db[b.Type];
-            //var hologram = new Building(ref data);
-            //hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
-
-            _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.Instance.GetCell(b.Position));
-            //_interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
-            _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
-        }
-
-        void BuildingReallocationFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
-        {
-            parameters.TryGetValue(UIPendingActionParam.PreviousCell, out object obj);
-            var currentCell = (GridCell)obj;
-            parameters.TryGetValue(UIPendingActionParam.CurrentCell, out obj);
-            var targetCell = (GridCell)obj;
-            parameters.TryGetValue(UIPendingActionParam.Building, out obj);
-            var hologram = (Building)obj;
-
-            ResourceManager.RemoveResource(hologram.ReallocationCost);
-
-            hologram.GameObject.SetActive(false);
-            Destroy(hologram.GameObject);
-
-            GameMap.Instance.MoveBuilding(ref currentCell, ref targetCell);
-        }
-
         void ShowBuildingInfo(GridCell cell)
         {
+            _buildingInfoUI.Building = cell.Building;
             _buildingInfoUI.gameObject.SetActive(true);
             _buildingInfoUI.gameObject.transform.position = Input.mousePosition;
-
-            Building b = cell.Building;
-            _buildingInfoUI.Building = b;
-
-            _buildingInfoUI.Initialize();
         }
 
-        void HideBuildingInfo() => _buildingInfoUI.gameObject.SetActive(false);
-
-        void ClearPendingActionParams()
+        void HideBuildingInfo()
         {
-            if (_interfacePendingAction.Parameters.TryGetValue(UIPendingActionParam.Building, out object obj))
-                Destroy(((Building)obj).GameObject);
-
-            _interfacePendingAction.Parameters.Clear();
-            _interfacePendingAction = null;
+            _buildingInfoUI.Building = null;
+            _buildingInfoUI.gameObject.SetActive(false);
         }
     }
 }

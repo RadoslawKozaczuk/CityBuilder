@@ -1,6 +1,7 @@
 ﻿using Assets.Scripts.DataModels;
 using Assets.Scripts.Interfaces;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.UI
 {
@@ -14,10 +15,11 @@ namespace Assets.Scripts.UI
         Vector2Int _to;
         bool _succeeded;
 
-        public MoveBuildingCommand(Building b, Vector2Int to)
+        public MoveBuildingCommand(Building b)
         {
+            _type = b.Type;
             _building = b;
-            _to = to;
+            _from = b.Position;
         }
 
         public bool IsSucceeded() => _succeeded;
@@ -29,7 +31,7 @@ namespace Assets.Scripts.UI
 
             CheckConditions();
 
-            _from = _building.Position;
+            _to = GameEngine.Instance.CachedCurrentCell.Value.Coordinates;
             GameMap.Instance.MoveBuilding(_building, _to);
 
             _succeeded = true;
@@ -48,11 +50,23 @@ namespace Assets.Scripts.UI
             return true;
         }
 
-        public bool CheckExecutionContext() => throw new System.NotImplementedException();
+        public bool CheckExecutionContext()
+        {
+            if (EventSystem.current.IsPointerOverGameObject())
+                return false; // cursor is over the UI
+
+            if (!GameEngine.Instance.CachedCurrentCell.HasValue)
+                return false; // cursor is not over the map
+
+            if (GameMap.Instance.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
+                return false; // area is out of the map
+
+            return true;
+        }
 
         public bool CheckConditions()
         {
-            if (!GameEngine.Instance.TryGibMeClickedCell(out _to))
+            if (!GameMap.Instance.IsAreaFree(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
             {
                 Debug.Log("Location invalid");
                 return false;

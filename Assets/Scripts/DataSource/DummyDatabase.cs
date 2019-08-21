@@ -66,7 +66,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Bench",
-                    Size = new Vector2Int(1, 2),
+                    Size = new Vector2Int(1, 1),
                     Cost = new List<Resource>() {
                         new Resource(ResourceType.Gold, 50),
                         new Resource(ResourceType.Wood, 200) },

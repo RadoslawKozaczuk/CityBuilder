@@ -22,7 +22,7 @@ namespace Assets.Scripts.UI
                 BuildingButtonUI buttonUI = Instantiate(BuildingElementPrefab, Resources).GetComponent<BuildingButtonUI>();
                 buttonUI.Title.text = b.Name;
                 buttonUI.BuildingType = b.Type;
-                buttonUI.GetComponent<Button>().onClick.AddListener(() => GameEngine.BuildingConstructionAction(buttonUI.BuildingType));
+                buttonUI.GetComponent<Button>().onClick.AddListener(() => GameEngine.StartBuildingConstruction(buttonUI.BuildingType));
 
                 foreach (Resource r in b.Cost)
                 {

@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.DataModels;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -7,7 +8,7 @@ namespace Assets.Scripts
         public bool IsOccupied { get => Building != null; }
 
         public Building Building;
-        public int X, Y;
+        public Vector2Int Coordinates;
     }
 }
 

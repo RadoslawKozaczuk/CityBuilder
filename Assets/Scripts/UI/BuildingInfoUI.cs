@@ -14,9 +14,23 @@ namespace Assets.Scripts.UI
         [SerializeField] TextMeshProUGUI _buildingName;
         [SerializeField] Slider _slider;
         [SerializeField] Image _fill;
-        [SerializeField] GameEngine _gameEngine;
 
-        void Start() => _reallocateButton.onClick.AddListener(ReallocateBuilding);
+        void OnDisable() => ResourceManager.ResourceChangedEventHandler -= ResourceUpdate; // unsubscribe from ResourceManager
+
+        void OnEnable()
+        {
+            ResourceManager.ResourceChangedEventHandler += ResourceUpdate; // subscribe to ResourceManager
+
+            _reallocateButton.gameObject.SetActive(Building.AbleToReallocate);
+
+            _reallocateButton.onClick.RemoveAllListeners();
+            _reallocateButton.onClick.AddListener(() =>
+            {
+                GameEngine.Instance.StartBuildingReallocation(Building);
+                gameObject.SetActive(false);
+                Building = null;
+            });
+        }
 
         void Update()
         {
@@ -36,13 +50,7 @@ namespace Assets.Scripts.UI
                 : "Building " + Building.Name;
 
             _startProductionButton.interactable = Building.Constructed && !Building.ProductionStarted;
-
-            // check if player has enough resources to reallocate
-            if(Building.AbleToReallocate)
-                _reallocateButton.interactable = ResourceManager.IsEnoughResource(Building.ReallocationCost);
         }
-
-        public void Initialize() => _reallocateButton.gameObject.SetActive(Building.AbleToReallocate);
 
         public void StartProduction()
         {
@@ -50,10 +58,9 @@ namespace Assets.Scripts.UI
             _startProductionButton.interactable = false;
         }
 
-        void ReallocateBuilding()
-        {
-            _gameEngine.BuildingReallocationAction(Building);
-            gameObject.SetActive(false);
-        }
+        void ResourceUpdate(object sender, ResourceChangedEventArgs eventArgs) 
+            => _reallocateButton.interactable = Building.AbleToReallocate
+                ? ResourceManager.IsEnoughResource(Building.ReallocationCost)
+                : true;
     }
 }
