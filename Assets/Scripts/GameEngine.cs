@@ -20,7 +20,7 @@ namespace Assets.Scripts
         InterfacePendingAction _interfacePendingAction;
         ICommand _pendingAction;
         GameObject _hologram;
-        BuildingType _typeTroll;
+        BuildingType _type;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
@@ -66,7 +66,7 @@ namespace Assets.Scripts
 
                 bool conditionsMet = _pendingAction.CheckConditions();
 
-                Vector3 targetPos = GameMap.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, 3, 3)
+                Vector3 targetPos = GameMap.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, new Vector2Int(3, 3))
                     .ApplyPrefabPositionOffset(BuildingType.Residence);
 
                 _hologram.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(conditionsMet
@@ -157,30 +157,15 @@ namespace Assets.Scripts
             return instance;
         }
 
-        void BuildingConstructionFollowUpAction(Dictionary<UIPendingActionParam, object> parameters)
-        {
-            parameters.TryGetValue(UIPendingActionParam.CurrentCell, out object obj);
-            var cell = (GridCell)obj;
-            parameters.TryGetValue(UIPendingActionParam.Building, out obj);
-            var b = (Building)obj;
-
-            // enough space
-            ResourceManager.RemoveResources(Db[b.Type].Cost);
-
-            b.GameObject.SetActive(true);
-            b.Position = new Vector2Int(cell.X, cell.Y);
-            b.UseDefaultMaterial();
-        }
-
         public void BuildingReallocationAction(Building b)
         {
             BuildingData data = Db[b.Type];
-            var hologram = new Building(ref data);
-            hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
+            //var hologram = new Building(ref data);
+            //hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
             _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.Position));
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
+            //_interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
             _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
         }
 

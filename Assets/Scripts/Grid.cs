@@ -125,29 +125,28 @@ namespace Assets.Scripts
         /// </summary>
         public Vector3 GetCellLeftBottomPosition(int x, int y) => GetCellLeftBottomPositionInternal(x, y);
 
-        public Vector3 GetMiddlePoint(int coordX, int coordY, int sizeX, int sizeY)
+        public Vector3 GetMiddlePoint(int coordX, int coordY, Vector2Int areaSize)
         {
-            if (sizeX < 1 || sizeY < 1)
+            if (areaSize.x < 1 || areaSize.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
 
             Vector3 leftBot = GetCellLeftBottomPosition(coordX, coordY);
-            leftBot.x += CELL_SIZE * sizeX / 2;
-            leftBot.z += CELL_SIZE * sizeY / 2;
+            leftBot.x += CELL_SIZE * areaSize.x / 2;
+            leftBot.z += CELL_SIZE * areaSize.y / 2;
 
             return leftBot;
         }
 
         public Vector3 GetMiddlePoint(Vector2Int leftBotCoord, BuildingType type)
         {
-            int sizeX = _db[type].SizeX;
-            int sizeY = _db[type].SizeY;
+            Vector2Int size = _db[type].Size;
 
-            if (sizeX < 1 || sizeY < 1)
+            if (size.x < 1 || size.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
 
             Vector3 leftBot = GetCellLeftBottomPosition(leftBotCoord.x, leftBotCoord.y);
-            leftBot.x += CELL_SIZE * sizeX / 2;
-            leftBot.z += CELL_SIZE * sizeY / 2;
+            leftBot.x += CELL_SIZE * size.x / 2;
+            leftBot.z += CELL_SIZE * size.y / 2;
 
             return leftBot;
         }
@@ -156,47 +155,47 @@ namespace Assets.Scripts
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// </summary>
-        public bool IsAreaFree(int x, int y, int sizeX, int sizeY) 
-            => !_cells.Any(x, y, sizeX, sizeY, (ref GridCell cell) => cell.IsOccupied);
+        public bool IsAreaFree(int x, int y, Vector2Int size) 
+            => !_cells.Any(x, y, size, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// </summary>
         public bool IsAreaFree(Vector2Int location, BuildingType type) 
-            => !_cells.Any(location.x, location.y, _db[type].SizeX, _db[type].SizeY, (ref GridCell cell) => cell.IsOccupied);
+            => !_cells.Any(location.x, location.y, _db[type].Size, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
-        public bool IsAreaFree(int x, int y, int sizeX, int sizeY, Building exclude) 
-            => !_cells.Any(x, y, sizeX, sizeY, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
+        public bool IsAreaFree(int x, int y, Vector2Int size, Building exclude) 
+            => !_cells.Any(x, y, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         public void MarkAreaAsOccupied(Building b) 
-            => _cells.All(b.Position.x, b.Position.y, b.SizeX, b.SizeY, (ref GridCell c) => c.Building = b);
+            => _cells.All(b.Position.x, b.Position.y, _db[b.Type].Size, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        public void MarkAreaAsFree(int x, int y, int sizeX, int sizeY) 
-            => _cells.All(x, y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
+        public void MarkAreaAsFree(int x, int y, Vector2Int size) 
+            => _cells.All(x, y, size, (ref GridCell cell) => cell.Building = null);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        public void MarkAreaAsFree(Vector2Int position, int sizeX, int sizeY)
-            => _cells.All(position.x, position.y, sizeX, sizeY, (ref GridCell cell) => cell.Building = null);
+        public void MarkAreaAsFree(Vector2Int position, Vector2Int size)
+            => _cells.All(position.x, position.y, size, (ref GridCell cell) => cell.Building = null);
 
-        public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
-            => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
+        public bool IsAreaOutOfBounds(int x, int y, Vector2Int size) 
+            => x < 0 || y < 0 || x + size.x > _gridSizeX || y + size.y > _gridSizeY;
 
         public bool IsAreaOutOfBounds(int x, int y, BuildingType type)
-            => x < 0 || y < 0 || x + _db[type].SizeX > _gridSizeX || y + _db[type].SizeY > _gridSizeY;
+            => x < 0 || y < 0 || x + _db[type].Size.x > _gridSizeX || y + _db[type].Size.y > _gridSizeY;
 
         /// <summary>
         /// Moves building located in the current cell to target cell.
@@ -205,7 +204,7 @@ namespace Assets.Scripts
         {
             Building b = from.Building;
             b.Position = new Vector2Int(to.X, to.Y);
-            b.GameObject.transform.position = GetMiddlePoint(to.X, to.Y, b.SizeX, b.SizeY)
+            b.GameObject.transform.position = GetMiddlePoint(to.X, to.Y, b.Size)
                .ApplyPrefabPositionOffset(b.Type);
         }
 
@@ -215,7 +214,7 @@ namespace Assets.Scripts
         public void MoveBuilding(Building b, Vector2Int to)
         {
             b.Position = to;
-            b.GameObject.transform.position = GetMiddlePoint(to.x, to.y, b.SizeX, b.SizeY)
+            b.GameObject.transform.position = GetMiddlePoint(to.x, to.y, b.Size)
                .ApplyPrefabPositionOffset(b.Type);
         }
 

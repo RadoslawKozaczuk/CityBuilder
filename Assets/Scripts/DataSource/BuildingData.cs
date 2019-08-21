@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.DataModels;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.DataSource
 {
@@ -7,7 +8,7 @@ namespace Assets.Scripts.DataSource
     public struct BuildingData
     {
         public string Name;
-        public int SizeX, SizeY;
+        public Vector2Int Size;
         public List<Resource> Cost;
         public BuildingType Type;
         public ResourceProductionData ResourceProductionData;

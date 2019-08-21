@@ -9,10 +9,10 @@ namespace Assets.Scripts
         /// Immediately returns true if the function result is true, otherwise false.
         /// This method does not check parameters validity.
         /// </summary>
-        public static bool Any(this GridCell[,] cells, int x, int y, int sizeX, int sizeY, Grid.FunctionRefStruct<GridCell> func)
+        public static bool Any(this GridCell[,] cells, int x, int y, Vector2Int areaSize, Grid.FunctionRefStruct<GridCell> func)
         {
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j < y + sizeY; j++)
+            for (int i = x; i < x + areaSize.x; i++)
+                for (int j = y; j < y + areaSize.y; j++)
                     if (func(ref cells[i, j]))
                         return true;
 
@@ -23,10 +23,10 @@ namespace Assets.Scripts
         /// Executes the given action on every cell in the given area.
         /// This method does not check parameters validity.
         /// </summary>
-        public static void All(this GridCell[,] cells, int x, int y, int sizeX, int sizeY, Grid.ActionRefStruct<GridCell> action)
+        public static void All(this GridCell[,] cells, int x, int y, Vector2Int areaSize, Grid.ActionRefStruct<GridCell> action)
         {
-            for (int i = x; i < x + sizeX; i++)
-                for (int j = y; j < y + sizeY; j++)
+            for (int i = x; i < x + areaSize.x; i++)
+                for (int j = y; j < y + areaSize.y; j++)
                     action(ref cells[i, j]);
         }
 

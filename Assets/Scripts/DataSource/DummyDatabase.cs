@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.DataModels;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.DataSource
 {
@@ -18,7 +19,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Residence",
-                    SizeX = 3, SizeY = 3,
+                    Size = new Vector2Int(3, 3),
                     Cost = new List<Resource> { new Resource(ResourceType.Gold, 100) },
                     Type = BuildingType.Residence,
                     ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Gold, 50), 10f, true, true),
@@ -29,8 +30,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Wood production building",
-                    SizeX = 3,
-                    SizeY = 2,
+                    Size = new Vector2Int(3, 2),
                     Cost = new List<Resource> { new Resource(ResourceType.Gold, 150) },
                     Type = BuildingType.WoodProduction,
                     ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Wood, 50), 10f, false, false),
@@ -41,8 +41,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Steel production building",
-                    SizeX = 2,
-                    SizeY = 2,
+                    Size = new Vector2Int(2, 2),
                     Cost = new List<Resource>() {
                         new Resource(ResourceType.Gold, 150),
                         new Resource(ResourceType.Wood, 100) },
@@ -55,8 +54,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Tree",
-                    SizeX = 1,
-                    SizeY = 1,
+                    Size = new Vector2Int(1, 1),
                     Cost = new List<Resource>() {
                         new Resource(ResourceType.Gold, 150),
                         new Resource(ResourceType.Iron, 50) },
@@ -68,8 +66,7 @@ namespace Assets.Scripts.DataSource
                 new BuildingData
                 {
                     Name = "Bench",
-                    SizeX = 1,
-                    SizeY = 1,
+                    Size = new Vector2Int(1, 2),
                     Cost = new List<Resource>() {
                         new Resource(ResourceType.Gold, 50),
                         new Resource(ResourceType.Wood, 200) },
