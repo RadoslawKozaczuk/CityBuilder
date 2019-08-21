@@ -15,7 +15,7 @@ namespace Assets.Scripts
         public void SpawnRandomExplosion()
         {
             // instantiate random explosion
-            GameObject explosion = Instantiate(_explosionPrefab) as GameObject;
+            GameObject explosion = Instantiate(_explosionPrefab);
             explosion.transform.position = new Vector3(
                 Random.Range(0f, 80f), // make proportional to grid
                 Random.Range(5f, 10f),

@@ -26,7 +26,7 @@ namespace Assets.Scripts
         [SerializeField] Sprite[] _resourceIcons;
 
         readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
-        readonly DummyDatabase _db = new DummyDatabase();
+        readonly AbstractDatabase _db = new DummyDatabase();
 
         #region Unity life-cycle methods
         void Awake() => _instance = this;

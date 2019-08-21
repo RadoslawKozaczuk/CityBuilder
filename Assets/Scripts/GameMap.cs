@@ -31,7 +31,7 @@ namespace Assets.Scripts
         [Range(1, 100)] [SerializeField] int _gridSizeY = 12;
         [SerializeField] bool _debugDrawOccupied;
 
-        readonly DummyDatabase _db = new DummyDatabase();
+        readonly AbstractDatabase _db = new DummyDatabase();
 
         GridCell[,] _cells;
         Material _material;

@@ -6,7 +6,7 @@ namespace Assets.Scripts
     {
         const float LIFE_TIME = 10f;
 
-        public Material Material;
+        [HideInInspector] public Material Material;
 
         [SerializeField] ParticleSystem _smoke;
         [SerializeField] Light _pointLight;

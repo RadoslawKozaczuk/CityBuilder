@@ -13,18 +13,18 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
-        [SerializeField] BuildingInfoUI _buildingInfoUI;
         public GameObject[] BuildingPrefabs;
+        public readonly AbstractDatabase Db = new DummyDatabase();
+        public GridCell? CellUnderCursorCached;
+
+        [SerializeField] BuildingInfoUI _buildingInfoUI;
+
+        readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
+        readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
 
         ICommand _pendingAction;
         GameObject _hologram;
         BuildingType _type;
-
-        readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
-        readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
-        public readonly DummyDatabase Db = new DummyDatabase();
-
-        public GridCell? CellUnderCursorCached;
 
         #region Unity life-cycle methods
         void Awake() => Instance = this;

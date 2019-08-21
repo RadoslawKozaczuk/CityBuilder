@@ -67,16 +67,10 @@ namespace Assets.Scripts.UI
         public bool CheckConditions()
         {
             if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
-            {
-                Debug.Log("Location invalid");
-                return false;
-            }
+                return false; // not enough space
 
             if (!ResourceManager.IsEnoughResources(_type))
-            {
-                Debug.Log("No resources");
-                return false;
-            }
+                return false; // not enough resources
 
             return true;
         }
