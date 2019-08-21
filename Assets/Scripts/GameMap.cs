@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class Grid : MonoBehaviour
+    public class GameMap : MonoBehaviour
     {
         // to circumnavigate the regular anonymous method declaration limitation
         public delegate void ActionRefStruct<T1>(ref GridCell cell);
@@ -12,7 +12,7 @@ namespace Assets.Scripts
 
         const float CELL_SIZE = 10f;
 
-        public static Grid Instance { get; private set; }
+        public static GameMap Instance { get; private set; }
 
         // to allow designers to put the plane in an arbitrary position in the world space
         [SerializeField] float _localOffsetX, _localOffsetZ;

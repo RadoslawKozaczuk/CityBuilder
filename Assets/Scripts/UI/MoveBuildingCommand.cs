@@ -30,7 +30,7 @@ namespace Assets.Scripts.UI
             CheckConditions();
 
             _from = _building.Position;
-            GameEngine.Instance.GameMap.MoveBuilding(_building, _to);
+            GameMap.Instance.MoveBuilding(_building, _to);
 
             _succeeded = true;
             return true;

@@ -17,11 +17,11 @@ namespace Assets.Scripts.DataModels
             get => _position;
             set
             {
-                Grid.Instance.MarkAreaAsFree(_position, Size);
+                GameMap.Instance.MarkAreaAsFree(_position, Size);
 
                 _position = value;
-                Grid.Instance.MarkAreaAsOccupied(this);
-                GameObject.transform.position = GameEngine.Instance.GameMap.GetMiddlePoint(_position, Type)
+                GameMap.Instance.MarkAreaAsOccupied(this);
+                GameObject.transform.position = GameMap.Instance.GetMiddlePoint(_position, Type)
                     .ApplyPrefabPositionOffset(Type);
             }
         }
@@ -42,9 +42,6 @@ namespace Assets.Scripts.DataModels
         readonly bool _imidiatelyStartProduction;
         readonly bool _loopProduction;
 
-        MeshRenderer _meshRenderer;
-        Material _defaultMaterial;
-
         public Building(BuildingType type, Vector2Int position)
         {
             Type = type;
@@ -61,9 +58,6 @@ namespace Assets.Scripts.DataModels
             Name = data.Name;
             AbleToReallocate = data.AbleToReallocate;
             ReallocationCost = data.ReallocationCost;
-
-            _meshRenderer = GameObject.GetComponent<MeshRenderer>();
-            _defaultMaterial = _meshRenderer.material;
 
             // schedule construction task
             var task = new BuildingTask(ConstructionTime, FinishConstruction);

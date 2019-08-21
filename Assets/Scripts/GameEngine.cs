@@ -12,8 +12,6 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
-        public Grid GameMap;
-
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         public GameObject[] BuildingPrefabs;
 
@@ -34,9 +32,9 @@ namespace Assets.Scripts
 
         void Update()
         {
-            // update cached values - some often used values are cached for performance resons
+            // some often used values are cached for performance reasons
             CachedMousePositionRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            CachedCurrentCell = GameMap.GetCell(CachedMousePositionRay, out GridCell cell) ? (GridCell?)cell : null;
+            CachedCurrentCell = GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell) ? (GridCell?)cell : null;
 
             ProcessInput();
             UpdateTasks();
@@ -66,7 +64,7 @@ namespace Assets.Scripts
 
                 bool conditionsMet = _pendingAction.CheckConditions();
 
-                Vector3 targetPos = GameMap.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, new Vector2Int(3, 3))
+                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, new Vector2Int(3, 3))
                     .ApplyPrefabPositionOffset(BuildingType.Residence);
 
                 _hologram.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(conditionsMet
@@ -137,7 +135,7 @@ namespace Assets.Scripts
         public bool TryGibMeClickedCell(out Vector2Int cellCoord)
         {
             if (EventSystem.current.IsPointerOverGameObject()
-                || !GameMap.GetCell(CachedMousePositionRay, out GridCell cell))
+                || !GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell))
             {
                 cellCoord = Vector2Int.zero;
                 return false;
@@ -164,7 +162,7 @@ namespace Assets.Scripts
             //hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.Position));
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.Instance.GetCell(b.Position));
             //_interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
             _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
         }
@@ -183,7 +181,7 @@ namespace Assets.Scripts
             hologram.GameObject.SetActive(false);
             Destroy(hologram.GameObject);
 
-            GameMap.MoveBuilding(ref currentCell, ref targetCell);
+            GameMap.Instance.MoveBuilding(ref currentCell, ref targetCell);
         }
 
         void ShowBuildingInfo(GridCell cell)

@@ -61,7 +61,7 @@ namespace Assets.Scripts.UI
             }
 
             // sprawdź czy area within the game map
-            if(GameEngine.Instance.GameMap.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y, _type))
+            if(GameMap.Instance.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y, _type))
             {
                 // area is out of the map
                 return false;
@@ -72,7 +72,7 @@ namespace Assets.Scripts.UI
 
         public bool CheckConditions()
         {
-            if (!GameEngine.Instance.GameMap.IsAreaFree(
+            if (!GameMap.Instance.IsAreaFree(
                 new Vector2Int(GameEngine.Instance.CachedCurrentCell.Value.X, GameEngine.Instance.CachedCurrentCell.Value.Y), _type))
             {
                 Debug.Log("Not enough space");
