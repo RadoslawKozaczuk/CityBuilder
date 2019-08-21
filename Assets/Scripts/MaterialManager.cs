@@ -2,6 +2,7 @@
 
 namespace Assets.Scripts
 {
+    [DisallowMultipleComponent]
     class MaterialManager : MonoBehaviour
     {
         static MaterialManager _instance;

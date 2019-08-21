@@ -355,4 +355,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Title: {fileID: 5468080333639580721}
   Resources: {fileID: 3386108259731025183}
+  BuildButton: {fileID: 3914605173766743579}
   BuildingType: 0

@@ -2,6 +2,7 @@
 
 namespace Assets.Scripts
 {
+    [DisallowMultipleComponent]
     class ExplosionManager : MonoBehaviour
     {
         public static ExplosionManager Instance { get; private set; }

@@ -31,9 +31,9 @@ namespace Assets.Scripts.UI
 
             CheckConditions();
 
-            _to = GameEngine.Instance.CachedCurrentCell.Value.Coordinates;
-            GameMap.Instance.MoveBuilding(_building, _to);
-
+            _to = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
+            GameMap.MoveBuilding(_building, _to);
+            ResourceManager.RemoveResources(GameEngine.Instance.Db[_type].ReallocationCost);
             _succeeded = true;
             return true;
         }
@@ -55,10 +55,10 @@ namespace Assets.Scripts.UI
             if (EventSystem.current.IsPointerOverGameObject())
                 return false; // cursor is over the UI
 
-            if (!GameEngine.Instance.CachedCurrentCell.HasValue)
+            if (!GameEngine.Instance.CellUnderCursorCached.HasValue)
                 return false; // cursor is not over the map
 
-            if (GameMap.Instance.IsAreaOutOfBounds(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
+            if (GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
                 return false; // area is out of the map
 
             return true;
@@ -66,7 +66,7 @@ namespace Assets.Scripts.UI
 
         public bool CheckConditions()
         {
-            if (!GameMap.Instance.IsAreaFree(GameEngine.Instance.CachedCurrentCell.Value.Coordinates, _type))
+            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
             {
                 Debug.Log("Location invalid");
                 return false;

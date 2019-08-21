@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Assets.Scripts.UI
 {
@@ -7,6 +8,7 @@ namespace Assets.Scripts.UI
     {
         public TextMeshProUGUI Title;
         public Transform Resources;
-        public BuildingType BuildingType;
+        public Button BuildButton;
+        [HideInInspector] public BuildingType BuildingType;
     }
 }

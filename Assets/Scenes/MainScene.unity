@@ -179,7 +179,6 @@ MonoBehaviour:
   _buildingName: {fileID: 915533336}
   _slider: {fileID: 587251572}
   _fill: {fileID: 818140507}
-  _gameEngine: {fileID: 1685839696}
 --- !u!114 &144037855
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,8 +406,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e8227758a8d49f42956f57f1a89e354, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _localOffsetX: 0
-  _localOffsetZ: 0
   _gridSizeX: 16
   _gridSizeY: 16
   _debugDrawOccupied: 1
@@ -1880,11 +1877,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Resources: {fileID: 1455072502}
-  BuildingElementPrefab: {fileID: 8619073393804147819, guid: 25e27594b4be89442a78233b98ea79d0,
+  _buildingElementPrefab: {fileID: 8619073393804147819, guid: 25e27594b4be89442a78233b98ea79d0,
     type: 3}
-  ResourceElementPrefab: {fileID: 2262382387427899780, guid: 83a6d7711d4c2374d8577cc9ff227b87,
+  _resourceElementPrefab: {fileID: 2262382387427899780, guid: 83a6d7711d4c2374d8577cc9ff227b87,
     type: 3}
-  GameEngine: {fileID: 1685839696}
 --- !u!114 &1455072504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2350,7 +2346,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d52836d269ef9114fb4759ab3f74f9f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameMap: {fileID: 286872029}
   _buildingInfoUI: {fileID: 144037854}
   BuildingPrefabs:
   - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}

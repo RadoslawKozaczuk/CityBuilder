@@ -8,6 +8,7 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Scripts
 {
+    [DisallowMultipleComponent]
     public class GameEngine : MonoBehaviour
     {
         public static GameEngine Instance { get; private set; }
@@ -23,8 +24,7 @@ namespace Assets.Scripts
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
         public readonly DummyDatabase Db = new DummyDatabase();
 
-        public Ray CachedMousePositionRay;
-        public GridCell? CachedCurrentCell;
+        public GridCell? CellUnderCursorCached;
 
         #region Unity life-cycle methods
         void Awake() => Instance = this;
@@ -32,8 +32,8 @@ namespace Assets.Scripts
         void Update()
         {
             // some often used values are cached for performance reasons
-            CachedMousePositionRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            CachedCurrentCell = EventSystem.current.IsPointerOverGameObject() || !GameMap.Instance.GetCell(CachedMousePositionRay, out GridCell cell)
+            CellUnderCursorCached = EventSystem.current.IsPointerOverGameObject() 
+                || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell)
                 ? null
                 : (GridCell?)cell;
 
@@ -63,14 +63,12 @@ namespace Assets.Scripts
 
                 _hologram.SetActive(true);
 
-                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.Coordinates, _type)
-                    .ApplyPrefabPositionOffset(_type);
-
                 _hologram.GetComponent<MeshRenderer>().material = MaterialManager.GetMaterial(_pendingAction.CheckConditions()
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
-                _hologram.transform.position = targetPos;
+                _hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.Value.Coordinates, _type)
+                    .ApplyPrefabPositionOffset(_type);
             }
         }
 
@@ -101,10 +99,10 @@ namespace Assets.Scripts
                         _pendingAction = null;
                     }
                 }
-                else if(CachedCurrentCell.HasValue)
+                else if(CellUnderCursorCached.HasValue)
                 {
-                    if (CachedCurrentCell.Value.IsOccupied)
-                        ShowBuildingInfo(CachedCurrentCell.Value);
+                    if (CellUnderCursorCached.Value.IsOccupied)
+                        ShowBuildingInfo(CellUnderCursorCached.Value);
                     else
                         HideBuildingInfo();
                 }

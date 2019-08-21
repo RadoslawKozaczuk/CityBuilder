@@ -15,6 +15,7 @@ namespace Assets.Scripts
     /// ResourceManager is a singleton class responsible for storing resources.
     /// Subscribe to ResourceChangedEventHandler to be informed about any changes.
     /// </summary>
+    [DisallowMultipleComponent]
     class ResourceManager : MonoBehaviour
     {
         static ResourceManager _instance;
@@ -59,7 +60,7 @@ namespace Assets.Scripts
                 newResources.Add(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
             }
 
-            ResourceChanged(newResources);
+            BroadcastResourceChanged(newResources);
         }
 
         /// <summary>
@@ -70,13 +71,13 @@ namespace Assets.Scripts
         /// <summary>
         /// Adds resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void AddResource(Resource resource)
+        public static void AddResources(Resource resource)
         {
             // update value
             _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
+            BroadcastResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
         }
 
         /// <summary>
@@ -94,13 +95,18 @@ namespace Assets.Scripts
             }
 
             // inform subscribers
-            ResourceChanged(newResources);
+            BroadcastResourceChanged(newResources);
         }
+
+        /// <summary>
+        /// Removes resources and broadcasts ResourceChanged event to all subscribers.
+        /// </summary>
+        public static void RemoveResources(BuildingType type) => RemoveResources(_instance._db[type].Cost);
 
         /// <summary>
         /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResource(Resource resource)
+        public static void RemoveResources(Resource resource)
         {
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
             {
@@ -112,13 +118,13 @@ namespace Assets.Scripts
             _instance._playerResources[(int)resource.ResourceType] -= resource.Quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
+            BroadcastResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
         }
 
         /// <summary>
         /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResource(Resource? resource)
+        public static void RemoveResources(Resource? resource)
         {
             if (!resource.HasValue)
                 throw new Exception("Resource should not be null in this context.");
@@ -136,7 +142,7 @@ namespace Assets.Scripts
             _instance._playerResources[(int)resourceType] -= quantity;
 
             // inform subscribers
-            ResourceChanged(new Resource(resourceType, _instance._playerResources[(int)resourceType]));
+            BroadcastResourceChanged(new Resource(resourceType, _instance._playerResources[(int)resourceType]));
         }
 
         /// <summary>
@@ -145,7 +151,7 @@ namespace Assets.Scripts
         public static bool IsEnoughResources(List<Resource> resources)
         {
             foreach (Resource resource in resources)
-                if (!IsEnoughResource(resource))
+                if (!IsEnoughResources(resource))
                     return false;
 
             return true;
@@ -159,12 +165,12 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public static bool IsEnoughResource(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
+        public static bool IsEnoughResources(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
 
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
-        public static bool IsEnoughResource(Resource? resource) 
+        public static bool IsEnoughResources(Resource? resource) 
             => resource.HasValue ? _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity : true;
 
         /// <summary>
@@ -187,12 +193,12 @@ namespace Assets.Scripts
         }
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        static void ResourceChanged(List<Resource> resources) => ResourceChangedEventHandler?.Invoke(
+        static void BroadcastResourceChanged(List<Resource> resources) => ResourceChangedEventHandler?.Invoke(
             _instance, 
             new ResourceChangedEventArgs { Resources = resources });
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        static void ResourceChanged(Resource resource) => ResourceChangedEventHandler?.Invoke(
+        static void BroadcastResourceChanged(Resource resource) => ResourceChangedEventHandler?.Invoke(
             _instance, 
             new ResourceChangedEventArgs { Resources = new List<Resource>(1) { resource } });
     }

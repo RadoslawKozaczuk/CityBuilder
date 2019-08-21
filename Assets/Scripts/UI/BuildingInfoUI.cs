@@ -60,7 +60,7 @@ namespace Assets.Scripts.UI
 
         void ResourceUpdate(object sender, ResourceChangedEventArgs eventArgs) 
             => _reallocateButton.interactable = Building.AbleToReallocate
-                ? ResourceManager.IsEnoughResource(Building.ReallocationCost)
+                ? ResourceManager.IsEnoughResources(Building.ReallocationCost)
                 : true;
     }
 }

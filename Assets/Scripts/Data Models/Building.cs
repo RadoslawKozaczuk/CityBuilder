@@ -17,11 +17,11 @@ namespace Assets.Scripts.DataModels
             get => _position;
             set
             {
-                GameMap.Instance.MarkAreaAsFree(_position, Size);
+                GameMap.MarkAreaAsFree(_position, Size);
 
                 _position = value;
-                GameMap.Instance.MarkAreaAsOccupied(this);
-                GameObject.transform.position = GameMap.Instance.GetMiddlePoint(_position, Type)
+                GameMap.MarkAreaAsOccupied(this);
+                GameObject.transform.position = GameMap.GetMiddlePoint(_position, Type)
                     .ApplyPrefabPositionOffset(Type);
             }
         }
@@ -75,7 +75,7 @@ namespace Assets.Scripts.DataModels
 
         public void AddResource()
         {
-            ResourceManager.AddResource(_resource);
+            ResourceManager.AddResources(_resource);
             ProductionStarted = false;
 
             if (_loopProduction)

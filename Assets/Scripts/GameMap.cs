@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
+    [DisallowMultipleComponent]
     public class GameMap : MonoBehaviour
     {
         // to circumnavigate the regular anonymous method declaration limitation
@@ -12,11 +13,7 @@ namespace Assets.Scripts
 
         const float CELL_SIZE = 10f;
 
-        public static GameMap Instance { get; private set; }
-
-        [SerializeField] float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-        [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
-        [SerializeField] bool _debugDrawOccupied;
+        static GameMap _instance;
 
         Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
         Vector4 SelectedArea
@@ -29,12 +26,19 @@ namespace Assets.Scripts
             }
         }
 
-        GridCell[,] _cells;
-        Material _material;
+        // editor params
+        [Range(1, 100)] [SerializeField] int _gridSizeX = 12;
+        [Range(1, 100)] [SerializeField] int _gridSizeY = 12;
+        [SerializeField] bool _debugDrawOccupied;
+
         readonly DummyDatabase _db = new DummyDatabase();
 
+        GridCell[,] _cells;
+        Material _material;
+        float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
+
         #region Unity life-cycle methods
-        void Awake() => Instance = this;
+        void Awake() => _instance = this;
 
         void Start()
         {
@@ -60,8 +64,8 @@ namespace Assets.Scripts
         /// Highlights the given cell.
         /// If the given coordinates points at already highlighted cell then it turn off cell's highlight.
         /// </summary>
-        public void SelectCell(Vector2Int coord) 
-            => SelectedArea = coord.x == SelectedArea.x && coord.y == SelectedArea.y
+        public static void SelectCell(Vector2Int coord) 
+            => _instance.SelectedArea = coord.x == _instance.SelectedArea.x && coord.y == _instance.SelectedArea.y
                 ? new Vector4(-1, -1, -1, -1)
                 : new Vector4(coord.x, coord.y, coord.x, coord.y);
 
@@ -69,18 +73,18 @@ namespace Assets.Scripts
         /// Highlights the given cell.
         /// If the given cell is already highlighted then the cell's highlight is turned off.
         /// </summary>
-        public void SelectCell(ref GridCell cell) => SelectCell(cell.Coordinates);
+        public static void SelectCell(ref GridCell cell) => SelectCell(cell.Coordinates);
 
-        public void ResetSelection() => SelectedArea = new Vector4(-1, -1, -1, -1);
+        public static void ResetSelection() => _instance.SelectedArea = new Vector4(-1, -1, -1, -1);
 
-        public bool GetCell(Ray ray, out GridCell cell)
+        public static bool GetCell(Ray ray, out GridCell cell)
         {
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                var position = transform.InverseTransformPoint(hit.point);
-                int x = (int)Mathf.Floor(Utils.Map(0, _gridSizeX, -5, 5, position.x));
-                int y = (int)Mathf.Floor(Utils.Map(0, _gridSizeY, -5, 5, position.z));
-                cell = _cells[x, y];
+                var position = _instance.transform.InverseTransformPoint(hit.point);
+                int x = (int)Mathf.Floor(Utils.Map(0, _instance._gridSizeX, -5, 5, position.x));
+                int y = (int)Mathf.Floor(Utils.Map(0, _instance._gridSizeY, -5, 5, position.z));
+                cell =_instance._cells[x, y];
                 return true;
             }
 
@@ -111,11 +115,11 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns world position of the center of the cell.
         /// </summary>
-        public Vector3 GetCellMiddlePosition(int coordX, int coordY)
+        public static Vector3 GetCellMiddlePosition(int coordX, int coordY)
         {
-            Vector3 gridPos = transform.position;
-            gridPos.x += coordX * CELL_SIZE + CELL_SIZE / 2 - _localOffsetX;
-            gridPos.z += coordY * CELL_SIZE + CELL_SIZE / 2 - _localOffsetZ;
+            Vector3 gridPos = _instance.transform.position;
+            gridPos.x += coordX * CELL_SIZE + CELL_SIZE / 2 - _instance._localOffsetX;
+            gridPos.z += coordY * CELL_SIZE + CELL_SIZE / 2 - _instance._localOffsetZ;
 
             return gridPos;
         }
@@ -123,14 +127,14 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public Vector3 GetCellLeftBottomPosition(ref GridCell cell) => GetCellLeftBottomPositionInternal(cell.Coordinates);
+        public static Vector3 GetCellLeftBottomPosition(ref GridCell cell) => GetCellLeftBottomPositionInternal(cell.Coordinates);
 
         /// <summary>
         /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public Vector3 GetCellLeftBottomPosition(Vector2Int position) => GetCellLeftBottomPositionInternal(position);
+        public static Vector3 GetCellLeftBottomPosition(Vector2Int position) => GetCellLeftBottomPositionInternal(position);
 
-        public Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
+        public static Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
         {
             if (areaSize.x < 1 || areaSize.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
@@ -142,9 +146,9 @@ namespace Assets.Scripts
             return leftBot;
         }
 
-        public Vector3 GetMiddlePoint(Vector2Int position, BuildingType type)
+        public static Vector3 GetMiddlePoint(Vector2Int position, BuildingType type)
         {
-            Vector2Int size = _db[type].Size;
+            Vector2Int size = _instance._db[type].Size;
 
             if (size.x < 1 || size.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
@@ -160,46 +164,46 @@ namespace Assets.Scripts
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// </summary>
-        public bool IsAreaFree(Vector2Int position, Vector2Int areaSize) 
-            => !_cells.Any(position, areaSize, (ref GridCell cell) => cell.IsOccupied);
+        public static bool IsAreaFree(Vector2Int position, Vector2Int areaSize) 
+            => !_instance._cells.Any(position, areaSize, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// </summary>
-        public bool IsAreaFree(Vector2Int position, BuildingType type) 
-            => !_cells.Any(position, _db[type].Size, (ref GridCell cell) => cell.IsOccupied);
+        public static bool IsAreaFree(Vector2Int position, BuildingType type) 
+            => !_instance._cells.Any(position, _instance._db[type].Size, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
         /// Additional parameter allow us to exclude certain building.
         /// </summary>
-        public bool IsAreaFree(Vector2Int position, Vector2Int size, Building exclude) 
-            => !_cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
+        public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building exclude) 
+            => !_instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != exclude);
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        public void MarkAreaAsOccupied(Building b) 
-            => _cells.All(b.Position, _db[b.Type].Size, (ref GridCell c) => c.Building = b);
+        public static void MarkAreaAsOccupied(Building b) 
+            => _instance._cells.All(b.Position, _instance._db[b.Type].Size, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        public void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize) 
-            => _cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
+        public static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize) 
+            => _instance._cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
 
-        public bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize) 
-            => position.x < 0 || position.y < 0 || position.x + areaSize.x > _gridSizeX || position.y + areaSize.y > _gridSizeY;
+        public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize) 
+            => position.x < 0 || position.y < 0 || position.x + areaSize.x > _instance._gridSizeX || position.y + areaSize.y > _instance._gridSizeY;
 
-        public bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
-            => position.x < 0 || position.y < 0 || position.x + _db[type].Size.x > _gridSizeX || position.y + _db[type].Size.y > _gridSizeY;
+        public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
+            => position.x < 0 || position.y < 0 || position.x + _instance._db[type].Size.x > _instance._gridSizeX || position.y + _instance._db[type].Size.y > _instance._gridSizeY;
 
         /// <summary>
         /// Moves building located in the current cell to target cell.
         /// </summary>
-        public void MoveBuilding(ref GridCell from, ref GridCell to)
+        public static void MoveBuilding(ref GridCell from, ref GridCell to)
         {
             Building b = from.Building;
             b.Position = to.Coordinates;
@@ -210,18 +214,18 @@ namespace Assets.Scripts
         /// <summary>
         /// Moves building located in the current cell to target cell.
         /// </summary>
-        public void MoveBuilding(Building b, Vector2Int to)
+        public static void MoveBuilding(Building b, Vector2Int to)
         {
             b.Position = to;
             b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
                .ApplyPrefabPositionOffset(b.Type);
         }
 
-        Vector3 GetCellLeftBottomPositionInternal(Vector2Int position)
+        static Vector3 GetCellLeftBottomPositionInternal(Vector2Int position)
         {
-            Vector3 pos = transform.position;
-            pos.x += position.x * CELL_SIZE - _localOffsetX;
-            pos.z += position.y * CELL_SIZE - _localOffsetZ;
+            Vector3 pos = _instance.transform.position;
+            pos.x += position.x * CELL_SIZE - _instance._localOffsetX;
+            pos.z += position.y * CELL_SIZE - _instance._localOffsetZ;
 
             return pos;
         }
