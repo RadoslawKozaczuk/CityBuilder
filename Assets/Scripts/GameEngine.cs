@@ -109,7 +109,7 @@ namespace Assets.Scripts
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
-                ExplosionManager.Instance.SpawnRandomExplosion();
+                ExplosionManager.SpawnRandomExplosion();
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {

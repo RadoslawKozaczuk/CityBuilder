@@ -5,17 +5,17 @@ namespace Assets.Scripts
     [DisallowMultipleComponent]
     class ExplosionManager : MonoBehaviour
     {
-        public static ExplosionManager Instance { get; private set; }
+        static ExplosionManager _instance;
 
         [SerializeField] GameObject _explosionPrefab;
 
-        void Awake() => Instance = this;
+        void Awake() => _instance = this;
 
         // this should be moved to a separate singleton
-        public void SpawnRandomExplosion()
+        public static void SpawnRandomExplosion()
         {
             // instantiate random explosion
-            GameObject explosion = Instantiate(_explosionPrefab);
+            GameObject explosion = Instantiate(_instance._explosionPrefab);
             explosion.transform.position = new Vector3(
                 Random.Range(0f, 80f), // make proportional to grid
                 Random.Range(5f, 10f),
@@ -37,7 +37,7 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns the explosion time animation offset in seconds.
         /// </summary>
-        float GetTimeOffset()
+        static float GetTimeOffset()
         {
             float totalTime = Time.time;
             float animDur = 6.28f;
