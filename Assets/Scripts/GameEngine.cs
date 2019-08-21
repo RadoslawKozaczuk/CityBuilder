@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.DataModels;
 using Assets.Scripts.DataSource;
+using Assets.Scripts.Interfaces;
 using Assets.Scripts.UI;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,17 +18,26 @@ namespace Assets.Scripts
         public GameObject[] BuildingPrefabs;
 
         InterfacePendingAction _interfacePendingAction;
-        bool _pendingActionCanBeProcessed;
+        ICommand _pendingAction;
+        GameObject _hologram;
+        BuildingType _typeTroll;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
         public readonly DummyDatabase Db = new DummyDatabase();
+
+        public Ray CachedMousePositionRay;
+        public GridCell? CachedCurrentCell;
 
         #region Unity life-cycle methods
         void Awake() => Instance = this;
 
         void Update()
         {
+            // update cached values - some often used values are cached for performance resons
+            CachedMousePositionRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            CachedCurrentCell = GameMap.GetCell(CachedMousePositionRay, out GridCell cell) ? (GridCell?)cell : null;
+
             ProcessInput();
             UpdateTasks();
 
@@ -43,43 +53,27 @@ namespace Assets.Scripts
 
         void UpdatePendingTaskBasedOnMousePosition()
         {
-            // this violates good principles a bit
-            if (_interfacePendingAction != null)
+            if (_pendingAction != null)
             {
-                if (_interfacePendingAction.Parameters.TryGetValue(UIPendingActionParam.Building, out object obj))
+                // Check if this is valid context to execute this command
+                if (!_pendingAction.CheckExecutionContext())
                 {
-                    Building b = (Building)obj;
-
-                    _pendingActionCanBeProcessed = false;
-
-                    // Check if the mouse is over the UI
-                    if (EventSystem.current.IsPointerOverGameObject()
-                        || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
-                    {
-                        b.GameObject.SetActive(false);
-                        return;
-                    }
-
-                    if (GameMap.IsAreaOutOfBounds(cell.X, cell.Y, b.SizeX, b.SizeY))
-                    {
-                        b.GameObject.SetActive(false);
-                        return;
-                    }
-
-                    b.GameObject.SetActive(true);
-
-                    Vector3 targetPos = GameMap.GetMiddlePoint(cell.X, cell.Y, b.SizeX, b.SizeY)
-                        .ApplyPrefabPositionOffset(b.Type);
-
-                    bool enoughSpace = GameMap.IsAreaFree(cell.X, cell.Y, b.SizeX, b.SizeY);
-                    _pendingActionCanBeProcessed = enoughSpace;
-
-                    b.UseCommonMaterial(enoughSpace
-                        ? CommonMaterialType.HolographicGreen
-                        : CommonMaterialType.HolographicRed);
-
-                    b.GameObject.transform.position = targetPos;
+                    _hologram.SetActive(false);
+                    return;
                 }
+
+                _hologram.SetActive(true);
+
+                bool conditionsMet = _pendingAction.CheckConditions();
+
+                Vector3 targetPos = GameMap.GetMiddlePoint(CachedCurrentCell.Value.X, CachedCurrentCell.Value.Y, 3, 3)
+                    .ApplyPrefabPositionOffset(BuildingType.Residence);
+
+                _hologram.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(conditionsMet
+                    ? CommonMaterialType.HolographicGreen
+                    : CommonMaterialType.HolographicRed);
+
+                _hologram.transform.position = targetPos;
             }
         }
 
@@ -102,25 +96,14 @@ namespace Assets.Scripts
         {
             if (Input.GetMouseButtonDown(0))
             {
-                // Check if the mouse was clicked over a UI element
-                if (EventSystem.current.IsPointerOverGameObject()
-                    || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
-                    return;
-
-                if (_interfacePendingAction != null && _pendingActionCanBeProcessed)
+                if (_pendingAction != null)
                 {
-                    _interfacePendingAction.AddOrReplaceParameter(UIPendingActionParam.CurrentCell, cell);
-                    _interfacePendingAction.PendingAction(_interfacePendingAction.Parameters);
-                    _interfacePendingAction = null;
-                    return;
+                    if(_pendingAction.Call())
+                    {
+                        Destroy(_hologram);
+                        _pendingAction = null;
+                    }
                 }
-
-                GameMap.SelectCell(ref cell);
-
-                if (cell.IsOccupied && _interfacePendingAction == null)
-                    ShowBuildingInfo(cell);
-                else
-                    HideBuildingInfo();
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
@@ -147,18 +130,14 @@ namespace Assets.Scripts
             if (!ResourceManager.IsEnoughResources(data.Cost))
                 return;
 
-            var building = new Building(ref data);
-            building.UseCommonMaterial(CommonMaterialType.HolographicGreen);
-
-            _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, building);
-            _interfacePendingAction.PendingAction = BuildingConstructionFollowUpAction;
+            _hologram = InstanciateHologram(type);
+            _pendingAction = new ConstructBuildingCommand(type);
         }
 
         public bool TryGibMeClickedCell(out Vector2Int cellCoord)
         {
             if (EventSystem.current.IsPointerOverGameObject()
-                    || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+                || !GameMap.GetCell(CachedMousePositionRay, out GridCell cell))
             {
                 cellCoord = Vector2Int.zero;
                 return false;
@@ -172,7 +151,7 @@ namespace Assets.Scripts
         {
             GameObject prefab = BuildingPrefabs[(int)type];
             GameObject instance = Instantiate(prefab);
-            instance.GetComponent<Building>().UseCommonMaterial(CommonMaterialType.HolographicGreen);
+            instance.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(CommonMaterialType.HolographicGreen);
             instance.SetActive(false);
 
             return instance;
@@ -200,7 +179,7 @@ namespace Assets.Scripts
             hologram.UseCommonMaterial(CommonMaterialType.HolographicGreen);
 
             _interfacePendingAction = new InterfacePendingAction();
-            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.Position.Value));
+            _interfacePendingAction.Parameters.Add(UIPendingActionParam.PreviousCell, GameMap.GetCell(b.Position));
             _interfacePendingAction.Parameters.Add(UIPendingActionParam.Building, hologram);
             _interfacePendingAction.PendingAction = BuildingReallocationFollowUpAction;
         }

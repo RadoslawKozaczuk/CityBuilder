@@ -8,23 +8,19 @@ namespace Assets.Scripts.DataModels
     {
         const float ConstructionTime = 10f; // hardcoded
 
-        Vector2Int? _position;
+        Vector2Int _position;
 
-        public Vector2Int? Position
+        public Vector2Int Position
         {
-            get { return _position; }
+            get => _position;
             set
             {
-                if (_position.HasValue)
-                    Grid.Instance.MarkAreaAsFree(_position.Value, SizeX, SizeY);
+                Grid.Instance.MarkAreaAsFree(_position, SizeX, SizeY);
 
-                if (value.HasValue)
-                {
-                    _position = value.Value;
-                    Grid.Instance.MarkAreaAsOccupied(this);
-                }
-                else
-                    _position = null;
+                _position = value;
+                Grid.Instance.MarkAreaAsOccupied(this);
+                GameObject.transform.position = GameEngine.Instance.GameMap.GetMiddlePoint(_position, Type)
+                    .ApplyPrefabPositionOffset(Type);
             }
         }
 
@@ -49,7 +45,10 @@ namespace Assets.Scripts.DataModels
         #region Constructors
         public Building(ref BuildingData data)
         {
+            Type = data.Type;
+
             GameObject instance = GameObject.Instantiate(GameEngine.Instance.BuildingPrefabs[(int)data.Type]);
+            GameObject = instance;
 
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;
@@ -61,6 +60,9 @@ namespace Assets.Scripts.DataModels
 
         public Building(int posX, int posY, ref BuildingData data, GameObject instance)
         {
+            Type = data.Type;
+            GameObject = instance;
+
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
@@ -72,6 +74,9 @@ namespace Assets.Scripts.DataModels
 
         public Building(ref GridCell cell, ref BuildingData data, GameObject instance)
         {
+            Type = data.Type;
+            GameObject = instance;
+
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
@@ -83,8 +88,15 @@ namespace Assets.Scripts.DataModels
 
         public Building(BuildingType type)
         {
+            Type = type;
+
             BuildingData data = GameEngine.Instance.Db[type];
             GameObject instance = GameObject.Instantiate(GameEngine.Instance.BuildingPrefabs[(int)type]);
+            GameObject = instance;
+
+            Position = new Vector2Int(
+                GameEngine.Instance.CachedCurrentCell.Value.X,
+                GameEngine.Instance.CachedCurrentCell.Value.Y);
 
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;
@@ -96,14 +108,19 @@ namespace Assets.Scripts.DataModels
 
         public Building(BuildingType type, Vector2Int position)
         {
+            Type = type;
+
+
+
             BuildingData data = GameEngine.Instance.Db[type];
             GameObject instance = GameObject.Instantiate(GameEngine.Instance.BuildingPrefabs[(int)type]);
+            GameObject = instance;
+            Position = position;
 
             _resource = data.ResourceProductionData.Resource;
             _productionTime = data.ResourceProductionData.ProductionTime;
             _imidiatelyStartProduction = data.ResourceProductionData.StartImidiately;
             _loopProduction = data.ResourceProductionData.Loop;
-            Position = position;
 
             InnerConstructorLogic(ref data, instance);
         }

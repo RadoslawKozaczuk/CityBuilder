@@ -137,6 +137,21 @@ namespace Assets.Scripts
             return leftBot;
         }
 
+        public Vector3 GetMiddlePoint(Vector2Int leftBotCoord, BuildingType type)
+        {
+            int sizeX = _db[type].SizeX;
+            int sizeY = _db[type].SizeY;
+
+            if (sizeX < 1 || sizeY < 1)
+                Debug.LogError("Invalid argument(s). Size need to be a positive number.");
+
+            Vector3 leftBot = GetCellLeftBottomPosition(leftBotCoord.x, leftBotCoord.y);
+            leftBot.x += CELL_SIZE * sizeX / 2;
+            leftBot.z += CELL_SIZE * sizeY / 2;
+
+            return leftBot;
+        }
+
         /// <summary>
         /// Checks if there is a free area of the given size under the given cell. 
         /// X and y are at the bottom (perspective camera).
@@ -163,7 +178,7 @@ namespace Assets.Scripts
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         public void MarkAreaAsOccupied(Building b) 
-            => _cells.All(b.Position.Value.x, b.Position.Value.y, b.SizeX, b.SizeY, (ref GridCell c) => c.Building = b);
+            => _cells.All(b.Position.x, b.Position.y, b.SizeX, b.SizeY, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
@@ -179,6 +194,9 @@ namespace Assets.Scripts
 
         public bool IsAreaOutOfBounds(int x, int y, int sizeX, int sizeY) 
             => x < 0 || y < 0 || x + sizeX > _gridSizeX || y + sizeY > _gridSizeY;
+
+        public bool IsAreaOutOfBounds(int x, int y, BuildingType type)
+            => x < 0 || y < 0 || x + _db[type].SizeX > _gridSizeX || y + _db[type].SizeY > _gridSizeY;
 
         /// <summary>
         /// Moves building located in the current cell to target cell.
