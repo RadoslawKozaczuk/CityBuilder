@@ -4,12 +4,11 @@ namespace Assets.Scripts
 {
     class MaterialManager : MonoBehaviour
     {
-        public static MaterialManager Instance { get; private set; }
-
+        static MaterialManager _instance;
         [SerializeField] Material[] _commonMaterials;
 
-        void Awake() => Instance = this;
+        void Awake() => _instance = this;
 
-        public Material GetMaterial(CommonMaterialType type) => _commonMaterials[(int)type];
+        public static Material GetMaterial(CommonMaterialType type) => _instance._commonMaterials[(int)type];
     }
 }

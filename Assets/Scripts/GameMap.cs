@@ -14,8 +14,7 @@ namespace Assets.Scripts
 
         public static GameMap Instance { get; private set; }
 
-        // to allow designers to put the plane in an arbitrary position in the world space
-        [SerializeField] float _localOffsetX, _localOffsetZ;
+        [SerializeField] float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
         [SerializeField] int _gridSizeX = 12, _gridSizeY = 12;
         [SerializeField] bool _debugDrawOccupied;
 
@@ -59,15 +58,18 @@ namespace Assets.Scripts
 
         /// <summary>
         /// Highlights the given cell.
-        /// If the coordinates points at already selected cell then the cell is deselected.
+        /// If the given coordinates points at already highlighted cell then it turn off cell's highlight.
         /// </summary>
-        //public void SelectCell(int x, int y) => SelectCellInternal(x, y);
+        public void SelectCell(Vector2Int coord) 
+            => SelectedArea = coord.x == SelectedArea.x && coord.y == SelectedArea.y
+                ? new Vector4(-1, -1, -1, -1)
+                : new Vector4(coord.x, coord.y, coord.x, coord.y);
 
         /// <summary>
         /// Highlights the given cell.
-        /// If the given cell is already selected then the cell is deselected.
+        /// If the given cell is already highlighted then the cell's highlight is turned off.
         /// </summary>
-        public void SelectCell(ref GridCell cell) => SelectCellInternal(cell.Coordinates);
+        public void SelectCell(ref GridCell cell) => SelectCell(cell.Coordinates);
 
         public void ResetSelection() => SelectedArea = new Vector4(-1, -1, -1, -1);
 
@@ -75,7 +77,10 @@ namespace Assets.Scripts
         {
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                cell = GetCell(hit.point);
+                var position = transform.InverseTransformPoint(hit.point);
+                int x = (int)Mathf.Floor(Utils.Map(0, _gridSizeX, -5, 5, position.x));
+                int y = (int)Mathf.Floor(Utils.Map(0, _gridSizeY, -5, 5, position.z));
+                cell = _cells[x, y];
                 return true;
             }
 
@@ -123,28 +128,28 @@ namespace Assets.Scripts
         /// <summary>
         /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public Vector3 GetCellLeftBottomPosition(Vector2Int coords) => GetCellLeftBottomPositionInternal(coords);
+        public Vector3 GetCellLeftBottomPosition(Vector2Int position) => GetCellLeftBottomPositionInternal(position);
 
-        public Vector3 GetMiddlePoint(Vector2Int coords, Vector2Int areaSize)
+        public Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
         {
             if (areaSize.x < 1 || areaSize.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
 
-            Vector3 leftBot = GetCellLeftBottomPosition(coords);
+            Vector3 leftBot = GetCellLeftBottomPosition(position);
             leftBot.x += CELL_SIZE * areaSize.x / 2;
             leftBot.z += CELL_SIZE * areaSize.y / 2;
 
             return leftBot;
         }
 
-        public Vector3 GetMiddlePoint(Vector2Int leftBotCoord, BuildingType type)
+        public Vector3 GetMiddlePoint(Vector2Int position, BuildingType type)
         {
             Vector2Int size = _db[type].Size;
 
             if (size.x < 1 || size.y < 1)
                 Debug.LogError("Invalid argument(s). Size need to be a positive number.");
 
-            Vector3 leftBot = GetCellLeftBottomPosition(leftBotCoord);
+            Vector3 leftBot = GetCellLeftBottomPosition(position);
             leftBot.x += CELL_SIZE * size.x / 2;
             leftBot.z += CELL_SIZE * size.y / 2;
 
@@ -212,32 +217,15 @@ namespace Assets.Scripts
                .ApplyPrefabPositionOffset(b.Type);
         }
 
-        // Get cell returns cell from a given position
-        GridCell GetCell(Vector3 position)
-        {
-            position = transform.InverseTransformPoint(position);
-
-            int coordX = (int)Mathf.Floor(Utils.Map(0, _gridSizeX, -5, 5, position.x));
-            int coordY = (int)Mathf.Floor(Utils.Map(0, _gridSizeY, -5, 5, position.z));
-            Debug.Log("CellCoord: x: " + coordX + ", z: " + coordY);
-
-            return _cells[coordX, coordY];
-        }
-
-        Vector3 GetCellLeftBottomPositionInternal(Vector2Int coords)
+        Vector3 GetCellLeftBottomPositionInternal(Vector2Int position)
         {
             Vector3 pos = transform.position;
-            pos.x += coords.x * CELL_SIZE - _localOffsetX;
-            pos.z += coords.y * CELL_SIZE - _localOffsetZ;
+            pos.x += position.x * CELL_SIZE - _localOffsetX;
+            pos.z += position.y * CELL_SIZE - _localOffsetZ;
 
             return pos;
         }
-
-        void SelectCellInternal(Vector2Int coord) 
-            => SelectedArea = coord.x == SelectedArea.x && coord.y == SelectedArea.y
-                ? new Vector4(-1, -1, -1, -1)
-                : new Vector4(coord.x, coord.y, coord.x, coord.y);
-
+         
         void DebugDrawOccupied()
         {
             for (int x = 0; x < _gridSizeX; x++)

@@ -63,12 +63,10 @@ namespace Assets.Scripts
 
                 _hologram.SetActive(true);
 
-                bool conditionsMet = _pendingAction.CheckConditions();
-
-                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.Coordinates, Db[_type].Size)
+                Vector3 targetPos = GameMap.Instance.GetMiddlePoint(CachedCurrentCell.Value.Coordinates, _type)
                     .ApplyPrefabPositionOffset(_type);
 
-                _hologram.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(conditionsMet
+                _hologram.GetComponent<MeshRenderer>().material = MaterialManager.GetMaterial(_pendingAction.CheckConditions()
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
@@ -150,7 +148,7 @@ namespace Assets.Scripts
         {
             GameObject prefab = BuildingPrefabs[(int)type];
             GameObject instance = Instantiate(prefab);
-            instance.GetComponent<MeshRenderer>().material = MaterialManager.Instance.GetMaterial(CommonMaterialType.HolographicGreen);
+            instance.GetComponent<MeshRenderer>().material = MaterialManager.GetMaterial(CommonMaterialType.HolographicGreen);
             instance.SetActive(false);
 
             return instance;
@@ -163,10 +161,6 @@ namespace Assets.Scripts
             _buildingInfoUI.gameObject.transform.position = Input.mousePosition;
         }
 
-        void HideBuildingInfo()
-        {
-            _buildingInfoUI.Building = null;
-            _buildingInfoUI.gameObject.SetActive(false);
-        }
+        void HideBuildingInfo() => _buildingInfoUI.gameObject.SetActive(false);
     }
 }
