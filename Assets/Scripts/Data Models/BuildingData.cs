@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts.DataSource
+namespace Assets.Scripts.DataModels
 {
     // this represents building data that comes from the data source
     public struct BuildingData

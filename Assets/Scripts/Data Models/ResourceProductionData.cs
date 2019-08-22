@@ -1,6 +1,6 @@
 ﻿using Assets.Scripts.DataModels;
 
-namespace Assets.Scripts.DataSource
+namespace Assets.Scripts.DataModels
 {
     public struct ResourceProductionData
     {
