@@ -1,53 +1,51 @@
 ﻿using Assets.Scripts.DataModels;
-using Assets.Scripts.Interfaces;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.UI
 {
-    class ConstructBuildingCommand : ICommand
+    class ConstructBuildingCommand : AbstractCommand
     {
-        readonly BuildingType _type;
+        public Building Building { get; internal set; }
+        public Vector2Int To { get; internal set; }
 
-        Vector2Int _to;
-        Building _building;
-        bool _succeeded;
+        public readonly BuildingType Type;
 
         public ConstructBuildingCommand(BuildingType type)
         {
-            _type = type;
+            Type = type;
         }
 
-        public bool IsSucceeded() => _succeeded;
-
-        public bool Call()
+        public override bool Call()
         {
             if (_succeeded)
                 return false;
 
             CheckConditions();
 
-            _to = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
-            _building = new Building(_type, _to);
-            ResourceManager.RemoveResources(_type);
+            To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
+            Building = new Building(Type, To);
+            ResourceManager.RemoveResources(Type);
             _succeeded = true;
 
             return true;
         }
 
-        public bool Undo()
+        public override bool Undo()
         {
             if (!_succeeded)
                 return false;
 
-            ResourceManager.AddResources(_type);
-            Object.Destroy(_building.GameObject);
-            _building = null;
+            ResourceManager.AddResources(Type);
+            GameMap.MarkAreaAsFree(Building.Position, Building.Size);
+            Object.Destroy(Building.GameObject);
+            Building = null;
+            _succeeded = false;
 
             return true;
         }
 
-        public bool CheckExecutionContext()
+        public override bool CheckExecutionContext()
         {
             if(EventSystem.current.IsPointerOverGameObject())
                 return false; // cursor is over the UI
@@ -55,21 +53,23 @@ namespace Assets.Scripts.UI
             if(!GameEngine.Instance.CellUnderCursorCached.HasValue)
                 return false; // cursor is not over the map
 
-            if(GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
+            if(GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
                 return false; // area is out of the map
 
             return true;
         }
 
-        public bool CheckConditions()
+        public override bool CheckConditions()
         {
-            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
+            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
                 return false; // not enough space
 
-            if (!ResourceManager.IsEnoughResources(_type))
+            if (!ResourceManager.IsEnoughResources(Type))
                 return false; // not enough resources
 
             return true;
         }
+
+        public override string ToString() => $"Build {Building.Type.ToString()} at {To.ToString()}";
     }
 }

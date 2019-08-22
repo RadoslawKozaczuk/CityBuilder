@@ -45,6 +45,7 @@ namespace Assets.Scripts
         #endregion
 
         public static Sprite GetResourceIcon(ResourceType type) => _instance._resourceIcons[(int)type];
+
         public static Sprite GetResourceIcon(int id) => _instance._resourceIcons[id];
 
         /// <summary>
@@ -78,6 +79,18 @@ namespace Assets.Scripts
 
             // inform subscribers
             BroadcastResourceChanged(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
+        }
+
+        /// <summary>
+        /// Adds resource and broadcasts ResourceChanged event to all subscribers.
+        /// In case resource is equal to null nothing happens.
+        /// </summary>
+        public static void AddResources(Resource? resource)
+        {
+            if (!resource.HasValue)
+                return;
+
+            AddResources(resource.Value);
         }
 
         /// <summary>
@@ -127,7 +140,7 @@ namespace Assets.Scripts
         public static void RemoveResources(Resource? resource)
         {
             if (!resource.HasValue)
-                throw new Exception("Resource should not be null in this context.");
+                return;
 
             ResourceType resourceType = resource.Value.ResourceType;
             int quantity = resource.Value.Quantity;

@@ -203,17 +203,6 @@ namespace Assets.Scripts
         /// <summary>
         /// Moves building located in the current cell to target cell.
         /// </summary>
-        public static void MoveBuilding(ref GridCell from, ref GridCell to)
-        {
-            Building b = from.Building;
-            b.Position = to.Coordinates;
-            b.GameObject.transform.position = GetMiddlePoint(to.Coordinates, b.Size)
-               .ApplyPrefabPositionOffset(b.Type);
-        }
-
-        /// <summary>
-        /// Moves building located in the current cell to target cell.
-        /// </summary>
         public static void MoveBuilding(Building b, Vector2Int to)
         {
             b.Position = to;

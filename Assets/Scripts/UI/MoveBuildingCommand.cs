@@ -5,52 +5,49 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.UI
 {
-    class MoveBuildingCommand : ICommand
+    class MoveBuildingCommand : AbstractCommand, ICommand
     {
-        readonly BuildingType _type;
+        public Building Building { get; internal set; }
+        public Vector2Int From { get; internal set; }
+        public Vector2Int To { get; internal set; }
 
-        Building _building;
-        Vector2Int _location;
-        Vector2Int _from;
-        Vector2Int _to;
-        bool _succeeded;
+        public readonly BuildingType Type;
 
         public MoveBuildingCommand(Building b)
         {
-            _type = b.Type;
-            _building = b;
-            _from = b.Position;
+            Type = b.Type;
+            Building = b;
+            From = b.Position;
         }
 
-        public bool IsSucceeded() => _succeeded;
-
-        public bool Call()
+        public override bool Call()
         {
             if (_succeeded)
                 return false;
 
             CheckConditions();
 
-            _to = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
-            GameMap.MoveBuilding(_building, _to);
-            ResourceManager.RemoveResources(GameEngine.Instance.Db[_type].ReallocationCost);
+            To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
+            GameMap.MoveBuilding(Building, To);
+            ResourceManager.RemoveResources(GameEngine.Instance.Db[Type].ReallocationCost);
             _succeeded = true;
+
             return true;
         }
 
-        public bool Undo()
+        public override bool Undo()
         {
             if (!_succeeded)
                 return false;
 
-            ResourceManager.AddResources(_type);
-            Object.Destroy(_building.GameObject);
-            _building = null;
+            ResourceManager.AddResources(Building.ReallocationCost);
+            GameMap.MoveBuilding(Building, From);
+            _succeeded = false;
 
             return true;
         }
 
-        public bool CheckExecutionContext()
+        public override bool CheckExecutionContext()
         {
             if (EventSystem.current.IsPointerOverGameObject())
                 return false; // cursor is over the UI
@@ -58,21 +55,23 @@ namespace Assets.Scripts.UI
             if (!GameEngine.Instance.CellUnderCursorCached.HasValue)
                 return false; // cursor is not over the map
 
-            if (GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
+            if (GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
                 return false; // area is out of the map
 
             return true;
         }
 
-        public bool CheckConditions()
+        public override bool CheckConditions()
         {
-            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, _type))
+            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
                 return false; // not enough space
 
-            if (!ResourceManager.IsEnoughResources(_type))
+            if (!ResourceManager.IsEnoughResources(Type))
                 return false; // not enough resources
 
             return true;
         }
+
+        public override string ToString() => $"Move {Building.Type.ToString()} from {From.ToString()} to {To.ToString()}";
     }
 }

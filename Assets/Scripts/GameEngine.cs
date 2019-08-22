@@ -2,7 +2,10 @@
 using Assets.Scripts.DataSource;
 using Assets.Scripts.Interfaces;
 using Assets.Scripts.UI;
+using System;
 using System.Collections.Generic;
+using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -18,29 +21,36 @@ namespace Assets.Scripts
         public GridCell? CellUnderCursorCached;
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
+        [SerializeField] TextMeshProUGUI _commandListText;
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
+        readonly List<ICommand> _executedCommands = new List<ICommand>();
 
-        ICommand _pendingAction;
+        ICommand _pendingCommand;
         GameObject _hologram;
+        MeshRenderer _hologramMeshRenderer;
         BuildingType _type;
 
         #region Unity life-cycle methods
-        void Awake() => Instance = this;
+        void Awake()
+        {
+            Instance = this;
+            UpdateCommandListText();
+        }
 
         void Update()
         {
             // some often used values are cached for performance reasons
-            CellUnderCursorCached = EventSystem.current.IsPointerOverGameObject() 
+            CellUnderCursorCached = EventSystem.current.IsPointerOverGameObject()
                 || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell)
-                ? null
-                : (GridCell?)cell;
+                    ? null
+                    : (GridCell?)cell;
 
             ProcessInput();
             UpdateTasks();
 
-            UpdatePendingTaskBasedOnMousePosition();
+            UpdateLocalsBasedOnMousePos();
         }
 
         void LateUpdate()
@@ -50,12 +60,12 @@ namespace Assets.Scripts
         }
         #endregion
 
-        void UpdatePendingTaskBasedOnMousePosition()
+        void UpdateLocalsBasedOnMousePos()
         {
-            if (_pendingAction != null)
+            if (_pendingCommand != null)
             {
                 // Check if this is valid context to execute this command
-                if (!_pendingAction.CheckExecutionContext())
+                if (!_pendingCommand.CheckExecutionContext())
                 {
                     _hologram.SetActive(false);
                     return;
@@ -63,7 +73,7 @@ namespace Assets.Scripts
 
                 _hologram.SetActive(true);
 
-                _hologram.GetComponent<MeshRenderer>().material = MaterialManager.GetMaterial(_pendingAction.CheckConditions()
+                _hologramMeshRenderer.material = MaterialManager.GetMaterial(_pendingCommand.CheckConditions()
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
@@ -91,15 +101,17 @@ namespace Assets.Scripts
         {
             if (Input.GetMouseButtonDown(0))
             {
-                if (_pendingAction != null)
+                if (_pendingCommand != null)
                 {
-                    if(_pendingAction.Call())
+                    if (_pendingCommand.Call())
                     {
+                        _executedCommands.Add(_pendingCommand.CopyCommand());
+                        _pendingCommand = null;
                         Destroy(_hologram);
-                        _pendingAction = null;
+                        UpdateCommandListText();
                     }
                 }
-                else if(CellUnderCursorCached.HasValue)
+                else if (CellUnderCursorCached.HasValue)
                 {
                     if (CellUnderCursorCached.Value.IsOccupied)
                         ShowBuildingInfo(CellUnderCursorCached.Value);
@@ -108,19 +120,61 @@ namespace Assets.Scripts
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.Space))
+            else if (Input.GetKeyDown(KeyCode.Space))
                 ExplosionManager.SpawnRandomExplosion();
 
-            if (Input.GetKeyDown(KeyCode.Escape))
+            else if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (_pendingAction != null)
+                if (_pendingCommand != null)
                 {
+                    _pendingCommand = null;
                     Destroy(_hologram);
-                    _pendingAction = null;
                 }
                 else
                     Application.Quit();
             }
+
+            else
+            {
+                if(Application.isEditor)
+                {
+                    if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.X))
+                    {
+                        int lastCmdId = _executedCommands.Count - 1;
+                        if (_executedCommands.Count > 0 && _executedCommands[lastCmdId].Undo())
+                        {
+                            _executedCommands.RemoveAt(lastCmdId);
+                            UpdateCommandListText();
+                        }
+                    }
+                }
+                else
+                {
+                    if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
+                    {
+                        int lastCmdId = _executedCommands.Count - 1;
+                        if (_executedCommands.Count > 0 && _executedCommands[lastCmdId].Undo())
+                        {
+                            _executedCommands.RemoveAt(lastCmdId);
+                            UpdateCommandListText();
+                        }
+                    }
+                }
+            }
+        }
+
+        void UpdateCommandListText()
+        {
+            var sb = new StringBuilder();
+            string shortcut = Application.isEditor ? "Ctrl+Z" : "Z+X";
+            sb.AppendLine($"Press {shortcut} to undo last command");
+            sb.Append(Environment.NewLine);
+            sb.AppendLine("Executed Commands:");
+
+            for (int i = _executedCommands.Count - 1; i >= 0; i--)
+                sb.AppendLine("- " + _executedCommands[i]);
+
+            _commandListText.text = sb.ToString();
         }
 
         /// <summary>
@@ -130,26 +184,25 @@ namespace Assets.Scripts
 
         public void StartBuildingConstruction(BuildingType type)
         {
+            InstanciateHologram(type);
             _type = type;
-            _hologram = InstanciateHologram(type);
-            _pendingAction = new ConstructBuildingCommand(type);
+            _pendingCommand = new ConstructBuildingCommand(type);
         }
 
         public void StartBuildingReallocation(Building b)
         {
+            InstanciateHologram(b.Type);
             _type = b.Type;
-            _hologram = InstanciateHologram(b.Type);
-            _pendingAction = new MoveBuildingCommand(b);
+            _pendingCommand = new MoveBuildingCommand(b);
         }
 
-        GameObject InstanciateHologram(BuildingType type)
+        void InstanciateHologram(BuildingType type)
         {
             GameObject prefab = BuildingPrefabs[(int)type];
-            GameObject instance = Instantiate(prefab);
-            instance.GetComponent<MeshRenderer>().material = MaterialManager.GetMaterial(CommonMaterialType.HolographicGreen);
-            instance.SetActive(false);
-
-            return instance;
+            _hologram = Instantiate(prefab);
+            _hologramMeshRenderer = _hologram.GetComponent<MeshRenderer>();
+            _hologramMeshRenderer.material = MaterialManager.GetMaterial(CommonMaterialType.HolographicGreen);
+            _hologram.SetActive(false);
         }
 
         void ShowBuildingInfo(GridCell cell)

@@ -30,6 +30,8 @@ namespace Assets.Scripts.UI
                 gameObject.SetActive(false);
                 Building = null;
             });
+
+            SetReallocateButtonInteractivity();
         }
 
         void Update()
@@ -58,7 +60,9 @@ namespace Assets.Scripts.UI
             _startProductionButton.interactable = false;
         }
 
-        void ResourceUpdate(object sender, ResourceChangedEventArgs eventArgs) 
+        void ResourceUpdate(object sender, ResourceChangedEventArgs eventArgs) => SetReallocateButtonInteractivity();
+
+        void SetReallocateButtonInteractivity()
             => _reallocateButton.interactable = Building.AbleToReallocate
                 ? ResourceManager.IsEnoughResources(Building.ReallocationCost)
                 : true;

@@ -11,13 +11,12 @@ namespace Assets.Scripts
 
         void Awake() => _instance = this;
 
-        // this should be moved to a separate singleton
         public static void SpawnRandomExplosion()
         {
             // instantiate random explosion
             GameObject explosion = Instantiate(_instance._explosionPrefab);
             explosion.transform.position = new Vector3(
-                Random.Range(0f, 80f), // make proportional to grid
+                Random.Range(0f, 80f), // TODO: make proportional to grid
                 Random.Range(5f, 10f),
                 Random.Range(0f, 80f));
 

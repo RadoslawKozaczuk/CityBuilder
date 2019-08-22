@@ -26,7 +26,7 @@ namespace Assets.Scripts.DataModels
             }
         }
 
-        public Vector2Int Size { get => GameEngine.Instance.Db[Type].Size; }
+        public Vector2Int Size => GameEngine.Instance.Db[Type].Size;
 
         public string Name;
         public BuildingType Type { get; private set; }
@@ -34,7 +34,7 @@ namespace Assets.Scripts.DataModels
         public bool Constructed = false;
         public bool ProductionStarted;
         public BuildingTask ScheduledTask;
-        public bool AbleToReallocate;
+        public readonly bool AbleToReallocate;
         public Resource? ReallocationCost;
 
         readonly Resource _resource;
