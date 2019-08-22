@@ -25,9 +25,9 @@ namespace Assets.Scripts
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
-        readonly List<ICommand> _executedCommands = new List<ICommand>();
+        readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
 
-        ICommand _pendingCommand;
+        AbstractCommand _pendingCommand;
         GameObject _hologram;
         MeshRenderer _hologramMeshRenderer;
         BuildingType _type;
@@ -105,7 +105,7 @@ namespace Assets.Scripts
                 {
                     if (_pendingCommand.Call())
                     {
-                        _executedCommands.Add(_pendingCommand.CopyCommand());
+                        _executedCommands.Add(_pendingCommand.Clone());
                         _pendingCommand = null;
                         Destroy(_hologram);
                         UpdateCommandListText();

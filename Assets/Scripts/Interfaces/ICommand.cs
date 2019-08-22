@@ -3,11 +3,6 @@
     interface ICommand
     {
         /// <summary>
-        /// Returns new instance of this command.
-        /// </summary>
-        ICommand CopyCommand();
-
-        /// <summary>
         /// Returns true if command was already executed successfully and false otherwise.
         /// Successful call of Undo method will reset the flag and make this method return false again.
         /// </summary>

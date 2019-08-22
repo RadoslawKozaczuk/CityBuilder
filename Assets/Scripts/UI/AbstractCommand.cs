@@ -3,13 +3,19 @@ using System;
 
 namespace Assets.Scripts.UI
 {
-    abstract class AbstractCommand : ICommand
+    abstract class AbstractCommand : ICommand, ICloneable<AbstractCommand>
     {
         protected bool _succeeded;
 
-        public ICommand CopyCommand()
+        public bool IsSucceeded() => _succeeded;
+        public abstract bool Call();
+        public abstract bool Undo();
+        public abstract bool CheckConditions();
+        public abstract bool CheckExecutionContext();
+
+        public AbstractCommand Clone()
         {
-            ICommand command;
+            AbstractCommand command;
 
             switch (this)
             {
@@ -32,15 +38,9 @@ namespace Assets.Scripts.UI
                     throw new NotImplementedException();
             }
 
-            InjectBaseVariables((AbstractCommand)command);
+            InjectBaseVariables(command);
             return command;
         }
-
-        public bool IsSucceeded() => _succeeded;
-        public abstract bool Call();
-        public abstract bool Undo();
-        public abstract bool CheckConditions();
-        public abstract bool CheckExecutionContext();
 
         void InjectBaseVariables(AbstractCommand reciever)
         {
