@@ -169,7 +169,7 @@ namespace Assets.Scripts
         void UpdateCommandListText()
         {
             var sb = new StringBuilder();
-            string shortcut = Application.isEditor ? "Ctrl+Z" : "Z+X";
+            string shortcut = "<b>" + (Application.isEditor ? "Ctrl+Z" : "Z+X") + "</b>";
             sb.AppendLine($"Press {shortcut} to undo last command");
             sb.Append(Environment.NewLine);
             sb.AppendLine("Executed Commands:");
