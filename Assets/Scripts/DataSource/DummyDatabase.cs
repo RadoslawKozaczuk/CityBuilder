@@ -20,9 +20,9 @@ namespace Assets.Scripts.DataSource
                 {
                     Name = "Residence",
                     Size = new Vector2Int(3, 3),
-                    Cost = new List<Resource> { new Resource(ResourceType.Gold, 100) },
+                    Cost = new List<Resource> { new Resource(ResourceType.Gold, 150) },
                     Type = BuildingType.Residence,
-                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Gold, 50), 10f, true, true),
+                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Gold, 50), 5f, true, true),
                     AbleToReallocate = false,
                     ReallocationCost = null
                 },
@@ -33,7 +33,7 @@ namespace Assets.Scripts.DataSource
                     Size = new Vector2Int(3, 2),
                     Cost = new List<Resource> { new Resource(ResourceType.Gold, 150) },
                     Type = BuildingType.WoodProduction,
-                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Wood, 50), 10f, false, false),
+                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Wood, 50), 5f, false, false),
                     AbleToReallocate = false,
                     ReallocationCost = null
                 },
@@ -46,7 +46,7 @@ namespace Assets.Scripts.DataSource
                         new Resource(ResourceType.Gold, 150),
                         new Resource(ResourceType.Wood, 100) },
                     Type = BuildingType.SteelProduction,
-                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Iron, 50), 10f, false, false),
+                    ResourceProductionData = new ResourceProductionData(new Resource(ResourceType.Iron, 50), 5f, false, false),
                     AbleToReallocate = false,
                     ReallocationCost = null
                 },
@@ -56,7 +56,7 @@ namespace Assets.Scripts.DataSource
                     Name = "Tree",
                     Size = new Vector2Int(1, 1),
                     Cost = new List<Resource>() {
-                        new Resource(ResourceType.Gold, 150),
+                        new Resource(ResourceType.Gold, 100),
                         new Resource(ResourceType.Iron, 50) },
                     Type = BuildingType.Tree,
                     AbleToReallocate = true,
@@ -69,7 +69,7 @@ namespace Assets.Scripts.DataSource
                     Size = new Vector2Int(1, 1),
                     Cost = new List<Resource>() {
                         new Resource(ResourceType.Gold, 50),
-                        new Resource(ResourceType.Wood, 200) },
+                        new Resource(ResourceType.Wood, 50) },
                     Type = BuildingType.Bench,
                     AbleToReallocate = true,
                     ReallocationCost = new Resource(ResourceType.Gold, 50)

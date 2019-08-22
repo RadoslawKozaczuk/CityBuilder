@@ -116,7 +116,10 @@ namespace Assets.Scripts
                     if (CellUnderCursorCached.Value.IsOccupied)
                         ShowBuildingInfo(CellUnderCursorCached.Value);
                     else
+                    {
                         HideBuildingInfo();
+                        GameMap.SelectCell(CellUnderCursorCached.Value.Coordinates);
+                    }
                 }
             }
 

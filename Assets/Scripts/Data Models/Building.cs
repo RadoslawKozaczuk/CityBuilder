@@ -6,9 +6,8 @@ namespace Assets.Scripts.DataModels
     // this represents building object in the game
     public class Building
     {
-        const float ConstructionTime = 10f; // hardcoded
+        const float CONSTRUCTION_TIME = 5f; // hardcoded
 
-        Vector2Int _position;
         /// <summary>
         /// Position always point at the left bottom corner of the building.
         /// </summary>
@@ -25,6 +24,7 @@ namespace Assets.Scripts.DataModels
                     .ApplyPrefabPositionOffset(Type);
             }
         }
+        Vector2Int _position;
 
         public Vector2Int Size => GameEngine.Instance.Db[Type].Size;
 
@@ -60,7 +60,7 @@ namespace Assets.Scripts.DataModels
             ReallocationCost = data.ReallocationCost;
 
             // schedule construction task
-            var task = new BuildingTask(ConstructionTime, FinishConstruction);
+            var task = new BuildingTask(CONSTRUCTION_TIME, FinishConstruction);
             ScheduledTask = task;
             GameEngine.Instance.ScheduleTask(task);
         }
