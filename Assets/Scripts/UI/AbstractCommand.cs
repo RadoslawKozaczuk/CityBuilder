@@ -13,6 +13,9 @@ namespace Assets.Scripts.UI
         public abstract bool CheckConditions();
         public abstract bool CheckExecutionContext();
 
+        /// <summary>
+        /// Returns a shallow copy of the command.
+        /// </summary>
         public AbstractCommand Clone()
         {
             AbstractCommand command;

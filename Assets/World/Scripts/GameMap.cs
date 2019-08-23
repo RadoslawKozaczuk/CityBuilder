@@ -22,8 +22,9 @@ namespace Assets.World
         const float CELL_SIZE = 10f;
 
         public static GameMap Instance;
-
         public static BuildingPrefabCollection BuildingPrefabCollection;
+
+        internal readonly AbstractDatabase Db = new DummyDatabase();
 
         Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
         Vector4 SelectedArea
@@ -36,12 +37,13 @@ namespace Assets.World
             }
         }
 
-        // editor params
+        [Header("These parameters are applied only at the start of the game")]
         [Range(1, 100)] [SerializeField] int _gridSizeX = 12;
         [Range(1, 100)] [SerializeField] int _gridSizeY = 12;
+
+        [Header("Turn on to see gizmos indicating which cells are occupied.")]
         [SerializeField] bool _debugDrawOccupied;
 
-        internal readonly AbstractDatabase Db = new DummyDatabase();
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
 
@@ -96,7 +98,7 @@ namespace Assets.World
         /// Highlights the given cell.
         /// If the given coordinates points at already highlighted cell then it turn off cell's highlight.
         /// </summary>
-        public static void HighlightCell(Vector2Int coord) 
+        public static void HighlightCell(Vector2Int coord)
             => Instance.SelectedArea = coord.x == Instance.SelectedArea.x && coord.y == Instance.SelectedArea.y
                 ? new Vector4(-1, -1, -1, -1)
                 : new Vector4(coord.x, coord.y, coord.x, coord.y);
@@ -116,7 +118,7 @@ namespace Assets.World
                 var position = Instance.transform.InverseTransformPoint(hit.point);
                 int x = (int)Mathf.Floor(Utils.Map(0, Instance._gridSizeX, -5, 5, position.x));
                 int y = (int)Mathf.Floor(Utils.Map(0, Instance._gridSizeY, -5, 5, position.z));
-                cell =Instance._cells[x, y];
+                cell = Instance._cells[x, y];
                 return true;
             }
 
@@ -124,13 +126,7 @@ namespace Assets.World
             return false;
         }
 
-        public ref GridCell GetCell(Vector2Int positon)
-        {
-            if (positon.x < 0 || positon.y < 0 || positon.x >= _gridSizeX || positon.y >= _gridSizeY)
-                throw new System.Exception("Index out of bounds");
-
-            return ref _cells[positon.x, positon.y];
-        }
+        public ref GridCell GetCell(Vector2Int positon) => ref _cells[positon.x, positon.y];
 
         /// <summary>
         /// Returns world position of the center of the cell.
@@ -172,10 +168,10 @@ namespace Assets.World
         /// </summary>
         public static Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
         {
-            // debug assertions
-            if (Debug.isDebugBuild)
-                if (areaSize.x < 1 || areaSize.y < 1)
-                    Debug.LogError("Invalid argument(s). Size need to be a positive number.");
+#if UNITY_EDITOR
+            if (IsAreaOutOfBounds(position, areaSize))
+                Debug.LogError("Invalid argument(s). Part of the area is out of the map.");
+#endif
 
             Vector3 middle = GetCellLeftBottomPosition(position);
             middle.x += CELL_SIZE * areaSize.x / 2;
@@ -194,10 +190,10 @@ namespace Assets.World
         {
             Vector2Int size = Instance.Db[type].Size;
 
-            // debug assertions
-            if (Debug.isDebugBuild)
-                if (size.x < 1 || size.y < 1)
-                    Debug.LogError("Invalid argument(s). Size need to be a positive number.");
+#if UNITY_EDITOR
+            if (IsAreaOutOfBounds(position, size))
+                Debug.LogError("Invalid argument(s). Part of the area is out of the map.");
+#endif
 
             Vector3 middle = GetCellLeftBottomPosition(position);
             middle.x += CELL_SIZE * size.x / 2;
@@ -225,26 +221,28 @@ namespace Assets.World
         /// Position variable points at the left bottom corner cell of the area.
         /// Additional parameter allow us to omit certain building from the check.
         /// </summary>
-        public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit) 
+        public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit)
             => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != omit);
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
-        static void MarkAreaAsOccupied(Building b) 
+        static void MarkAreaAsOccupied(Building b)
             => Instance._cells.All(b.Position, Instance.Db[b.Type].Size, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
-        static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize) 
+        static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize)
             => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
 
-        public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize) 
-            => position.x < 0 || position.y < 0 || position.x + areaSize.x > Instance._gridSizeX || position.y + areaSize.y > Instance._gridSizeY;
+        public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
+            => position.x < 0 || position.x + areaSize.x > Instance._gridSizeX 
+            || position.y < 0  || position.y + areaSize.y > Instance._gridSizeY;
 
         public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
-            => position.x < 0 || position.y < 0 || position.x + Instance.Db[type].Size.x > Instance._gridSizeX || position.y + Instance.Db[type].Size.y > Instance._gridSizeY;
+            => position.x < 0 || position.x + Instance.Db[type].Size.x > Instance._gridSizeX 
+            || position.y < 0 || position.y + Instance.Db[type].Size.y > Instance._gridSizeY;
 
         /// <summary>
         /// Moves building located in the current cell to target cell.
@@ -264,7 +262,7 @@ namespace Assets.World
 
             return pos;
         }
-        
+
         /// <summary>
         /// Add BuildingTask object to the task buffer.
         /// </summary>

@@ -91,7 +91,7 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Adds resources and broadcasts the ResourceChanged event.
+        /// Adds resources and broadcasts ResourceChanged event.
         /// </summary>
         internal static void AddResources(BuildingType type) => AddResources(_instance._db[type].BuildCost);
 
@@ -185,12 +185,12 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Adds resource without broadcasting the ResourceChanged event.
+        /// Adds resource without broadcasting ResourceChanged event.
         /// </summary>
         static void AddResourceNoEventCall(Resource resource) => _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
 
         /// <summary>
-        /// Removes resource without broadcasting the ResourceChanged event.
+        /// Removes resource without broadcasting ResourceChanged event.
         /// </summary>
         static void RemoveResourceNoEventCall(Resource resource)
         {

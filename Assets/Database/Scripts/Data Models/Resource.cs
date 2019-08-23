@@ -1,5 +1,6 @@
 ﻿namespace Assets.Database.DataModels
 {
+    // marked as read-only for optimization purposes
     public readonly struct Resource
     {
         public readonly ResourceType ResourceType;

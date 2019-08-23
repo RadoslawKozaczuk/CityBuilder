@@ -6,8 +6,10 @@ namespace Assets.Database
     {
         // custom indexers for convenience
         public BuildingData this[BuildingType type] => _buildings[(int)type];
-
         public BuildingData this[int id] => _buildings[id];
+
+        // encapsulated
+        public BuildingData[] AllBuildings => _buildings;
 
         // monostate pattern - many instances, one data - this is to imitate real db
         protected static BuildingData[] _buildings = null;

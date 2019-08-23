@@ -6,8 +6,6 @@ namespace Assets.Database
 {
     public class DummyDatabase : AbstractDatabase
     {
-        public BuildingData[] AllBuildings => _buildings;
-
         public DummyDatabase()
         {
             // monostate pattern - many instances, one data - this is to imitate real db

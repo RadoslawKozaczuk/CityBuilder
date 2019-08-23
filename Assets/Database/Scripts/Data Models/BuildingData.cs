@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace Assets.Database.DataModels
 {
-    // this represents building data that comes from the data source
+    // this represents building's data that comes from the data source
+    // marked as read-only for optimization purposes
     public readonly struct BuildingData
     {
         public readonly string Name;

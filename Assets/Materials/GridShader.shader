@@ -8,7 +8,7 @@
 		[PerRendererData] _MainTex("Albedo (RGB)", 2D) = "white" {}
 		[IntRange] _GridSize("Grid Size", Range(1,100)) = 10
 		_LineSize("Line Size", Range(0,1)) = 0.15
-		_SelectedArea("Selected Area", Vector) = (-1,-1,-1,-1)
+		[HideInInspector] _SelectedArea("Selected Area", Vector) = (-1,-1,-1,-1)
 	}
 
 	SubShader
@@ -18,7 +18,7 @@
 
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+		#pragma surface surf Lambert fullforwardshadows
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
@@ -42,11 +42,10 @@
 		int4 _SelectedArea;
 
 		UNITY_INSTANCING_BUFFER_START(Props)
-
 		// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
-		void surf(Input IN, inout SurfaceOutputStandard o)
+		void surf(Input IN, inout SurfaceOutput o)
 		{
 			float2 uv = IN.uv_MainTex;
 			fixed4 c = float4(0.0, 0.0, 0.0, 0.0);
@@ -82,8 +81,8 @@
 
 			o.Albedo = float4(color.x * brightness, color.y * brightness, color.z * brightness, brightness);
 			// Metallic and smoothness come from slider variables
-			o.Metallic = 0.0;
-			o.Smoothness = 0.0;
+			//o.Metallic = 0.0;
+			//o.Smoothness = 0.0;
 			o.Alpha = 0.0;
 		}
 		ENDCG

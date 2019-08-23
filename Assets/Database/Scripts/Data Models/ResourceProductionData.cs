@@ -1,7 +1,6 @@
 ﻿namespace Assets.Database.DataModels
 {
-    // this struct is marked readonly for optimization purposes
-    // it is not like it is important but since we know it should not be changed at all why not to do it
+    // marked as read-only for optimization purposes
     public readonly struct ResourceProductionData
     {
         public readonly Resource Resource;
