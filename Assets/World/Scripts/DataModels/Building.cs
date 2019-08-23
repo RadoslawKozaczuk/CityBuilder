@@ -14,7 +14,7 @@ namespace Assets.World.DataModels
         /// </summary>
         public Vector2Int Position { get; internal set; }
 
-        public Vector2Int Size => GameMap.Instance.Db[Type].Size;
+        public Vector2Int Size => GameMap.DB[Type].Size;
 
         public string Name;
         public BuildingType Type { get; set; }
@@ -34,7 +34,7 @@ namespace Assets.World.DataModels
         {
             Type = type;
 
-            BuildingData data = GameMap.Instance.Db[type];
+            BuildingData data = GameMap.DB[type];
             GameObject = Object.Instantiate(GameMap.BuildingPrefabCollection[type]);
             GameObject.transform.position = GameMap.GetMiddlePoint(position, type);
 

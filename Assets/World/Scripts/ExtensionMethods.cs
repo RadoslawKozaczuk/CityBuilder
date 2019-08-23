@@ -11,7 +11,7 @@ namespace Assets.World
         /// Immediately returns true if the function result is true, otherwise false.
         /// This method assumes parameters are valid.
         /// </summary>
-        public static bool Any(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.FunctionRefStruct<GridCell> func)
+        internal static bool Any(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.FunctionRefStruct<GridCell> func)
         {
             for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
                 for (int j = leftBotCell.y; j < leftBotCell.y + areaSize.y; j++)
@@ -25,7 +25,7 @@ namespace Assets.World
         /// Executes the given action on every cell in the given area.
         /// This method assumes parameters are valid.
         /// </summary>
-        public static void All(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.ActionRefStruct<GridCell> action)
+        internal static void All(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.ActionRefStruct<GridCell> action)
         {
             for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
                 for (int j = leftBotCell.y; j < leftBotCell.y + areaSize.y; j++)
@@ -37,7 +37,7 @@ namespace Assets.World
         /// Each building has different position offset attached to him.
         /// Calling this method is necessary to position the building right.
         /// </summary>
-        public static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
+        internal static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
         {
             GameObject prefab = GameMap.BuildingPrefabCollection[type];
             position.x += prefab.transform.position.x;

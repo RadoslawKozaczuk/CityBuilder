@@ -66,8 +66,7 @@ namespace Assets.Scripts
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
-                _hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.Value.Coordinates, _type)
-                    .ApplyPrefabPositionOffset(_type);
+                _hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.Value.Coordinates, _type);
             }
         }
 

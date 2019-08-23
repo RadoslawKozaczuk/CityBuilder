@@ -20,10 +20,8 @@ namespace Assets.Scripts.UI
 
         public override bool Call()
         {
-            if (_succeeded)
+            if (_succeeded || !CheckConditions())
                 return false;
-
-            CheckConditions();
 
             To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
             Building = GameMap.BuildBuilding(Type, To);
@@ -37,9 +35,7 @@ namespace Assets.Scripts.UI
             if (!_succeeded)
                 return false;
 
-            // remove building
-
-            Object.Destroy(Building.GameObject);
+            GameMap.RemoveBuilding(Building);
             Building = null;
             _succeeded = false;
 

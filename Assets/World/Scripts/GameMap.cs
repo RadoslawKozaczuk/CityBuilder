@@ -12,20 +12,21 @@ namespace Assets.World
     }
 
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(ResourceManager), typeof(BuildingPrefabCollection))]
+    [RequireComponent(typeof(BuildingPrefabCollection))]
     public class GameMap : MonoBehaviour
     {
+        public const float CELL_SIZE = 10f;
+
         // to circumnavigate the regular anonymous method declaration limitation
-        public delegate void ActionRefStruct<T1>(ref GridCell cell);
-        public delegate bool FunctionRefStruct<T1>(ref GridCell cell);
-
-        const float CELL_SIZE = 10f;
-
-        public static GameMap Instance;
+        internal delegate void ActionRefStruct<T1>(ref GridCell cell);
+        internal delegate bool FunctionRefStruct<T1>(ref GridCell cell);
+            
         public static BuildingPrefabCollection BuildingPrefabCollection;
 
-        internal readonly AbstractDatabase Db = new DummyDatabase();
+        internal static GameMap Instance;
+        internal static readonly AbstractDatabase DB = new DummyDatabase();
 
+        #region Properties
         Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
         Vector4 SelectedArea
         {
@@ -37,44 +38,41 @@ namespace Assets.World
             }
         }
 
-        [Header("These parameters are applied only at the start of the game")]
-        [Range(1, 100)] [SerializeField] int _gridSizeX = 12;
-        [Range(1, 100)] [SerializeField] int _gridSizeY = 12;
+        [Header("These parameters are applied only at the start of the game.")]
+        [Range(1, 100)] [SerializeField] int _gridSizeX = 16;
+        public static int GridSizeX => Instance._gridSizeX;   // to bypass Range ATR only to variables appliance
+        [Range(1, 100)] [SerializeField] int _gridSizeY = 16; // as well as to not break the Instance encapsulation
+        public static int GridSizeY => Instance._gridSizeX; // same as above
+        #endregion
 
         [Header("Turn on to see gizmos indicating which cells are occupied.")]
-        [SerializeField] bool _debugDrawOccupied;
+        [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in order to make it work
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
+        readonly GridCell[,] _cells;
+        readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
 
-        GridCell[,] _cells;
         Material _material;
-        float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
 
         #region Unity life-cycle methods
         void Awake()
         {
             Instance = this;
             BuildingPrefabCollection = GetComponent<BuildingPrefabCollection>();
-        }
-
-        void Start()
-        {
-            _cells = new GridCell[_gridSizeX, _gridSizeY];
-            for (int i = 0; i < _gridSizeX; i++)
-                for (int j = 0; j < _gridSizeY; j++)
-                    _cells[i, j] = new GridCell(i, j);
-
-            _localOffsetX = _gridSizeX * CELL_SIZE / 2;
-            _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
+            transform.localScale = new Vector3(_gridSizeX, 1, _gridSizeY);
 
             _material = gameObject.GetComponent<MeshRenderer>().material;
+            _material.SetInt("_GridSizeX", _gridSizeX);
+            _material.SetInt("_GridSizeY", _gridSizeY);
         }
 
         void Update()
         {
-            if (Debug.isDebugBuild && _debugDrawOccupied)
+#if UNITY_EDITOR
+            if (_debugDrawOccupied)
                 DebugDrawOccupied();
+#endif
 
             UpdateTasks();
         }
@@ -86,12 +84,32 @@ namespace Assets.World
         }
         #endregion
 
+        // This constructor will be called by Unity Engine.
+        // We need private constructor in order to be able to mark these variables as read-only
+        // in order to allow compiler to perform extra optimizations, this is especially important in case of cells array 
+        GameMap()
+        {
+            _cells = new GridCell[_gridSizeX, _gridSizeY];
+            for (int i = 0; i < _gridSizeX; i++)
+                for (int j = 0; j < _gridSizeY; j++)
+                    _cells[i, j] = new GridCell(i, j);
+
+            _localOffsetX = _gridSizeX * CELL_SIZE / 2;
+            _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
+        }
+
         public static Building BuildBuilding(BuildingType type, Vector2Int position)
         {
             var building = new Building(type, position);
             MarkAreaAsOccupied(building);
 
             return building;
+        }
+
+        public static void RemoveBuilding(Building building)
+        {
+            MarkAreaAsFree(building);
+            Destroy(building.GameObject);
         }
 
         /// <summary>
@@ -188,7 +206,7 @@ namespace Assets.World
         /// </summary>
         public static Vector3 GetMiddlePoint(Vector2Int position, BuildingType type)
         {
-            Vector2Int size = Instance.Db[type].Size;
+            Vector2Int size = DB[type].Size;
 
 #if UNITY_EDITOR
             if (IsAreaOutOfBounds(position, size))
@@ -214,7 +232,7 @@ namespace Assets.World
         /// Position variable points at the left bottom corner cell of the area.
         /// </summary>
         public static bool IsAreaFree(Vector2Int position, BuildingType type)
-            => !Instance._cells.Any(position, Instance.Db[type].Size, (ref GridCell cell) => cell.IsOccupied);
+            => !Instance._cells.Any(position, DB[type].Size, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>
         /// Returns true if the area of the given size is entirely free, false otherwise.
@@ -228,7 +246,7 @@ namespace Assets.World
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         static void MarkAreaAsOccupied(Building b)
-            => Instance._cells.All(b.Position, Instance.Db[b.Type].Size, (ref GridCell c) => c.Building = b);
+            => Instance._cells.All(b.Position, DB[b.Type].Size, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
@@ -236,22 +254,35 @@ namespace Assets.World
         static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize)
             => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
 
+        /// <summary>
+        /// Mark cells occupied by the given building as free.
+        /// </summary>
+        static void MarkAreaAsFree(Building building)
+            => MarkAreaAsFree(building.Position, building.Size);
+
         public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
             => position.x < 0 || position.x + areaSize.x > Instance._gridSizeX 
             || position.y < 0  || position.y + areaSize.y > Instance._gridSizeY;
 
         public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
-            => position.x < 0 || position.x + Instance.Db[type].Size.x > Instance._gridSizeX 
-            || position.y < 0 || position.y + Instance.Db[type].Size.y > Instance._gridSizeY;
+            => position.x < 0 || position.x + DB[type].Size.x > Instance._gridSizeX 
+            || position.y < 0 || position.y + DB[type].Size.y > Instance._gridSizeY;
 
         /// <summary>
         /// Moves building located in the current cell to target cell.
+        /// Last parameter allows you to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
+        /// This can be useful, for example, for implementing undo operation.
         /// </summary>
         public static void MoveBuilding(Building b, Vector2Int to, ResourceOperationType rot = ResourceOperationType.Remove)
         {
             b.Position = to;
             b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
                .ApplyPrefabPositionOffset(b.Type);
+
+            if (rot == ResourceOperationType.Add)
+                ResourceManager.AddResources(b.ReallocationCost);
+            else
+                ResourceManager.RemoveResources(b.ReallocationCost);
         }
 
         static Vector3 GetCellLeftBottomPositionInternal(Vector2Int position)
@@ -283,6 +314,7 @@ namespace Assets.World
             }
         }
 
+#if UNITY_EDITOR
         void DebugDrawOccupied()
         {
             for (int x = 0; x < _gridSizeX; x++)
@@ -302,5 +334,6 @@ namespace Assets.World
                     }
                 }
         }
+#endif
     }
 }

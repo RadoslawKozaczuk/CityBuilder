@@ -6,8 +6,9 @@
 		_CellColor("Cell Color", Color) = (0,0,0,0)
 		_SelectedColor("Selected Color", Color) = (1,0,0,1)
 		[PerRendererData] _MainTex("Albedo (RGB)", 2D) = "white" {}
-		[IntRange] _GridSize("Grid Size", Range(1,100)) = 10
-		_LineSize("Line Size", Range(0,1)) = 0.15
+		[HideInInspector] [IntRange] _GridSizeX("Grid Size X", Range(1, 100)) = 16
+		[HideInInspector] [IntRange] _GridSizeY("Grid Size Y", Range(1, 100)) = 16
+		[HideInInspector] _LineSize("Line Size", Range(0,1)) = 0.1 // I hid it because I think it is a pretty useless parameter
 		[HideInInspector] _SelectedArea("Selected Area", Vector) = (-1,-1,-1,-1)
 	}
 
@@ -36,7 +37,8 @@
 		float4 _CellColor;
 		float4 _SelectedColor;
 
-		float _GridSize;
+		float _GridSizeX;
+		float _GridSizeY;
 		float _LineSize;
 
 		int4 _SelectedArea;
@@ -51,11 +53,10 @@
 			fixed4 c = float4(0.0, 0.0, 0.0, 0.0);
 
 			float brightness = 1.0;
-			
-			float gsize = floor(_GridSize);
+
 			float2 id;
-			id.x = floor((1.0 - uv.x) / (1.0 / gsize));
-			id.y = floor((1.0 - uv.y) / (1.0 / gsize));
+			id.x = floor((1.0 - uv.x) / (1.0 / _GridSizeX));
+			id.y = floor((1.0 - uv.y) / (1.0 / _GridSizeY));
 			
 			float4 color = _CellColor;
 			brightness = _CellColor.w;
@@ -67,7 +68,7 @@
 				color = _SelectedColor;
 			}
 
-			if (frac(uv.x * gsize) <= _LineSize || frac(uv.y * gsize) <= _LineSize)
+			if (frac(uv.x * _GridSizeX) <= _LineSize || frac(uv.y * _GridSizeY) <= _LineSize)
 			{
 				brightness = _LineColor.w;
 				color = _LineColor;
@@ -75,9 +76,7 @@
 
 			// Clip transparent spots using alpha cutout
 			if (brightness == 0.0)
-			{
 				clip(c.a - 1.0);
-			}
 
 			o.Albedo = float4(color.x * brightness, color.y * brightness, color.z * brightness, brightness);
 			// Metallic and smoothness come from slider variables

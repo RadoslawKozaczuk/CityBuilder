@@ -4,6 +4,7 @@ namespace Assets.World.DataModels
 {
     public struct GridCell
     {
+        // for convenience
         public bool IsOccupied { get => Building != null; }
 
         public Building Building { get; internal set; }
