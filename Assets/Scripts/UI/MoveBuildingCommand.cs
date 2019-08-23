@@ -1,5 +1,7 @@
-﻿using Assets.Scripts.DataModels;
+﻿using Assets.Database;
 using Assets.Scripts.Interfaces;
+using Assets.World;
+using Assets.World.DataModels;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -29,7 +31,6 @@ namespace Assets.Scripts.UI
 
             To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
             GameMap.MoveBuilding(Building, To);
-            ResourceManager.RemoveResources(GameEngine.Instance.Db[Type].ReallocationCost);
             _succeeded = true;
 
             return true;
@@ -40,8 +41,7 @@ namespace Assets.Scripts.UI
             if (!_succeeded)
                 return false;
 
-            ResourceManager.AddResources(Building.ReallocationCost);
-            GameMap.MoveBuilding(Building, From);
+            GameMap.MoveBuilding(Building, From, ResourceOperationType.Add);
             _succeeded = false;
 
             return true;

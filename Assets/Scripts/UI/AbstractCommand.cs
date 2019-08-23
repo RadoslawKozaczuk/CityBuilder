@@ -42,9 +42,6 @@ namespace Assets.Scripts.UI
             return command;
         }
 
-        void InjectBaseVariables(AbstractCommand reciever)
-        {
-            reciever._succeeded = _succeeded;
-        }
+        void InjectBaseVariables(AbstractCommand reciever) => reciever._succeeded = _succeeded;
     }
 }

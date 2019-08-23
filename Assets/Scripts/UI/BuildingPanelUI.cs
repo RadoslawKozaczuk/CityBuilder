@@ -1,5 +1,6 @@
-﻿using Assets.Scripts.DataModels;
-using Assets.Scripts.DataSource;
+﻿using Assets.Database;
+using Assets.Database.DataModels;
+using Assets.World;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,10 +28,10 @@ namespace Assets.Scripts.UI
                 buttonUI.Title.text = b.Name;
                 buttonUI.BuildingType = b.Type;
                 buttonUI.GetComponent<Button>().onClick.AddListener(() => GameEngine.Instance.StartBuildingConstruction(buttonUI.BuildingType));
-                buttonUI.BuildButton.interactable = ResourceManager.IsEnoughResources(b.Cost);
+                buttonUI.BuildButton.interactable = ResourceManager.IsEnoughResources(b.BuildCost);
                 _buttons.Add(buttonUI);
 
-                foreach (Resource r in b.Cost)
+                foreach (Resource r in b.BuildCost)
                 {
                     GameObject go = Instantiate(_resourceElementPrefab, buttonUI.Resources);
                     ResourceElementUI resUI = go.GetComponent<ResourceElementUI>();

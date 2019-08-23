@@ -1,11 +1,12 @@
 ﻿using System;
 
-namespace Assets.Scripts.DataModels
+namespace Assets.Database.DataModels
 {
     public class BuildingTask
     {
-        public float TotalTime, TimeLeft;
-        public Action ActionOnFinish;
+        public readonly Action ActionOnFinish;
+        public readonly float TotalTime;
+        public float TimeLeft;
 
         public BuildingTask(float executionDelay, Action onCompleteAction)
         {

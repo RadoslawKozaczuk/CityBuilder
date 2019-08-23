@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using Assets.Database;
+using Assets.World.DataModels;
+using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.World
 {
-    static class ExtensionMethods
+    public static class ExtensionMethods
     {
         /// <summary>
         /// Executes the given function on every cell in the given area. 
@@ -37,7 +39,7 @@ namespace Assets.Scripts
         /// </summary>
         public static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
         {
-            GameObject prefab = GameEngine.Instance.BuildingPrefabs[(int)type];
+            GameObject prefab = GameMap.BuildingPrefabCollection[type];
             position.x += prefab.transform.position.x;
             position.y = prefab.transform.position.y;
             position.z += prefab.transform.position.z;

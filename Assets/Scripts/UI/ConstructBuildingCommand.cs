@@ -1,4 +1,6 @@
-﻿using Assets.Scripts.DataModels;
+﻿using Assets.Database;
+using Assets.World;
+using Assets.World.DataModels;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -24,8 +26,7 @@ namespace Assets.Scripts.UI
             CheckConditions();
 
             To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
-            Building = new Building(Type, To);
-            ResourceManager.RemoveResources(Type);
+            Building = GameMap.BuildBuilding(Type, To);
             _succeeded = true;
 
             return true;
@@ -36,8 +37,8 @@ namespace Assets.Scripts.UI
             if (!_succeeded)
                 return false;
 
-            ResourceManager.AddResources(Type);
-            GameMap.MarkAreaAsFree(Building.Position, Building.Size);
+            // remove building
+
             Object.Destroy(Building.GameObject);
             Building = null;
             _succeeded = false;

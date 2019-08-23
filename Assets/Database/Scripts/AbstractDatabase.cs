@@ -1,6 +1,6 @@
-﻿using Assets.Scripts.DataModels;
+﻿using Assets.Database.DataModels;
 
-namespace Assets.Scripts.DataSource
+namespace Assets.Database
 {
     public abstract class AbstractDatabase
     {

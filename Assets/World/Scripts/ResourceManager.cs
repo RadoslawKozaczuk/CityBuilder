@@ -1,29 +1,26 @@
-﻿using Assets.Scripts.DataModels;
-using Assets.Scripts.DataSource;
+﻿using Assets.Database;
+using Assets.Database.DataModels;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.World
 {
-    class ResourceChangedEventArgs
-    {
-        public List<Resource> Resources;
-    }
-
     /// <summary>
     /// ResourceManager is a singleton class responsible for storing resources.
     /// Subscribe to ResourceChangedEventHandler to be informed about any changes.
     /// </summary>
     [DisallowMultipleComponent]
-    class ResourceManager : MonoBehaviour
+    public class ResourceManager : MonoBehaviour
     {
         static ResourceManager _instance;
 
-        // subscribers
-        public static event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
-
         [SerializeField] Sprite[] _resourceIcons;
+
+        /// <summary>
+        /// Subscribe to this event to receive notifications each time resource number has changed.
+        /// </summary>
+        public static event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
         readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
         readonly AbstractDatabase _db = new DummyDatabase();
@@ -65,14 +62,43 @@ namespace Assets.Scripts
         }
 
         /// <summary>
+        /// Returns true if the player has enough resources to build this type of building, false otherwise.
+        /// </summary>
+        public static bool IsEnoughResources(BuildingType type)  => IsEnoughResources(_instance._db[type].BuildCost);
+
+        /// <summary>
+        /// Returns true if the player has this amount of resources, false otherwise.
+        /// </summary>
+        public static bool IsEnoughResources(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
+
+        /// <summary>
+        /// Returns true if the player has this amount of resources, false otherwise.
+        /// Null value is interpreted as zero resources and therefore gives true in return.
+        /// </summary>
+        public static bool IsEnoughResources(Resource? resource)
+            => resource.HasValue ? _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity : true;
+
+        /// <summary>
+        /// Returns true if the player has this amount of resources, false otherwise.
+        /// </summary>
+        public static bool IsEnoughResources(List<Resource> resources)
+        {
+            foreach (Resource resource in resources)
+                if (!IsEnoughResources(resource))
+                    return false;
+
+            return true;
+        }
+
+        /// <summary>
         /// Adds resources and broadcasts the ResourceChanged event.
         /// </summary>
-        public static void AddResources(BuildingType type) => AddResources(_instance._db[type].Cost);
+        internal static void AddResources(BuildingType type) => AddResources(_instance._db[type].BuildCost);
 
         /// <summary>
         /// Adds resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void AddResources(Resource resource)
+        internal static void AddResources(Resource resource)
         {
             // update value
             _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
@@ -85,7 +111,7 @@ namespace Assets.Scripts
         /// Adds resource and broadcasts ResourceChanged event to all subscribers.
         /// In case resource is equal to null nothing happens.
         /// </summary>
-        public static void AddResources(Resource? resource)
+        internal static void AddResources(Resource? resource)
         {
             if (!resource.HasValue)
                 return;
@@ -96,7 +122,7 @@ namespace Assets.Scripts
         /// <summary>
         /// Removes resources and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResources(List<Resource> resources)
+        internal static void RemoveResources(List<Resource> resources)
         {
             var newResources = new List<Resource>(resources.Count);
 
@@ -114,12 +140,12 @@ namespace Assets.Scripts
         /// <summary>
         /// Removes resources and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResources(BuildingType type) => RemoveResources(_instance._db[type].Cost);
+        internal static void RemoveResources(BuildingType type) => RemoveResources(_instance._db[type].BuildCost);
 
         /// <summary>
         /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResources(Resource resource)
+        internal static void RemoveResources(Resource resource)
         {
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
             {
@@ -137,7 +163,7 @@ namespace Assets.Scripts
         /// <summary>
         /// Removes resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
-        public static void RemoveResources(Resource? resource)
+        internal static void RemoveResources(Resource? resource)
         {
             if (!resource.HasValue)
                 return;
@@ -157,34 +183,6 @@ namespace Assets.Scripts
             // inform subscribers
             BroadcastResourceChanged(new Resource(resourceType, _instance._playerResources[(int)resourceType]));
         }
-
-        /// <summary>
-        /// Returns true if the player has this amount of resources, false otherwise.
-        /// </summary>
-        public static bool IsEnoughResources(List<Resource> resources)
-        {
-            foreach (Resource resource in resources)
-                if (!IsEnoughResources(resource))
-                    return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if the player has this amount of resources, false otherwise.
-        /// </summary>
-        public static bool IsEnoughResources(BuildingType type) => IsEnoughResources(_instance._db[type].Cost);
-
-        /// <summary>
-        /// Returns true if the player has this amount of resources, false otherwise.
-        /// </summary>
-        public static bool IsEnoughResources(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
-
-        /// <summary>
-        /// Returns true if the player has this amount of resources, false otherwise.
-        /// </summary>
-        public static bool IsEnoughResources(Resource? resource) 
-            => resource.HasValue ? _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity : true;
 
         /// <summary>
         /// Adds resource without broadcasting the ResourceChanged event.

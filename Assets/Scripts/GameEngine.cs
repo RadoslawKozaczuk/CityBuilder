@@ -1,7 +1,7 @@
-﻿using Assets.Scripts.DataModels;
-using Assets.Scripts.DataSource;
-using Assets.Scripts.Interfaces;
+﻿using Assets.Database;
 using Assets.Scripts.UI;
+using Assets.World;
+using Assets.World.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,15 +16,12 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
-        public GameObject[] BuildingPrefabs;
         public readonly AbstractDatabase Db = new DummyDatabase();
         public GridCell? CellUnderCursorCached;
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         [SerializeField] TextMeshProUGUI _commandListText;
-
-        readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
-        readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
+        
         readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
 
         AbstractCommand _pendingCommand;
@@ -48,15 +45,7 @@ namespace Assets.Scripts
                     : (GridCell?)cell;
 
             ProcessInput();
-            UpdateTasks();
-
             UpdateLocalsBasedOnMousePos();
-        }
-
-        void LateUpdate()
-        {
-            _scheduledTasks.AddRange(_taskBuffer);
-            _taskBuffer.Clear();
         }
         #endregion
 
@@ -82,21 +71,6 @@ namespace Assets.Scripts
             }
         }
 
-        void UpdateTasks()
-        {
-            for (int i = 0; i < _scheduledTasks.Count; i++)
-            {
-                BuildingTask task = _scheduledTasks[i];
-                task.TimeLeft -= Time.deltaTime;
-
-                if (task.TimeLeft > 0)
-                    return;
-
-                task.ActionOnFinish();
-                _scheduledTasks.RemoveAt(i--);
-            }
-        }
-
         void ProcessInput()
         {
             if (Input.GetMouseButtonDown(0))
@@ -118,7 +92,7 @@ namespace Assets.Scripts
                     else
                     {
                         HideBuildingInfo();
-                        GameMap.SelectCell(CellUnderCursorCached.Value.Coordinates);
+                        GameMap.HighlightCell(CellUnderCursorCached.Value.Coordinates);
                     }
                 }
             }
@@ -180,11 +154,6 @@ namespace Assets.Scripts
             _commandListText.text = sb.ToString();
         }
 
-        /// <summary>
-        /// Add BuildingTask object to the task buffer.
-        /// </summary>
-        public void ScheduleTask(BuildingTask task) => _taskBuffer.Add(task);
-
         public void StartBuildingConstruction(BuildingType type)
         {
             InstanciateHologram(type);
@@ -201,7 +170,7 @@ namespace Assets.Scripts
 
         void InstanciateHologram(BuildingType type)
         {
-            GameObject prefab = BuildingPrefabs[(int)type];
+            GameObject prefab = GameMap.BuildingPrefabCollection[type];
             _hologram = Instantiate(prefab);
             _hologramMeshRenderer = _hologram.GetComponent<MeshRenderer>();
             _hologramMeshRenderer.material = MaterialManager.GetMaterial(CommonMaterialType.HolographicGreen);

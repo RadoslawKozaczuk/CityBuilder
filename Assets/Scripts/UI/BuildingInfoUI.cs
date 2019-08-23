@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.DataModels;
+﻿using Assets.World;
+using Assets.World.DataModels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

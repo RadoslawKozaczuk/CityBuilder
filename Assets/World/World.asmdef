@@ -1,0 +1,15 @@
+{
+    "name": "World",
+    "references": [
+        "GUID:cf0ad477e09c30546b68c299cacbebe3"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

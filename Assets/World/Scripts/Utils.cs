@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.World
 {
-    class Utils
+    public class Utils
     {
         /// <summary>
         /// Map value from one range to another.
