@@ -7,7 +7,7 @@ namespace Assets.World.DataModels
     // this represents building object in the game
     public sealed class Building
     {
-        const float CONSTRUCTION_TIME = 5f; // hardcoded for simplicity
+        const float CONSTRUCTION_TIME = 5f; // hard-coded for simplicity
 
         /// <summary>
         /// Position always point at the left bottom corner of the building.
@@ -17,7 +17,7 @@ namespace Assets.World.DataModels
         public Vector2Int Size => GameMap.DB[Type].Size;
 
         public string Name;
-        public BuildingType Type { get; set; }
+        public readonly BuildingType Type;
         public GameObject GameObject { get; set; }
         public bool Constructed = false;
         public bool ProductionStarted;

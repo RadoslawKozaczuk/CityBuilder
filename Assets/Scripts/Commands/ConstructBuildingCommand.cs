@@ -6,7 +6,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.Commands
 {
     class ConstructBuildingCommand : AbstractCommand, ICloneable<AbstractCommand>
     {
@@ -15,8 +15,8 @@ namespace Assets.Scripts.UI
         public new readonly BuildingType Type; // Type base variable is hidden but we want to have both to make it accessible without casting
         public Building Building { get; private set; }
 
-        NullableGridCellStructRef _promise;
-        bool _lateEvaluation;
+        readonly NullableGridCellStructRef _promise;
+        readonly bool _lateEvaluation;
 
         /// <summary>
         /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.

@@ -1,7 +1,7 @@
 ﻿using Assets.Database;
 using Assets.Scripts.Interfaces;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.Commands
 {
     abstract class AbstractCommand : ICommand, ICloneable<AbstractCommand>
     {

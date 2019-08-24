@@ -17,7 +17,6 @@ namespace Assets.World
     public sealed class GameMap : MonoBehaviour
     {
         public const float CELL_SIZE = 10f;
-        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything > 0.5 as selected
 
         // to circumnavigate the regular anonymous method declaration limitation
         internal delegate void ActionRefStruct<T1>(ref GridCell cell);

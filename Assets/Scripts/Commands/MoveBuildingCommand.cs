@@ -6,7 +6,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.Commands
 {
     class MoveBuildingCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
