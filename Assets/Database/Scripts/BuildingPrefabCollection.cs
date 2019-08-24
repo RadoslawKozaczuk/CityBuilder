@@ -3,7 +3,7 @@
 namespace Assets.Database
 {
     [DisallowMultipleComponent]
-    public class BuildingPrefabCollection : MonoBehaviour
+    public sealed class BuildingPrefabCollection : MonoBehaviour
     {
         // custom indexers for convenience
         public GameObject this[BuildingType type] => _buildings[(int)type];

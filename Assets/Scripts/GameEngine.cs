@@ -11,6 +11,9 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Scripts
 {
+    /// <summary>
+    /// This wrapper is here because it is troublesome to pass reference to a nullable struct in C#.
+    /// </summary>
     public sealed class NullableGridCellStructRef
     {
         public GridCell? GridCell;
@@ -48,9 +51,6 @@ namespace Assets.Scripts
                     ? null
                     : (GridCell?) cell;
 
-            //if(CellUnderCursorCached.GridCell.HasValue)
-            //    Debug.Log("coords: " + CellUnderCursorCached.GridCell.Value.Coordinates.x + ", " + CellUnderCursorCached.GridCell.Value.Coordinates.y);
-
             ProcessInput();
             UpdateHologramPosition();
         }
@@ -86,7 +86,6 @@ namespace Assets.Scripts
                     : CommonMaterialType.HolographicRed);
 
                 _hologram.transform.position = GameMap.GetMiddlePointWithOffset(CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
-                //_hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.GridCell.Value.Coordinates, new Vector2Int(2, 2));
 
                 var p = CellUnderCursorCached.GridCell.Value.Coordinates;
                 Debug.Log("Hologram: " + _pendingCommand.Type.ToString() + " " + p.x + ", " + p.y);

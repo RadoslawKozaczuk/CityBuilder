@@ -2,7 +2,7 @@
 
 namespace Assets.Database.DataModels
 {
-    public class BuildingTask
+    public sealed class BuildingTask
     {
         public readonly Action ActionOnFinish;
         public readonly float TotalTime;

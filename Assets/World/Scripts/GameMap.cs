@@ -7,38 +7,28 @@ using UnityEngine;
 
 namespace Assets.World
 {
-    public class ResourceChangedEventArgs
+    public sealed class ResourceChangedEventArgs
     {
         public List<Resource> Resources;
     }
 
     [DisallowMultipleComponent]
     [RequireComponent(typeof(BuildingPrefabCollection))]
-    public class GameMap : MonoBehaviour
+    public sealed class GameMap : MonoBehaviour
     {
         public const float CELL_SIZE = 10f;
+        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything > 0.5 as selected
 
         // to circumnavigate the regular anonymous method declaration limitation
         internal delegate void ActionRefStruct<T1>(ref GridCell cell);
         internal delegate bool FunctionRefStruct<T1>(ref GridCell cell);
-            
+
         public static BuildingPrefabCollection BuildingPrefabCollection;
 
         internal static GameMap Instance;
         internal static readonly AbstractDatabase DB = new DummyDatabase();
 
         #region Properties
-        Vector4 _selectedArea = new Vector4(-1, -1, -1, -1);
-        Vector4 SelectedArea
-        {
-            get => _selectedArea;
-            set
-            {
-                _selectedArea = value;
-                _material.SetVector("_SelectedArea", _selectedArea);
-            }
-        }
-
         [Header("These parameters are applied only at the start of the game.")]
         [Range(1, 100)] [SerializeField] int _gridSizeX = 16;
         public static int GridSizeX => Instance._gridSizeX;   // to bypass Range ATR only to variables appliance
@@ -54,6 +44,7 @@ namespace Assets.World
         readonly GridCell[,] _cells;
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
         Material _material;
+        GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
 
         #region Unity life-cycle methods
         void Awake()
@@ -65,6 +56,8 @@ namespace Assets.World
             _material = gameObject.GetComponent<MeshRenderer>().material;
             _material.SetInt("_GridSizeX", _gridSizeX);
             _material.SetInt("_GridSizeY", _gridSizeY);
+
+            _gridShaderAdapter.InitializeCellTexture();
         }
 
         void Update()
@@ -81,6 +74,8 @@ namespace Assets.World
         {
             _scheduledTasks.AddRange(_taskBuffer);
             _taskBuffer.Clear();
+
+            _gridShaderAdapter.SendDataToGPU();
         }
         #endregion
 
@@ -100,7 +95,6 @@ namespace Assets.World
 
         public static Building BuildBuilding(BuildingType type, Vector2Int position)
         {
-            Debug.Log("GameMap->BuildBuilding: " + type.ToString() + " " + position.x + ", " + position.y);
             var building = new Building(type, position);
             MarkAreaAsOccupied(building);
 
@@ -117,18 +111,18 @@ namespace Assets.World
         /// Highlights the given cell.
         /// If the given coordinates points at already highlighted cell then it turn off cell's highlight.
         /// </summary>
-        public static void HighlightCell(Vector2Int coord)
-            => Instance.SelectedArea = coord.x == Instance.SelectedArea.x && coord.y == Instance.SelectedArea.y
-                ? new Vector4(-1, -1, -1, -1)
-                : new Vector4(coord.x, coord.y, coord.x, coord.y);
-
+        public static void HighlightCell(Vector2Int coord) => Instance._gridShaderAdapter[coord] = !Instance._gridShaderAdapter[coord];
+                
         /// <summary>
         /// Highlights the given cell.
         /// If the given cell is already highlighted then the cell's highlight is turned off.
         /// </summary>
         public static void HighlightCell(ref GridCell cell) => HighlightCell(cell.Coordinates);
 
-        public static void ResetSelection() => Instance.SelectedArea = new Vector4(-1, -1, -1, -1);
+        /// <summary>
+        /// Disables all highlight.
+        /// </summary>
+        public static void ResetSelection() => Instance._gridShaderAdapter.ResetAllSelection();
 
         public static bool GetCell(Ray ray, out GridCell cell)
         {

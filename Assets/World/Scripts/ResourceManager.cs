@@ -12,7 +12,7 @@ namespace Assets.World
     /// Subscribe to ResourceChangedEventHandler to be informed about any changes.
     /// </summary>
     [DisallowMultipleComponent]
-    public class ResourceManager : MonoBehaviour
+    public sealed class ResourceManager : MonoBehaviour
     {
         static ResourceManager _instance;
 

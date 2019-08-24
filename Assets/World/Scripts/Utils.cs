@@ -2,7 +2,7 @@
 
 namespace Assets.World
 {
-    public class Utils
+    public sealed class Utils
     {
         /// <summary>
         /// Map value from one range to another.
