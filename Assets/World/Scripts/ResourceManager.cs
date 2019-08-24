@@ -2,6 +2,7 @@
 using Assets.Database.DataModels;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Assets.World
@@ -64,17 +65,20 @@ namespace Assets.World
         /// <summary>
         /// Returns true if the player has enough resources to build this type of building, false otherwise.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsEnoughResources(BuildingType type)  => IsEnoughResources(_instance._db[type].BuildCost);
 
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsEnoughResources(Resource resource) => _instance._playerResources[(int)resource.ResourceType] >= resource.Quantity;
 
         /// <summary>
         /// Returns true if the player has this amount of resources, false otherwise.
         /// Null value is interpreted as zero resources and therefore gives true in return.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsEnoughResources(Resource? resource)
             => resource.HasValue ? _instance._playerResources[(int)resource.Value.ResourceType] >= resource.Value.Quantity : true;
 
@@ -91,13 +95,15 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Adds resources and broadcasts ResourceChanged event.
+        /// Adds amount of resources necessary to build a building of the given type, and broadcasts ResourceChanged event.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void AddResources(BuildingType type) => AddResources(_instance._db[type].BuildCost);
 
         /// <summary>
         /// Adds resource and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void AddResources(Resource resource)
         {
             // update value
@@ -187,6 +193,7 @@ namespace Assets.World
         /// <summary>
         /// Adds resource without broadcasting ResourceChanged event.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void AddResourceNoEventCall(Resource resource) => _instance._playerResources[(int)resource.ResourceType] += resource.Quantity;
 
         /// <summary>

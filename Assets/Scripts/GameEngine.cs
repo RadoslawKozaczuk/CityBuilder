@@ -11,13 +11,18 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Scripts
 {
+    public sealed class NullableGridCellStructRef
+    {
+        public GridCell? GridCell;
+    }
+
     [DisallowMultipleComponent]
     public class GameEngine : MonoBehaviour
     {
         public static GameEngine Instance { get; private set; }
 
         public readonly AbstractDatabase Db = new DummyDatabase();
-        public GridCell? CellUnderCursorCached;
+        public NullableGridCellStructRef CellUnderCursorCached = new NullableGridCellStructRef();
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         [SerializeField] TextMeshProUGUI _commandListText;
@@ -27,7 +32,6 @@ namespace Assets.Scripts
         AbstractCommand _pendingCommand;
         GameObject _hologram;
         MeshRenderer _hologramMeshRenderer;
-        BuildingType _type;
 
         #region Unity life-cycle methods
         void Awake()
@@ -39,17 +43,32 @@ namespace Assets.Scripts
         void Update()
         {
             // some often used values are cached for performance reasons
-            CellUnderCursorCached = EventSystem.current.IsPointerOverGameObject()
+            CellUnderCursorCached.GridCell = EventSystem.current.IsPointerOverGameObject()
                 || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell)
                     ? null
-                    : (GridCell?)cell;
+                    : (GridCell?) cell;
+
+            //if(CellUnderCursorCached.GridCell.HasValue)
+            //    Debug.Log("coords: " + CellUnderCursorCached.GridCell.Value.Coordinates.x + ", " + CellUnderCursorCached.GridCell.Value.Coordinates.y);
 
             ProcessInput();
-            UpdateLocalsBasedOnMousePos();
+            UpdateHologramPosition();
         }
         #endregion
 
-        void UpdateLocalsBasedOnMousePos()
+        public void StartBuildingConstruction(BuildingType type)
+        {
+            InstanciateHologram(type);
+            _pendingCommand = new ConstructBuildingCommand(type, CellUnderCursorCached);
+        }
+
+        public void StartBuildingReallocation(Building b)
+        {
+            InstanciateHologram(b.Type);
+            _pendingCommand = new MoveBuildingCommand(b, CellUnderCursorCached);
+        }
+
+        void UpdateHologramPosition()
         {
             if (_pendingCommand != null)
             {
@@ -66,7 +85,11 @@ namespace Assets.Scripts
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
-                _hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.Value.Coordinates, _type);
+                _hologram.transform.position = GameMap.GetMiddlePointWithOffset(CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
+                //_hologram.transform.position = GameMap.GetMiddlePoint(CellUnderCursorCached.GridCell.Value.Coordinates, new Vector2Int(2, 2));
+
+                var p = CellUnderCursorCached.GridCell.Value.Coordinates;
+                Debug.Log("Hologram: " + _pendingCommand.Type.ToString() + " " + p.x + ", " + p.y);
             }
         }
 
@@ -84,14 +107,14 @@ namespace Assets.Scripts
                         UpdateCommandListText();
                     }
                 }
-                else if (CellUnderCursorCached.HasValue)
+                else if (CellUnderCursorCached.GridCell.HasValue)
                 {
-                    if (CellUnderCursorCached.Value.IsOccupied)
-                        ShowBuildingInfo(CellUnderCursorCached.Value);
+                    if (CellUnderCursorCached.GridCell.Value.IsOccupied)
+                        ShowBuildingInfo(CellUnderCursorCached.GridCell.Value);
                     else
                     {
                         HideBuildingInfo();
-                        GameMap.HighlightCell(CellUnderCursorCached.Value.Coordinates);
+                        GameMap.HighlightCell(CellUnderCursorCached.GridCell.Value.Coordinates);
                     }
                 }
             }
@@ -153,27 +176,10 @@ namespace Assets.Scripts
             _commandListText.text = sb.ToString();
         }
 
-        public void StartBuildingConstruction(BuildingType type)
-        {
-            InstanciateHologram(type);
-            _type = type;
-            _pendingCommand = new ConstructBuildingCommand(type);
-        }
-
-        public void StartBuildingReallocation(Building b)
-        {
-            InstanciateHologram(b.Type);
-            _type = b.Type;
-            _pendingCommand = new MoveBuildingCommand(b);
-        }
-
         void InstanciateHologram(BuildingType type)
         {
-            GameObject prefab = GameMap.BuildingPrefabCollection[type];
-            _hologram = Instantiate(prefab);
+            _hologram = Instantiate(GameMap.BuildingPrefabCollection[type]);
             _hologramMeshRenderer = _hologram.GetComponent<MeshRenderer>();
-            _hologramMeshRenderer.material = MaterialManager.GetMaterial(CommonMaterialType.HolographicGreen);
-            _hologram.SetActive(false);
         }
 
         void ShowBuildingInfo(GridCell cell)

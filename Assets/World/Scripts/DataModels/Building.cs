@@ -36,7 +36,7 @@ namespace Assets.World.DataModels
 
             BuildingData data = GameMap.DB[type];
             GameObject = Object.Instantiate(GameMap.BuildingPrefabCollection[type]);
-            GameObject.transform.position = GameMap.GetMiddlePoint(position, type);
+            GameObject.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
 
             Position = position;
 

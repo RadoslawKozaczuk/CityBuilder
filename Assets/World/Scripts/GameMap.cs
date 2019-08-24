@@ -2,6 +2,7 @@
 using Assets.Database.DataModels;
 using Assets.World.DataModels;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Assets.World
@@ -52,7 +53,6 @@ namespace Assets.World
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
         readonly GridCell[,] _cells;
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-
         Material _material;
 
         #region Unity life-cycle methods
@@ -100,6 +100,7 @@ namespace Assets.World
 
         public static Building BuildBuilding(BuildingType type, Vector2Int position)
         {
+            Debug.Log("GameMap->BuildBuilding: " + type.ToString() + " " + position.x + ", " + position.y);
             var building = new Building(type, position);
             MarkAreaAsOccupied(building);
 
@@ -149,7 +150,7 @@ namespace Assets.World
         /// <summary>
         /// Returns world position of the center of the cell.
         /// </summary>
-        public Vector3 GetCellMiddlePosition(GridCell cell)
+        public Vector3 GetCellMiddlePosition(ref GridCell cell)
         {
             Vector3 gridPos = transform.position;
             gridPos.x += cell.Coordinates.x * CELL_SIZE + CELL_SIZE / 2 - _localOffsetX;
@@ -161,29 +162,20 @@ namespace Assets.World
         /// <summary>
         /// Returns world position of the center of the cell.
         /// </summary>
-        public static Vector3 GetCellMiddlePosition(int coordX, int coordY)
+        public static Vector3 GetCellMiddlePosition(Vector2Int position)
         {
             Vector3 gridPos = Instance.transform.position;
-            gridPos.x += coordX * CELL_SIZE + CELL_SIZE / 2 - Instance._localOffsetX;
-            gridPos.z += coordY * CELL_SIZE + CELL_SIZE / 2 - Instance._localOffsetZ;
+            gridPos.x += position.x * CELL_SIZE + CELL_SIZE / 2 - Instance._localOffsetX;
+            gridPos.z += position.y * CELL_SIZE + CELL_SIZE / 2 - Instance._localOffsetZ;
 
             return gridPos;
         }
 
         /// <summary>
-        /// Returns world position of the left bottom corner of the cell.
-        /// </summary>
-        public static Vector3 GetCellLeftBottomPosition(ref GridCell cell) => GetCellLeftBottomPositionInternal(cell.Coordinates);
-
-        /// <summary>
-        /// Returns world position of the left bottom corner of the cell.
-        /// </summary>
-        public static Vector3 GetCellLeftBottomPosition(Vector2Int position) => GetCellLeftBottomPositionInternal(position);
-
-        /// <summary>
         /// Returns position in the world space of the point that is exactly in the middle of the given area.
         /// Position variable points at the left bottom corner cell of the area.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
         {
 #if UNITY_EDITOR
@@ -201,10 +193,10 @@ namespace Assets.World
         /// <summary>
         /// Returns position in the world space of the point that is exactly in the middle of the given area.
         /// The area is defined by the left bottom cell's coordinates and the given building's size.
-        /// This method automatically applies the prefab's position offset.
-        /// If you want to get the position of the middle point without the offset please use different overload.
+        /// Important: This method automatically applies the prefab's position offset.
+        /// If you want to get the position of the middle point without the offset please use a different overload.
         /// </summary>
-        public static Vector3 GetMiddlePoint(Vector2Int position, BuildingType type)
+        public static Vector3 GetMiddlePointWithOffset(Vector2Int position, BuildingType type)
         {
             Vector2Int size = DB[type].Size;
 
@@ -217,6 +209,7 @@ namespace Assets.World
             middle.x += CELL_SIZE * size.x / 2;
             middle.z += CELL_SIZE * size.y / 2;
 
+            Debug.Log("They called me");
             return middle.ApplyPrefabPositionOffset(type);
         }
 
@@ -224,6 +217,7 @@ namespace Assets.World
         /// Returns true if the area of the given size is entirely free, false otherwise.
         /// Position variable points at the left bottom corner cell of the area.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaFree(Vector2Int position, Vector2Int areaSize)
             => !Instance._cells.Any(position, areaSize, (ref GridCell cell) => cell.IsOccupied);
 
@@ -231,6 +225,7 @@ namespace Assets.World
         /// Returns true if the area of the size of the given building type is entirely free, false otherwise.
         /// Position variable points at the left bottom corner cell of the area.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaFree(Vector2Int position, BuildingType type)
             => !Instance._cells.Any(position, DB[type].Size, (ref GridCell cell) => cell.IsOccupied);
 
@@ -239,53 +234,73 @@ namespace Assets.World
         /// Position variable points at the left bottom corner cell of the area.
         /// Additional parameter allow us to omit certain building from the check.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit)
             => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != omit);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
+            => position.x < 0 || position.x + areaSize.x > Instance._gridSizeX 
+            || position.y < 0 || position.y + areaSize.y > Instance._gridSizeY;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
+            => position.x < 0 || position.x + DB[type].Size.x > Instance._gridSizeX 
+            || position.y < 0 || position.y + DB[type].Size.y > Instance._gridSizeY;
+
+        /// <summary>
+        /// Moves building located from its current position to target cell.
+        /// Last parameter allows us to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
+        /// This can be useful, for example, for implementing undo operation.
+        /// </summary>
+        public static void MoveBuilding(Building b, Vector2Int to, bool addResources = false)
+        {
+            MarkAreaAsFree(b);
+
+            b.Position = to;
+            b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
+                .ApplyPrefabPositionOffset(b.Type);
+
+            MarkAreaAsOccupied(b);
+
+            if (addResources)
+                ResourceManager.AddResources(b.ReallocationCost);
+            else
+                ResourceManager.RemoveResources(b.ReallocationCost);
+        }
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsOccupied(Building b)
             => Instance._cells.All(b.Position, DB[b.Type].Size, (ref GridCell c) => c.Building = b);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize)
             => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
 
         /// <summary>
         /// Mark cells occupied by the given building as free.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsFree(Building building)
             => MarkAreaAsFree(building.Position, building.Size);
 
-        public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
-            => position.x < 0 || position.x + areaSize.x > Instance._gridSizeX 
-            || position.y < 0  || position.y + areaSize.y > Instance._gridSizeY;
-
-        public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
-            => position.x < 0 || position.x + DB[type].Size.x > Instance._gridSizeX 
-            || position.y < 0 || position.y + DB[type].Size.y > Instance._gridSizeY;
+        /// <summary>
+        /// Returns world position of the left bottom corner of the cell.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static Vector3 GetCellLeftBottomPosition(ref GridCell cell) => GetCellLeftBottomPosition(cell.Coordinates);
 
         /// <summary>
-        /// Moves building located in the current cell to target cell.
-        /// Last parameter allows you to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
-        /// This can be useful, for example, for implementing undo operation.
+        /// Returns world position of the left bottom corner of the cell.
         /// </summary>
-        public static void MoveBuilding(Building b, Vector2Int to, ResourceOperationType rot = ResourceOperationType.Remove)
-        {
-            b.Position = to;
-            b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
-               .ApplyPrefabPositionOffset(b.Type);
-
-            if (rot == ResourceOperationType.Add)
-                ResourceManager.AddResources(b.ReallocationCost);
-            else
-                ResourceManager.RemoveResources(b.ReallocationCost);
-        }
-
-        static Vector3 GetCellLeftBottomPositionInternal(Vector2Int position)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static Vector3 GetCellLeftBottomPosition(Vector2Int position)
         {
             Vector3 pos = Instance.transform.position;
             pos.x += position.x * CELL_SIZE - Instance._localOffsetX;

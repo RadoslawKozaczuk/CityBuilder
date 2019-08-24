@@ -2,34 +2,75 @@
 using Assets.Scripts.Interfaces;
 using Assets.World;
 using Assets.World.DataModels;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.UI
 {
-    class MoveBuildingCommand : AbstractCommand, ICommand
+    class MoveBuildingCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
-        public Building Building { get; internal set; }
-        public Vector2Int From { get; internal set; }
-        public Vector2Int To { get; internal set; }
+        public Vector2Int To { get; private set; }
 
-        public readonly BuildingType Type;
+        public new readonly BuildingType Type; // Type base variable is hidden but we want to have both to make it accessible without casting
+        public readonly Building Building;
 
-        public MoveBuildingCommand(Building b)
+        public readonly Vector2Int From;
+
+        NullableGridCellStructRef _promise;
+        bool _lateEvaluation;
+
+        /// <summary>
+        /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
+        /// </summary>
+        public MoveBuildingCommand(Building b, Vector2Int to) : base(b.Type) // to ensure base field is also set
         {
-            Type = b.Type;
             Building = b;
+            Type = b.Type;
             From = b.Position;
+            To = to;
+
+            _lateEvaluation = false;
+        }
+
+        /// <summary>
+        /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
+        /// Important: The parameter 'to' is a late evaluation type of parameter 
+        /// and it operating on a promise that it will have a value at the moment of the function execution.
+        /// </summary>
+        public MoveBuildingCommand(Building b, NullableGridCellStructRef to) : base(b.Type)
+        {
+            Building = b;
+            Type = b.Type;
+            From = b.Position;
+            _promise = to;
+
+            _lateEvaluation = true;
+        }
+
+        MoveBuildingCommand(Building b, Vector2Int from, Vector2Int to, bool succeeded) : base(b.Type)
+        {
+            Building = b;
+            Type = b.Type;
+            From = from;
+            To = to;
+
+            _succeeded = succeeded;
         }
 
         public override bool Call()
         {
-            if (_succeeded)
+            if (_succeeded || !CheckConditions())
                 return false;
 
-            CheckConditions();
+            if (_lateEvaluation)
+            {
+                if (_promise.GridCell.HasValue)
+                    To = _promise.GridCell.Value.Coordinates;
+                else
+                    throw new ArgumentException("Promise unfulfilled - parameter 'to' does not have a value.");
+            }
 
-            To = GameEngine.Instance.CellUnderCursorCached.Value.Coordinates;
             GameMap.MoveBuilding(Building, To);
             _succeeded = true;
 
@@ -41,7 +82,7 @@ namespace Assets.Scripts.UI
             if (!_succeeded)
                 return false;
 
-            GameMap.MoveBuilding(Building, From, ResourceOperationType.Add);
+            GameMap.MoveBuilding(Building, From, true);
             _succeeded = false;
 
             return true;
@@ -52,10 +93,10 @@ namespace Assets.Scripts.UI
             if (EventSystem.current.IsPointerOverGameObject())
                 return false; // cursor is over the UI
 
-            if (!GameEngine.Instance.CellUnderCursorCached.HasValue)
+            if (_lateEvaluation && !_promise.GridCell.HasValue)
                 return false; // cursor is not over the map
 
-            if (GameMap.IsAreaOutOfBounds(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
+            if (GameMap.IsAreaOutOfBounds(_promise.GridCell.Value.Coordinates, Type))
                 return false; // area is out of the map
 
             return true;
@@ -63,7 +104,7 @@ namespace Assets.Scripts.UI
 
         public override bool CheckConditions()
         {
-            if (!GameMap.IsAreaFree(GameEngine.Instance.CellUnderCursorCached.Value.Coordinates, Type))
+            if (!GameMap.IsAreaFree(_lateEvaluation ? _promise.GridCell.Value.Coordinates : To, Type))
                 return false; // not enough space
 
             if (!ResourceManager.IsEnoughResources(Type))
@@ -72,6 +113,12 @@ namespace Assets.Scripts.UI
             return true;
         }
 
-        public override string ToString() => $"Move {Building.Type.ToString()} from {From.ToString()} to {To.ToString()}";
+        public override string ToString() => $"Move {Building.Type.ToString()} "
+            + $"to {(_lateEvaluation ? _promise.GridCell.Value.Coordinates : To).ToString()}";
+
+        /// <summary>
+        /// Returns a shallow copy of the command.
+        /// </summary>
+        public override AbstractCommand Clone() => new MoveBuildingCommand(Building, From, To, _succeeded);
     }
 }
