@@ -1,4 +1,5 @@
 ﻿using Assets.Database;
+using Assets.Scripts.Commands;
 using Assets.Scripts.UI;
 using Assets.World;
 using Assets.World.DataModels;
@@ -88,7 +89,6 @@ namespace Assets.Scripts
                 _hologram.transform.position = GameMap.GetMiddlePointWithOffset(CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
 
                 var p = CellUnderCursorCached.GridCell.Value.Coordinates;
-                Debug.Log("Hologram: " + _pendingCommand.Type.ToString() + " " + p.x + ", " + p.y);
             }
         }
 

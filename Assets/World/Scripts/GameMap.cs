@@ -202,7 +202,6 @@ namespace Assets.World
             middle.x += CELL_SIZE * size.x / 2;
             middle.z += CELL_SIZE * size.y / 2;
 
-            Debug.Log("They called me");
             return middle.ApplyPrefabPositionOffset(type);
         }
 
