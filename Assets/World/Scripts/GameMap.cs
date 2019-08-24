@@ -96,14 +96,39 @@ namespace Assets.World
         {
             var building = new Building(type, position);
             MarkAreaAsOccupied(building);
+            ResourceManager.RemoveResources(type);
 
             return building;
         }
 
-        public static void RemoveBuilding(Building building)
+        public static void RemoveBuilding(Building building, bool restoreResources = false)
         {
             MarkAreaAsFree(building);
             Destroy(building.GameObject);
+
+            if (restoreResources)
+                ResourceManager.AddResources(building.Type);
+        }
+
+        /// <summary>
+        /// Moves building located from its current position to target cell.
+        /// Last parameter allows us to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
+        /// This can be useful, for example, for implementing undo operation.
+        /// </summary>
+        public static void MoveBuilding(Building b, Vector2Int to, bool addResources = false)
+        {
+            MarkAreaAsFree(b);
+
+            b.Position = to;
+            b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
+                .ApplyPrefabPositionOffset(b.Type);
+
+            MarkAreaAsOccupied(b);
+
+            if (addResources)
+                ResourceManager.AddResources(b.ReallocationCost);
+            else
+                ResourceManager.RemoveResources(b.ReallocationCost);
         }
 
         /// <summary>
@@ -239,27 +264,6 @@ namespace Assets.World
         public static bool IsAreaOutOfBounds(Vector2Int position, BuildingType type)
             => position.x < 0 || position.x + DB[type].Size.x > Instance._gridSizeX 
             || position.y < 0 || position.y + DB[type].Size.y > Instance._gridSizeY;
-
-        /// <summary>
-        /// Moves building located from its current position to target cell.
-        /// Last parameter allows us to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
-        /// This can be useful, for example, for implementing undo operation.
-        /// </summary>
-        public static void MoveBuilding(Building b, Vector2Int to, bool addResources = false)
-        {
-            MarkAreaAsFree(b);
-
-            b.Position = to;
-            b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
-                .ApplyPrefabPositionOffset(b.Type);
-
-            MarkAreaAsOccupied(b);
-
-            if (addResources)
-                ResourceManager.AddResources(b.ReallocationCost);
-            else
-                ResourceManager.RemoveResources(b.ReallocationCost);
-        }
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.

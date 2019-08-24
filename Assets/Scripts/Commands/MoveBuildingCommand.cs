@@ -14,11 +14,7 @@ namespace Assets.Scripts.Commands
 
         public new readonly BuildingType Type; // Type base variable is hidden but we want to have both to make it accessible without casting
         public readonly Building Building;
-
         public readonly Vector2Int From;
-
-        NullableGridCellStructRef _promise;
-        bool _lateEvaluation;
 
         /// <summary>
         /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
@@ -29,8 +25,6 @@ namespace Assets.Scripts.Commands
             Type = b.Type;
             From = b.Position;
             To = to;
-
-            _lateEvaluation = false;
         }
 
         /// <summary>
@@ -38,14 +32,11 @@ namespace Assets.Scripts.Commands
         /// Important: The parameter 'to' is a late evaluation type of parameter 
         /// and it operating on a promise that it will have a value at the moment of the function execution.
         /// </summary>
-        public MoveBuildingCommand(Building b, NullableGridCellStructRef to) : base(b.Type)
+        public MoveBuildingCommand(Building b, NullableGridCellStructRef to) : base(b.Type, to)
         {
             Building = b;
             Type = b.Type;
             From = b.Position;
-            _promise = to;
-
-            _lateEvaluation = true;
         }
 
         MoveBuildingCommand(Building b, Vector2Int from, Vector2Int to, bool succeeded) : base(b.Type)

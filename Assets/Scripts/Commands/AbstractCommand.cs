@@ -7,11 +7,20 @@ namespace Assets.Scripts.Commands
     {
         public readonly BuildingType Type; // this is here to make it visible outside without casting
 
+        protected readonly NullableGridCellStructRef _promise;
+        protected readonly bool _lateEvaluation;
         protected bool _succeeded;
 
         protected AbstractCommand(BuildingType type)
         {
             Type = type;
+        }
+
+        protected AbstractCommand(BuildingType type, NullableGridCellStructRef promise)
+        {
+            Type = type;
+            _promise = promise;
+            _lateEvaluation = true;
         }
 
         public bool IsSucceeded() => _succeeded;

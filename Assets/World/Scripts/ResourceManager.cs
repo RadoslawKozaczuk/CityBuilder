@@ -47,22 +47,6 @@ namespace Assets.World
         public static Sprite GetResourceIcon(int id) => _instance._resourceIcons[id];
 
         /// <summary>
-        /// Adds resources and broadcasts the ResourceChanged event.
-        /// </summary>
-        public static void AddResources(List<Resource> resources)
-        {
-            var newResources = new List<Resource>(resources.Count);
-
-            foreach (Resource resource in resources)
-            {
-                AddResourceNoEventCall(resource);
-                newResources.Add(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
-            }
-
-            BroadcastResourceChanged(newResources);
-        }
-
-        /// <summary>
         /// Returns true if the player has enough resources to build this type of building, false otherwise.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,6 +76,22 @@ namespace Assets.World
                     return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// Adds resources and broadcasts the ResourceChanged event.
+        /// </summary>
+        internal static void AddResources(List<Resource> resources)
+        {
+            var newResources = new List<Resource>(resources.Count);
+
+            foreach (Resource resource in resources)
+            {
+                AddResourceNoEventCall(resource);
+                newResources.Add(new Resource(resource.ResourceType, _instance._playerResources[(int)resource.ResourceType]));
+            }
+
+            BroadcastResourceChanged(newResources);
         }
 
         /// <summary>
@@ -144,7 +144,8 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Removes resources and broadcasts ResourceChanged event to all subscribers.
+        /// Removes resource amount equals to the construction cost of a building of the given type, 
+        /// and broadcasts ResourceChanged event to all subscribers.
         /// </summary>
         internal static void RemoveResources(BuildingType type) => RemoveResources(_instance._db[type].BuildCost);
 
