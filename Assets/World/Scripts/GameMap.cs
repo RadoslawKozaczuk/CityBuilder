@@ -44,6 +44,7 @@ namespace Assets.World
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
         Material _material;
         GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
+        PathFinder _pathFinder;
 
         #region Unity life-cycle methods
         void Awake()
@@ -57,6 +58,8 @@ namespace Assets.World
             _material.SetInt("_GridSizeY", _gridSizeY);
 
             _gridShaderAdapter.InitializeCellTexture();
+
+            _pathFinder = new PathFinder(Instance._cells);
         }
 
         void Update()
@@ -90,6 +93,17 @@ namespace Assets.World
 
             _localOffsetX = _gridSizeX * CELL_SIZE / 2;
             _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
+        }
+
+        public static void PathFinderTest(Vector2Int from, Vector2Int to)
+        {
+            List<Vector2Int> path = Instance._pathFinder.FindPath(from, to);
+            ResetSelection();
+            
+            foreach(var v in path)
+            {
+                Instance._gridShaderAdapter[v] = true;
+            }
         }
 
         public static Building BuildBuilding(BuildingType type, Vector2Int position)

@@ -119,6 +119,7 @@ namespace Assets.Scripts
             }
 
             else if (Input.GetKeyDown(KeyCode.Space))
+                //GameMap.PathFinderTest(new Vector2Int(0, 0), new Vector2Int(5, 10));
                 ExplosionManager.SpawnRandomExplosion();
 
             else if (Input.GetKeyDown(KeyCode.Escape))

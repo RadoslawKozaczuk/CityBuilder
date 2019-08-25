@@ -5,7 +5,7 @@ namespace Assets.World
     /// <summary>
     /// This class helps you handle communication with the GPU by exposing human-friendly interface.
     /// Just change flags the cells you want to be highlighted to true and voilà.
-    /// Important: To actually apply the data to the texture and push it to the GPU, SendDataToGPU method need to be called in LateUpdate.
+    /// Important: Call SendDataToGPUTo to apply the data to the texture and push it to the GPU.
     /// </summary>
     sealed class GridShaderAdapter
     {
@@ -14,11 +14,16 @@ namespace Assets.World
         Texture2D _cellTexture;
         Color32[] _cellTextureData;
 
+        bool _isDirty = true;
+
         internal bool this[Vector2Int coord]
         {
             get => _cellTextureData[coord.y * GameMap.GridSizeY + coord.x].r == SELECTED_CELL_INDICATOR;
-            set => _cellTextureData[coord.y * GameMap.GridSizeY + coord.x]
-                = new Color32(value ? SELECTED_CELL_INDICATOR : (byte)0, 0, 0, 0);
+            set
+            {
+                _cellTextureData[coord.y * GameMap.GridSizeY + coord.x] = new Color32(value ? SELECTED_CELL_INDICATOR : (byte)0, 0, 0, 0);
+                _isDirty = true;
+            }
         }
 
         internal void InitializeCellTexture()
@@ -43,20 +48,29 @@ namespace Assets.World
 
             if (_cellTextureData == null || _cellTextureData.Length != GameMap.GridSizeX * GameMap.GridSizeY)
                 _cellTextureData = new Color32[GameMap.GridSizeX * GameMap.GridSizeY];
+
+            SendDataToGPU();
         }
 
         internal void SendDataToGPU()
         {
+            if (!_isDirty)
+                return;
+            
             // To actually apply the data to the texture and push it to the GPU, 
             // we have to invoke Texture2D.SetPixels32 followed by Texture2D.Apply.
             _cellTexture.SetPixels32(_cellTextureData);
             _cellTexture.Apply();
+
+            _isDirty = false;
         }
 
         internal void ResetAllSelection()
         {
             for (int i = 0; i < _cellTextureData.Length; i++)
                 _cellTextureData[i] = new Color32(0, 0, 0, 0);
+
+            _isDirty = true;
         }
     }
 }

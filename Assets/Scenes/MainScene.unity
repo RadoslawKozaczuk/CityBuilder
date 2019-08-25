@@ -457,7 +457,7 @@ MonoBehaviour:
   - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}
   - {fileID: 177548, guid: 8ced8772a0380c643a2733f587421c1c, type: 3}
   - {fileID: 180750, guid: d68ef7a2a7a25ca499eb4d0024f2ff0d, type: 3}
-  - {fileID: 108142, guid: cc05c3e29b3319444aeeca588e9f3511, type: 3}
+  - {fileID: 7710390051711534056, guid: 3de7db18dfdac0f449fd9bef56009dc0, type: 3}
   - {fileID: 186398, guid: 6f298296ef5bf9b46a11aa44bde063d9, type: 3}
 --- !u!1 &459269227
 GameObject:
@@ -804,7 +804,7 @@ MonoBehaviour:
   m_outlineColor:
     serializedVersion: 2
     rgba: 4278190080
-  m_fontSize: 18.15
+  m_fontSize: 16.7
   m_fontSizeBase: 22
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -850,7 +850,7 @@ MonoBehaviour:
     spaceCount: 57
     wordCount: 58
     linkCount: 0
-    lineCount: 3
+    lineCount: 4
     pageCount: 1
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0

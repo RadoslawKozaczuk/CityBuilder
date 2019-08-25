@@ -5,7 +5,7 @@ namespace Assets.Scripts.Commands
 {
     abstract class AbstractCommand : ICommand, ICloneable<AbstractCommand>
     {
-        public readonly BuildingType Type; // this is here to make it visible outside without casting
+        public readonly BuildingType Type; // to make Type visible outside without necessity for casting
 
         protected readonly NullableGridCellStructRef _promise;
         protected readonly bool _lateEvaluation;
