@@ -4,35 +4,35 @@ using UnityEngine;
 
 namespace Assets.World
 {
-    public class PathFinder
+    // Breadth First Search
+    internal class PathFinder
     {
         readonly (int xOffset, int yOffset)[] _directions = { (0, 1), (1, 0), (0, -1), (-1, 0) };
         readonly (int fromX, int fromY)[,] _cameFrom;
         readonly GridCell[,] _cells;
-        readonly Queue<(int x, int y)> frontier;
+        readonly Queue<(int x, int y)> _frontier;
 
-        public PathFinder(GridCell[,] cells)
+        internal PathFinder(GridCell[,] cells)
         {
+#if UNITY_EDITOR
+            if (cells.GetLength(0) != GameMap.GridSizeX || cells.GetLength(1) != GameMap.GridSizeY)
+                throw new System.ArgumentException($"Cells array must be of size {GameMap.GridSizeX}, {GameMap.GridSizeX}");
+#endif
             _cells = cells;
-            _cameFrom = new (int fromX, int fromY)[GameMap.GridSizeX, GameMap.GridSizeX]; // if visited then where from, otherwise minus infinity
-            frontier = new Queue<(int x, int y)>();
+            _cameFrom = new (int fromX, int fromY)[GameMap.GridSizeX, GameMap.GridSizeX];
+            _frontier = new Queue<(int x, int y)>();
         }
 
-        public List<Vector2Int> FindPath(Vector2Int from, Vector2Int to)
+        internal List<Vector2Int> FindPath(Vector2Int from, Vector2Int to)
         {
             ClearData();
 
             // The key idea for all of these algorithms is that we keep track of an expanding ring called the frontier.
-            frontier.Enqueue((from.x, from.y));
+            _frontier.Enqueue((from.x, from.y));
 
-            while (frontier.Count > 0)
+            while (_frontier.Count > 0)
             {
-                var (currX, currY) = frontier.Dequeue();
-
-                if(currX == 1 && currY == 2)
-                {
-                    int trolll = 234;
-                }
+                var (currX, currY) = _frontier.Dequeue();
 
                 foreach (var (xOffset, yOffset) in _directions)
                 {
@@ -59,9 +59,9 @@ namespace Assets.World
                     }
 
                     // is not visited check
-                    if (_cameFrom[nextX, nextY].fromX == int.MinValue)
+                    if (_cameFrom[nextX, nextY].fromX == int.MinValue) // MinValue means null in this context
                     {
-                        frontier.Enqueue((nextX, nextY));
+                        _frontier.Enqueue((nextX, nextY));
                         _cameFrom[nextX, nextY] = (currX, currY);
                     }
                 }
@@ -74,9 +74,9 @@ namespace Assets.World
         {
             for (int i = 0; i < GameMap.GridSizeX; i++)
                 for (int j = 0; j < GameMap.GridSizeY; j++)
-                    _cameFrom[i, j] = (int.MinValue, int.MinValue);
+                    _cameFrom[i, j] = (int.MinValue, int.MinValue); // MinValue means null in this context
 
-            frontier.Clear();
+            _frontier.Clear();
         }
 
         List<Vector2Int> CreatePath(Vector2Int to)

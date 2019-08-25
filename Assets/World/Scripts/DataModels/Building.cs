@@ -7,8 +7,6 @@ namespace Assets.World.DataModels
     // this represents building object in the game
     public sealed class Building
     {
-        const float CONSTRUCTION_TIME = 5f; // hard-coded for simplicity
-
         /// <summary>
         /// Position always point at the left bottom corner of the building.
         /// </summary>
@@ -51,16 +49,6 @@ namespace Assets.World.DataModels
             Name = data.Name;
             AbleToReallocate = data.AbleToReallocate;
             ReallocationCost = data.ReallocationCost;
-
-            // schedule construction task
-            var task = new BuildingTask(CONSTRUCTION_TIME, FinishConstruction);
-            ScheduledTask = task;
-            GameMap.Instance.ScheduleTask(task);
-        }
-
-        public void FinishConstruction()
-        {
-            Constructed = true;
 
             if (_imidiatelyStartProduction)
                 StartProduction();

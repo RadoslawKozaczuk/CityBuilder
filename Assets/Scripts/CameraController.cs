@@ -17,8 +17,6 @@ namespace Assets.Scripts
         float _zoom = 1f;
         float _rotationAngle;
 
-        internal static bool Locked { set => _instance.enabled = !value; }
-
         #region Unity life-cycle methods
         void Awake()
         {
@@ -112,7 +110,6 @@ namespace Assets.Scripts
             float zMax = (GameMap.GridSizeY - 1) * (1.5f * GameMap.CELL_SIZE);
             position.z = Mathf.Clamp(position.z, 0f, zMax);
 
-            //Grid.CenterMap(position.x);
             return position;
         }
     }
