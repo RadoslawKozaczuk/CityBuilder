@@ -24,7 +24,7 @@ namespace Assets.World
         public static event EventHandler<ResourceChangedEventArgs> ResourceChangedEventHandler;
 
         readonly int[] _playerResources = new int[Enum.GetNames(typeof(ResourceType)).Length];
-        readonly AbstractDatabase _db = new DummyDatabase();
+        readonly Repository _db = new Repository();
 
         #region Unity life-cycle methods
         void Awake() => _instance = this;

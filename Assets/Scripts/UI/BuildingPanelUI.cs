@@ -14,7 +14,7 @@ namespace Assets.Scripts.UI
         [SerializeField] GameObject _buildingElementPrefab;
         [SerializeField] GameObject _resourceElementPrefab;
 
-        readonly DummyDatabase _db = new DummyDatabase();
+        readonly Repository _db = new Repository();
         readonly List<BuildingButtonUI> _buttons = new List<BuildingButtonUI>();
 
         void Start()

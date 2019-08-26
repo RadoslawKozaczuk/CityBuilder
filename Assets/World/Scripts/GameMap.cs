@@ -13,7 +13,7 @@ namespace Assets.World
     }
 
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(BuildingPrefabCollection))]
+    [RequireComponent(typeof(MapFeaturePrefabCollection))]
     public sealed class GameMap : MonoBehaviour
     {
         public const float CELL_SIZE = 10f;
@@ -22,10 +22,10 @@ namespace Assets.World
         internal delegate void ActionRefStruct<T1>(ref GridCell cell);
         internal delegate bool FunctionRefStruct<T1>(ref GridCell cell);
 
-        public static BuildingPrefabCollection BuildingPrefabCollection;
+        public static MapFeaturePrefabCollection BuildingPrefabCollection;
 
         internal static GameMap Instance;
-        internal static readonly AbstractDatabase DB = new DummyDatabase();
+        internal static readonly Repository DB = new Repository();
 
         #region Properties
         [Header("These parameters are applied only at the start of the game.")]
@@ -50,7 +50,7 @@ namespace Assets.World
         void Awake()
         {
             Instance = this;
-            BuildingPrefabCollection = GetComponent<BuildingPrefabCollection>();
+            BuildingPrefabCollection = GetComponent<MapFeaturePrefabCollection>();
             transform.localScale = new Vector3(_gridSizeX, 1, _gridSizeY);
 
             _material = gameObject.GetComponent<MeshRenderer>().material;
@@ -104,6 +104,12 @@ namespace Assets.World
             {
                 Instance._gridShaderAdapter[v] = true;
             }
+        }
+
+        public static void BuildVehicle(VehicleType type, Vector2Int position)
+        {
+            var truck = new Vehicle(type, position);
+            MarkAreaAsOccupied(position, new Vector2Int(1, 1), truck);
         }
 
         public static Building BuildBuilding(BuildingType type, Vector2Int position)
@@ -229,20 +235,16 @@ namespace Assets.World
         /// If you want to get the position of the middle point without the offset please use a different overload.
         /// </summary>
         public static Vector3 GetMiddlePointWithOffset(Vector2Int position, BuildingType type)
-        {
-            Vector2Int size = DB[type].Size;
+            => GetMiddlePoint(position, DB[type].Size).ApplyPrefabPositionOffset(type);
 
-#if UNITY_EDITOR
-            if (IsAreaOutOfBounds(position, size))
-                Debug.LogError("Invalid argument(s). Part of the area is out of the map.");
-#endif
-
-            Vector3 middle = GetCellLeftBottomPosition(position);
-            middle.x += CELL_SIZE * size.x / 2;
-            middle.z += CELL_SIZE * size.y / 2;
-
-            return middle.ApplyPrefabPositionOffset(type);
-        }
+        /// <summary>
+        /// Returns position in the world space of the point that is exactly in the middle of the given area.
+        /// The area is defined by the left bottom cell's coordinates and the given building's size.
+        /// Important: This method automatically applies the prefab's position offset.
+        /// If you want to get the position of the middle point without the offset please use a different overload.
+        /// </summary>
+        public static Vector3 GetMiddlePointWithOffset(Vector2Int position, VehicleType type)
+            => GetMiddlePoint(position, DB[type].Size).ApplyPrefabPositionOffset(type);
 
         /// <summary>
         /// Returns true if the area of the given size is entirely free, false otherwise.
@@ -267,7 +269,7 @@ namespace Assets.World
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit)
-            => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.Building != omit);
+            => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.MapObject != omit);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
@@ -284,14 +286,21 @@ namespace Assets.World
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsOccupied(Building b)
-            => Instance._cells.All(b.Position, DB[b.Type].Size, (ref GridCell c) => c.Building = b);
+            => Instance._cells.All(b.Position, DB[b.Type].Size, (ref GridCell c) => c.MapObject = b);
+
+        /// <summary>
+        /// Mark all the cells in the given area as occupied.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void MarkAreaAsOccupied(Vector2Int position, Vector2Int areaSize, Vehicle v)
+            => Instance._cells.All(position, areaSize, (ref GridCell c) => c.MapObject = v);
 
         /// <summary>
         /// Mark all the cells in the given area as free.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize)
-            => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.Building = null);
+            => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.MapObject = null);
 
         /// <summary>
         /// Mark cells occupied by the given building as free.

@@ -34,12 +34,22 @@ namespace Assets.World
 
         /// <summary>
         /// Adds building prefab's position values.
-        /// Each building has different position offset attached to him.
-        /// Calling this method is necessary to position the building right.
+        /// Each building has different position offset.
+        /// It is necessary to call this method is necessary to position the building right.
         /// </summary>
-        internal static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type)
+        internal static Vector3 ApplyPrefabPositionOffset(this Vector3 position, BuildingType type) 
+            => ApplyPrefabPositionOffsetInternal(position, GameMap.BuildingPrefabCollection[type]);
+
+        /// <summary>
+        /// Adds vehicle prefab's position values.
+        /// Each vehicle has different position offset.
+        /// It is necessary to call this method is necessary to position the vehicle right.
+        /// </summary>
+        internal static Vector3 ApplyPrefabPositionOffset(this Vector3 position, VehicleType type) 
+            => ApplyPrefabPositionOffsetInternal(position, GameMap.BuildingPrefabCollection[type]);
+
+        static Vector3 ApplyPrefabPositionOffsetInternal(this Vector3 position, GameObject prefab)
         {
-            GameObject prefab = GameMap.BuildingPrefabCollection[type];
             position.x += prefab.transform.position.x;
             position.y = prefab.transform.position.y;
             position.z += prefab.transform.position.z;

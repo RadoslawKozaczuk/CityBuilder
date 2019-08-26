@@ -25,7 +25,7 @@ namespace Assets.Scripts
     {
         public static GameEngine Instance { get; private set; }
 
-        public readonly AbstractDatabase Db = new DummyDatabase();
+        public readonly Repository Db = new Repository();
         public NullableGridCellStructRef CellUnderCursorCached = new NullableGridCellStructRef();
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
@@ -42,6 +42,11 @@ namespace Assets.Scripts
         {
             Instance = this;
             UpdateCommandListText();
+        }
+
+        void Start()
+        {
+            GameMap.BuildVehicle(VehicleType.Truck, new Vector2Int(1, 1));
         }
 
         void Update()
@@ -184,7 +189,8 @@ namespace Assets.Scripts
 
         void ShowBuildingInfo(GridCell cell)
         {
-            _buildingInfoUI.Building = cell.Building;
+            // TODO: temporary solution
+            _buildingInfoUI.Building = (Building)cell.MapObject;
             _buildingInfoUI.gameObject.SetActive(true);
             _buildingInfoUI.gameObject.transform.position = Input.mousePosition;
         }

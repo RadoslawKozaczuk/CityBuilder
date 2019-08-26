@@ -457,8 +457,10 @@ MonoBehaviour:
   - {fileID: 121866, guid: dfb0016267344ee489343ed8010c9a61, type: 3}
   - {fileID: 177548, guid: 8ced8772a0380c643a2733f587421c1c, type: 3}
   - {fileID: 180750, guid: d68ef7a2a7a25ca499eb4d0024f2ff0d, type: 3}
-  - {fileID: 7710390051711534056, guid: 3de7db18dfdac0f449fd9bef56009dc0, type: 3}
+  - {fileID: 369232733251071766, guid: 3d621f7fb6bc6664ea5a31c41966627c, type: 3}
   - {fileID: 186398, guid: 6f298296ef5bf9b46a11aa44bde063d9, type: 3}
+  _vehicles:
+  - {fileID: 7509737985590548560, guid: 3950f098dc9daa04dad4a8e2abe91eca, type: 3}
 --- !u!1 &459269227
 GameObject:
   m_ObjectHideFlags: 0

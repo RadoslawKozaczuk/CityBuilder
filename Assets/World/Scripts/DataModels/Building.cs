@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Assets.World.DataModels
 {
     // this represents building object in the game
-    public sealed class Building
+    public sealed class Building : IMapObject
     {
         /// <summary>
         /// Position always point at the left bottom corner of the building.
