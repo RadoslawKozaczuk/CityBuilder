@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7509737985589511248}
   - component: {fileID: 7509737985588545168}
   - component: {fileID: 5516317837682725524}
+  - component: {fileID: 1187593284396020622}
   m_Layer: 0
   m_Name: Major's Limo
   m_TagString: Untagged
@@ -91,3 +92,17 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 5.3204913, y: 2.2647867, z: 2.4053817}
   m_Center: {x: -0.10459318, y: 1.1309347, z: 0.1415501}
+--- !u!114 &1187593284396020622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7509737985590548560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08732d14ee642434da4d65c727b4c473, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MeshRenderer: {fileID: 7509737985588545168}
+  Material: {fileID: 0}

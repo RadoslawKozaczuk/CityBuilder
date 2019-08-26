@@ -5,7 +5,7 @@
 		_MainTex("Base (RGB)", 2D) = "white" {}
 		_OutlineFactor("Outline Factor", Range(0, 1)) = 0.5
 		_OutlineColor("Outline Color", Color) = (1,1,1,1)
-		_OutlineWidth("Outline Width", Range(0, 10)) = 0.002
+		_OutlineWidth("Outline Width", Range(0, 2)) = 0.5
 
 		_Stencil("Stencil ID", Int) = 16
 

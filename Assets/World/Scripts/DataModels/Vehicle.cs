@@ -1,18 +1,31 @@
 ﻿using Assets.Database;
+using Assets.World.Controllers;
 using UnityEngine;
 
 namespace Assets.World.DataModels
 {
-    public sealed class Vehicle : MonoBehaviour, IMapObject
+    internal sealed class Vehicle : IMapObject
     {
         public readonly VehicleType Type;
-        public GameObject GameObject { get; set; }
+        public GameObject Instance { get; }
 
-        public Vehicle(VehicleType type, Vector2Int position)
+        internal bool Selected;
+
+        internal Vehicle(VehicleType type, Vector2Int position)
         {
             Type = type;
-            GameObject = Instantiate(GameMap.BuildingPrefabCollection[type]);
-            GameObject.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
+
+            var instance = Object.Instantiate(GameMap.BuildingPrefabCollection[type]);
+
+            // we have make a separate copy of a material for each instance to apply slightly different parameters
+            var vc = instance.GetComponent<VehicleController>();
+            vc.MeshRenderer.material = new Material(vc.MeshRenderer.sharedMaterial);
+            vc.Vehicle = this;
+
+            // put in a correct place on the map
+            instance.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
+
+            Instance = instance;
         }
     }
 }

@@ -2,6 +2,7 @@
 using Assets.Scripts.Commands;
 using Assets.Scripts.UI;
 using Assets.World;
+using Assets.World.Controllers;
 using Assets.World.DataModels;
 using System;
 using System.Collections.Generic;
@@ -47,6 +48,7 @@ namespace Assets.Scripts
         void Start()
         {
             GameMap.BuildVehicle(VehicleType.Truck, new Vector2Int(1, 1));
+            GameMap.BuildVehicle(VehicleType.Truck, new Vector2Int(3, 4));
         }
 
         void Update()
@@ -91,9 +93,8 @@ namespace Assets.Scripts
                     ? CommonMaterialType.HolographicGreen
                     : CommonMaterialType.HolographicRed);
 
-                _hologram.transform.position = GameMap.GetMiddlePointWithOffset(CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
-
-                var p = CellUnderCursorCached.GridCell.Value.Coordinates;
+                _hologram.transform.position = GameMap.GetMiddlePointWithOffset(
+                    CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
             }
         }
 
@@ -101,6 +102,16 @@ namespace Assets.Scripts
         {
             if (Input.GetMouseButtonDown(0))
             {
+                // for testing vehicle selection
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if(Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    var vehicle = hit.collider.GetComponent<VehicleController>();
+                    vehicle.SelectMe();
+                    return;
+                }
+
+
                 if (_pendingCommand != null)
                 {
                     if (_pendingCommand.Call())

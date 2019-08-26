@@ -1,5 +1,6 @@
 ﻿using Assets.Database;
 using Assets.Database.DataModels;
+using Assets.World.Controllers;
 using Assets.World.DataModels;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -101,9 +102,7 @@ namespace Assets.World
             ResetSelection();
             
             foreach(var v in path)
-            {
                 Instance._gridShaderAdapter[v] = true;
-            }
         }
 
         public static void BuildVehicle(VehicleType type, Vector2Int position)
