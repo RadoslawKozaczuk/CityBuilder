@@ -6,8 +6,7 @@ namespace Assets.Scripts
     {
         const float LIFE_TIME = 10f;
 
-        [HideInInspector] public Material Material;
-
+        public MeshRenderer MeshRenderer;
         [SerializeField] ParticleSystem _smoke;
         [SerializeField] Light _pointLight;
 
@@ -19,7 +18,7 @@ namespace Assets.Scripts
             _lifeTime += Time.deltaTime;
 
             _climpRange -= Time.deltaTime / 4f;
-            Material.SetFloat("_ClipRange", _climpRange);
+            MeshRenderer.material.SetFloat("_ClipRange", _climpRange);
 
             if (_lifeTime > LIFE_TIME)
                 Destroy(gameObject);

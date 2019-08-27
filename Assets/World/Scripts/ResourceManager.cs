@@ -79,7 +79,7 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Adds resources and broadcasts the ResourceChanged event.
+        /// Adds resources and broadcasts ResourceChanged event.
         /// </summary>
         internal static void AddResources(List<Resource> resources)
         {
@@ -115,7 +115,7 @@ namespace Assets.World
 
         /// <summary>
         /// Adds resource and broadcasts ResourceChanged event to all subscribers.
-        /// In case resource is equal to null nothing happens.
+        /// If resource is null nothing happens.
         /// </summary>
         internal static void AddResources(Resource? resource)
         {

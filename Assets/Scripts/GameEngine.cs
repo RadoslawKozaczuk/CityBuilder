@@ -48,7 +48,6 @@ namespace Assets.Scripts
         void Start()
         {
             GameMap.BuildVehicle(VehicleType.Truck, new Vector2Int(1, 1));
-            GameMap.BuildVehicle(VehicleType.Truck, new Vector2Int(3, 4));
         }
 
         void Update()
@@ -194,7 +193,7 @@ namespace Assets.Scripts
 
         void InstanciateHologram(BuildingType type)
         {
-            _hologram = Instantiate(GameMap.BuildingPrefabCollection[type]);
+            _hologram = Instantiate(GameMap.MapFeaturePrefabCollection[type]);
             _hologramMeshRenderer = _hologram.GetComponent<MeshRenderer>();
         }
 

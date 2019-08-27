@@ -39,6 +39,7 @@ namespace Assets.Scripts.Commands
             From = b.Position;
         }
 
+        // copy constructor (well in fact it is a normal constructor but we use it as a copy constructor)
         MoveBuildingCommand(Building b, Vector2Int from, Vector2Int to, bool succeeded) : base(b.Type)
         {
             Building = b;

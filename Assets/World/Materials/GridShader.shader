@@ -9,10 +9,6 @@
 		[HideInInspector] [IntRange] _GridSizeX("Grid Size X", Range(1, 100)) = 16
 		[HideInInspector] [IntRange] _GridSizeY("Grid Size Y", Range(1, 100)) = 16
 		[HideInInspector] _LineSize("Line Size", Range(0,1)) = 0.1 // I hid it because I think it is a pretty useless parameter
-
-		// unit selection params
-		//_Center("")
-
 	}
 
 	SubShader

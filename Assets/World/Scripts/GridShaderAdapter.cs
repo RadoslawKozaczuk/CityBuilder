@@ -1,19 +1,20 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.World
 {
     /// <summary>
     /// This class helps you handle communication with the GPU by exposing human-friendly interface.
-    /// Just change flags the cells you want to be highlighted to true and voilà.
-    /// Important: Call SendDataToGPUTo to apply the data to the texture and push it to the GPU.
+    /// Just set the flags of the cells you want to highlight to true and voilà.
+    /// You can access the flags just like you would normally access an array.
+    /// Important: To actually apply the data, call SendDataToGPUTo method (preferably at the end of a frame).
     /// </summary>
     sealed class GridShaderAdapter
     {
-        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything > 0.5 as selected
+        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything >0.5 as selected
 
         Texture2D _cellTexture;
         Color32[] _cellTextureData;
-
         bool _isDirty = true;
 
         internal bool this[Vector2Int coord]
@@ -28,11 +29,7 @@ namespace Assets.World
 
         internal void InitializeCellTexture()
         {
-            if (_cellTexture)
-            {
-                _cellTexture.Resize(GameMap.GridSizeX, GameMap.GridSizeY); // we don't need to check if the precious size was the same
-            }
-            else
+            if (!_cellTexture)
             {
                 // each pixel corresponds to one cell
                 _cellTexture = new Texture2D(GameMap.GridSizeX, GameMap.GridSizeY, TextureFormat.RGBA32, false, true)
@@ -46,17 +43,32 @@ namespace Assets.World
                 Shader.SetGlobalTexture("_CellData", _cellTexture);
             }
 
-            if (_cellTextureData == null || _cellTextureData.Length != GameMap.GridSizeX * GameMap.GridSizeY)
+            if (_cellTextureData == null)
                 _cellTextureData = new Color32[GameMap.GridSizeX * GameMap.GridSizeY];
 
             SendDataToGPU();
         }
 
+        internal void SetData(List<Vector2Int> data, bool resetPreviousData = false)
+        {
+#if UNITY_EDITOR
+            if (data == null || data.Count == 0)
+                throw new System.ArgumentException($"Data send to GridShaderAdapter is {(data == null ? "null" : "empty")}. " 
+                    + "If you intended to reset the selection use ResetAllSelection method instead.");
+#endif
+
+            if (resetPreviousData)
+                ResetAllSelection();
+
+            foreach (Vector2Int v in data)
+                this[v] = true;
+        }
+
         internal void SendDataToGPU()
         {
             if (!_isDirty)
-                return;
-            
+                return; // nothing changed, no reason to bother the GPU
+
             // To actually apply the data to the texture and push it to the GPU, 
             // we have to invoke Texture2D.SetPixels32 followed by Texture2D.Apply.
             _cellTexture.SetPixels32(_cellTextureData);

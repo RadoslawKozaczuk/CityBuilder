@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Assets.World
 {
     // Breadth First Search
-    internal class PathFinder
+    internal sealed class PathFinder
     {
         readonly (int xOffset, int yOffset)[] _directions = { (0, 1), (1, 0), (0, -1), (-1, 0) };
         readonly (int fromX, int fromY)[,] _cameFrom;
@@ -16,8 +16,9 @@ namespace Assets.World
         {
 #if UNITY_EDITOR
             if (cells.GetLength(0) != GameMap.GridSizeX || cells.GetLength(1) != GameMap.GridSizeY)
-                throw new System.ArgumentException($"Cells array must be of size {GameMap.GridSizeX}, {GameMap.GridSizeX}");
+                throw new System.ArgumentException($"Cells array must be of size {GameMap.GridSizeX}x {GameMap.GridSizeX}");
 #endif
+
             _cells = cells;
             _cameFrom = new (int fromX, int fromY)[GameMap.GridSizeX, GameMap.GridSizeX];
             _frontier = new Queue<(int x, int y)>();
@@ -33,7 +34,6 @@ namespace Assets.World
             while (_frontier.Count > 0)
             {
                 var (currX, currY) = _frontier.Dequeue();
-
                 foreach (var (xOffset, yOffset) in _directions)
                 {
                     var (nextX, nextY) = (currX + xOffset, currY + yOffset);

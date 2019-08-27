@@ -20,17 +20,16 @@ namespace Assets.Scripts
                 Random.Range(5f, 10f),
                 Random.Range(0f, 80f));
 
-            // we make a separate copy of a material for each instance to apply slightly different parameters
-            Renderer renderer = explosion.GetComponent<Renderer>();
-            Material material = new Material(renderer.sharedMaterial);
-
             var script = explosion.GetComponent<Explosion>();
-            script.Material = material;
 
+            // we make a separate copy of a material for each instance to apply slightly different parameters
+            Material material = new Material(script.MeshRenderer.sharedMaterial);
             material.SetFloat("_RampOffset", Random.Range(-0.25f, -0.15f));
             material.SetFloat("_Amount", Random.Range(0.7f, 0.9f));
             material.SetFloat("_TimeOffset", GetTimeOffset());
-            renderer.material = material;
+
+            // attach the copy back to the renderer
+            script.MeshRenderer.material = material;
         }
 
         /// <summary>
@@ -39,7 +38,7 @@ namespace Assets.Scripts
         static float GetTimeOffset()
         {
             float totalTime = Time.time;
-            float animDur = 6.28f;
+            float animDur = 6.28f; // 2pi = 6.28rad = 6.28sec
             float c = Mathf.Floor(totalTime / animDur);
             float timeOfsset = totalTime - c * animDur;
 

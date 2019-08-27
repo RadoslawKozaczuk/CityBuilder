@@ -92,8 +92,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1eff4c250aa78744f817dadbe646582e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Material: {fileID: 0}
-  ShaderDisappearnceThreshold: 15
+  MeshRenderer: {fileID: 885196522799745853}
   _smoke: {fileID: 414320583121569248}
   _pointLight: {fileID: 2617288741698851469}
 --- !u!1 &6317649773449252202

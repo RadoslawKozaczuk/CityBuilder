@@ -8,7 +8,7 @@ namespace Assets.World.DataModels
     public sealed class Building : IMapObject
     {
         /// <summary>
-        /// Position always point at the left bottom corner of the building.
+        /// Game map's coordinates.
         /// </summary>
         public Vector2Int Position { get; internal set; }
 
@@ -33,7 +33,7 @@ namespace Assets.World.DataModels
             Type = type;
 
             BuildingData data = GameMap.DB[type];
-            GameObject = Object.Instantiate(GameMap.BuildingPrefabCollection[type]);
+            GameObject = Object.Instantiate(GameMap.MapFeaturePrefabCollection[type]);
             GameObject.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
 
             Position = position;

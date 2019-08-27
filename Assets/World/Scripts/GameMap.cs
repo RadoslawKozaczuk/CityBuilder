@@ -1,10 +1,10 @@
 ﻿using Assets.Database;
 using Assets.Database.DataModels;
-using Assets.World.Controllers;
 using Assets.World.DataModels;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
@@ -23,7 +23,7 @@ namespace Assets.World
         internal delegate void ActionRefStruct<T1>(ref GridCell cell);
         internal delegate bool FunctionRefStruct<T1>(ref GridCell cell);
 
-        public static MapFeaturePrefabCollection BuildingPrefabCollection;
+        public static MapFeaturePrefabCollection MapFeaturePrefabCollection;
 
         internal static GameMap Instance;
         internal static readonly Repository DB = new Repository();
@@ -37,26 +37,43 @@ namespace Assets.World
         #endregion
 
         [Header("Turn on to see gizmos indicating which cells are occupied.")]
-        [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in order to make it work
+        [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in the editor in order to make it work
 
         readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
         readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
         readonly GridCell[,] _cells;
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-        Material _material;
-        GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
+        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
+
         PathFinder _pathFinder;
+
+        Vehicle _selectedVehicle;
+        internal Vehicle SelectedVehicle
+        {
+            get => _selectedVehicle;
+            set
+            {
+                if (value == null || value != _selectedVehicle)
+                    _pathIsDirty = true;
+
+                _selectedVehicle = value;
+            }
+        }
+
+        Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
+        bool _pathIsDirty; // indicates if PathFinder should recalculate the path
+        List<Vector2Int> _path;
 
         #region Unity life-cycle methods
         void Awake()
         {
             Instance = this;
-            BuildingPrefabCollection = GetComponent<MapFeaturePrefabCollection>();
+            MapFeaturePrefabCollection = GetComponent<MapFeaturePrefabCollection>();
             transform.localScale = new Vector3(_gridSizeX, 1, _gridSizeY);
 
-            _material = gameObject.GetComponent<MeshRenderer>().material;
-            _material.SetInt("_GridSizeX", _gridSizeX);
-            _material.SetInt("_GridSizeY", _gridSizeY);
+            Material material = gameObject.GetComponent<MeshRenderer>().material;
+            material.SetInt("_GridSizeX", _gridSizeX);
+            material.SetInt("_GridSizeY", _gridSizeY);
 
             _gridShaderAdapter.InitializeCellTexture();
 
@@ -71,6 +88,33 @@ namespace Assets.World
 #endif
 
             UpdateTasks();
+
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                _gridShaderAdapter.ResetAllSelection();
+                return;
+            }
+
+            if(!GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+            {
+                _gridShaderAdapter.ResetAllSelection();
+                return;
+            }
+
+            if (SelectedVehicle != null)
+            {
+                if(cell.Coordinates != _targetCell)
+                {
+                    _pathIsDirty = true;
+                    _targetCell = cell.Coordinates;
+                }
+
+                if(_pathIsDirty)
+                    _path = _pathFinder.FindPath(_selectedVehicle.Position, _targetCell);
+            }
+
+            if (_path != null)
+                _gridShaderAdapter.SetData(_path, true);
         }
 
         void LateUpdate()
@@ -131,7 +175,8 @@ namespace Assets.World
 
         /// <summary>
         /// Moves building located from its current position to target cell.
-        /// Last parameter allows us to specify whether the reallocation cost of the building should be added or subtracted from player's resources.
+        /// Last parameter allows you to specify whether the reallocation cost of the building 
+        /// should be added or subtracted from player's resources.
         /// This can be useful, for example, for implementing undo operation.
         /// </summary>
         public static void MoveBuilding(Building b, Vector2Int to, bool addResources = false)
