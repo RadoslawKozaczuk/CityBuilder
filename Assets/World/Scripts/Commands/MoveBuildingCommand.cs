@@ -1,38 +1,23 @@
 ﻿using Assets.Database;
 using Assets.Scripts.Interfaces;
-using Assets.World;
 using Assets.World.DataModels;
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Assets.Scripts.Commands
+namespace Assets.World.Commands
 {
-    class MoveBuildingCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
+    public class MoveBuildingCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
         public Vector2Int To { get; private set; }
 
-        public new readonly BuildingType Type; // Type base variable is hidden but we want to have both to make it accessible without casting
+        public readonly BuildingType Type;
         public readonly Building Building;
         public readonly Vector2Int From;
 
         /// <summary>
         /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
         /// </summary>
-        public MoveBuildingCommand(Building b, Vector2Int to) : base(b.Type) // to ensure base field is also set
-        {
-            Building = b;
-            Type = b.Type;
-            From = b.Position;
-            To = to;
-        }
-
-        /// <summary>
-        /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
-        /// Important: The parameter 'to' is a late evaluation type of parameter 
-        /// and it operating on a promise that it will have a value at the moment of the function execution.
-        /// </summary>
-        public MoveBuildingCommand(Building b, NullableGridCellStructRef to) : base(b.Type, to)
+        public MoveBuildingCommand(Building b)
         {
             Building = b;
             Type = b.Type;
@@ -40,7 +25,7 @@ namespace Assets.Scripts.Commands
         }
 
         // copy constructor (well in fact it is a normal constructor but we use it as a copy constructor)
-        MoveBuildingCommand(Building b, Vector2Int from, Vector2Int to, bool succeeded) : base(b.Type)
+        MoveBuildingCommand(Building b, Vector2Int from, Vector2Int to, bool succeeded)// : base(b.Type)
         {
             Building = b;
             Type = b.Type;
@@ -54,14 +39,6 @@ namespace Assets.Scripts.Commands
         {
             if (_succeeded || !CheckConditions())
                 return false;
-
-            if (_lateEvaluation)
-            {
-                if (_promise.GridCell.HasValue)
-                    To = _promise.GridCell.Value.Coordinates;
-                else
-                    throw new ArgumentException("Promise unfulfilled - parameter 'to' does not have a value.");
-            }
 
             GameMap.MoveBuilding(Building, To);
             _succeeded = true;
@@ -85,18 +62,17 @@ namespace Assets.Scripts.Commands
             if (EventSystem.current.IsPointerOverGameObject())
                 return false; // cursor is over the UI
 
-            if (_lateEvaluation && !_promise.GridCell.HasValue)
-                return false; // cursor is not over the map
+            if (!GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+                return false; // cursor is not over the Grid
 
-            if (GameMap.IsAreaOutOfBounds(_promise.GridCell.Value.Coordinates, Type))
-                return false; // area is out of the map
+            To = cell.Coordinates; // we need to feel to with current data so check condition can proceed
 
             return true;
         }
 
         public override bool CheckConditions()
         {
-            if (!GameMap.IsAreaFree(_lateEvaluation ? _promise.GridCell.Value.Coordinates : To, Type))
+            if (!GameMap.IsAreaFree(To, Type))
                 return false; // not enough space
 
             if (!ResourceManager.IsEnoughResources(Type))
@@ -104,9 +80,6 @@ namespace Assets.Scripts.Commands
 
             return true;
         }
-
-        public override string ToString() => $"Move {Building.Type.ToString()} "
-            + $"to {(_lateEvaluation ? _promise.GridCell.Value.Coordinates : To).ToString()}";
 
         /// <summary>
         /// Returns a shallow copy of the command.

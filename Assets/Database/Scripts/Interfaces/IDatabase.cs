@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Assets.Database
+namespace Assets.Database.Interfaces
 {
     internal interface IDatabase
     {

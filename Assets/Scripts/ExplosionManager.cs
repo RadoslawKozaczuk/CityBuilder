@@ -6,7 +6,6 @@ namespace Assets.Scripts
     class ExplosionManager : MonoBehaviour
     {
         static ExplosionManager _instance;
-
         [SerializeField] GameObject _explosionPrefab;
 
         void Awake() => _instance = this;

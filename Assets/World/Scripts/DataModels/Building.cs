@@ -1,5 +1,6 @@
 ﻿using Assets.Database;
 using Assets.Database.DataModels;
+using Assets.World.Interfaces;
 using UnityEngine;
 
 namespace Assets.World.DataModels

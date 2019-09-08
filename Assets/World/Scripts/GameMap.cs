@@ -303,7 +303,7 @@ namespace Assets.World
         /// Position variable points at the left bottom corner cell of the area.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsAreaFree(Vector2Int position, BuildingType type)
+        public static bool IsAreaFree(Vector2Int position, BuildingType type) 
             => !Instance._cells.Any(position, DB[type].Size, (ref GridCell cell) => cell.IsOccupied);
 
         /// <summary>

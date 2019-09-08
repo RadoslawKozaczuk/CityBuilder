@@ -1,8 +1,7 @@
 ﻿using Assets.Database;
-using Assets.Scripts.Commands;
 using Assets.Scripts.UI;
 using Assets.World;
-using Assets.World.Controllers;
+using Assets.World.Commands;
 using Assets.World.DataModels;
 using System;
 using System.Collections.Generic;
@@ -13,21 +12,13 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Scripts
 {
-    /// <summary>
-    /// This wrapper is here because it is troublesome to pass reference to a nullable struct in C#.
-    /// </summary>
-    public sealed class NullableGridCellStructRef
-    {
-        public GridCell? GridCell;
-    }
-
     [DisallowMultipleComponent]
     public class GameEngine : MonoBehaviour
     {
         public static GameEngine Instance { get; private set; }
 
-        public readonly Repository Db = new Repository();
-        public NullableGridCellStructRef CellUnderCursorCached = new NullableGridCellStructRef();
+        public readonly Repository DB = new Repository();
+        public GridCell? CellUnderCursorCached;
 
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         [SerializeField] TextMeshProUGUI _commandListText;
@@ -35,7 +26,7 @@ namespace Assets.Scripts
         readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
 
         AbstractCommand _pendingCommand;
-        GameObject _hologram;
+        (GameObject instance, BuildingType type) _hologram;
         MeshRenderer _hologramMeshRenderer;
 
         #region Unity life-cycle methods
@@ -53,7 +44,7 @@ namespace Assets.Scripts
         void Update()
         {
             // some often used values are cached for performance reasons
-            CellUnderCursorCached.GridCell = EventSystem.current.IsPointerOverGameObject()
+            CellUnderCursorCached = EventSystem.current.IsPointerOverGameObject() 
                 || !GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell)
                     ? null
                     : (GridCell?) cell;
@@ -66,13 +57,15 @@ namespace Assets.Scripts
         public void StartBuildingConstruction(BuildingType type)
         {
             InstanciateHologram(type);
-            _pendingCommand = new ConstructBuildingCommand(type, CellUnderCursorCached);
+
+            _pendingCommand = new BuildBuildingCommand(type);
         }
 
         public void StartBuildingReallocation(Building b)
         {
             InstanciateHologram(b.Type);
-            _pendingCommand = new MoveBuildingCommand(b, CellUnderCursorCached);
+
+            _pendingCommand = new MoveBuildingCommand(b);
         }
 
         void UpdateHologramPosition()
@@ -82,18 +75,21 @@ namespace Assets.Scripts
                 // Check if this is valid context to execute this command
                 if (!_pendingCommand.CheckExecutionContext())
                 {
-                    _hologram.SetActive(false);
+                    _hologram.instance.SetActive(false);
                     return;
                 }
 
-                _hologram.SetActive(true);
+                if (!CellUnderCursorCached.HasValue)
+                    return;
 
-                _hologramMeshRenderer.material = MaterialManager.GetMaterial(_pendingCommand.CheckConditions()
-                    ? CommonMaterialType.HolographicGreen
-                    : CommonMaterialType.HolographicRed);
+                _hologram.instance.SetActive(true);
 
-                _hologram.transform.position = GameMap.GetMiddlePointWithOffset(
-                    CellUnderCursorCached.GridCell.Value.Coordinates, _pendingCommand.Type);
+                _hologramMeshRenderer.material = MaterialCollection.GetMaterial(_pendingCommand.CheckConditions()
+                    ? CommonMaterials.HolographicGreen
+                    : CommonMaterials.HolographicRed);
+
+                _hologram.instance.transform.position = GameMap.GetMiddlePointWithOffset(
+                    CellUnderCursorCached.Value.Coordinates, _hologram.type);
             }
         }
 
@@ -102,14 +98,13 @@ namespace Assets.Scripts
             if (Input.GetMouseButtonDown(0))
             {
                 // for testing vehicle selection
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if(Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    var vehicle = hit.collider.GetComponent<VehicleController>();
-                    vehicle.SelectMe();
-                    return;
-                }
-
+                //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                //if(Physics.Raycast(ray, out RaycastHit hit))
+                //{
+                //    var vehicle = hit.collider.GetComponent<VehicleController>();
+                //    vehicle.SelectMe();
+                //    return;
+                //}
 
                 if (_pendingCommand != null)
                 {
@@ -117,24 +112,29 @@ namespace Assets.Scripts
                     {
                         _executedCommands.Add(_pendingCommand.Clone());
                         _pendingCommand = null;
-                        Destroy(_hologram);
+                        DestroyHologram();
                         UpdateCommandListText();
                     }
                 }
-                else if (CellUnderCursorCached.GridCell.HasValue)
+                else if (CellUnderCursorCached.HasValue)
                 {
-                    if (CellUnderCursorCached.GridCell.Value.IsOccupied)
-                        ShowBuildingInfo(CellUnderCursorCached.GridCell.Value);
+                    if (CellUnderCursorCached.Value.IsOccupiedByVehicle)
+                    {
+                        (CellUnderCursorCached.Value.MapObject as Vehicle).ToggleSelection();
+                    }
+                    else if(CellUnderCursorCached.Value.IsOccupiedByBuilding)
+                    {
+                        ShowBuildingInfo(CellUnderCursorCached.Value);
+                    }
                     else
                     {
                         HideBuildingInfo();
-                        GameMap.HighlightCell(CellUnderCursorCached.GridCell.Value.Coordinates);
+                        GameMap.HighlightCell(CellUnderCursorCached.Value.Coordinates);
                     }
                 }
             }
 
             else if (Input.GetKeyDown(KeyCode.Space))
-                //GameMap.PathFinderTest(new Vector2Int(0, 0), new Vector2Int(5, 10));
                 ExplosionManager.SpawnRandomExplosion();
 
             else if (Input.GetKeyDown(KeyCode.Escape))
@@ -142,7 +142,7 @@ namespace Assets.Scripts
                 if (_pendingCommand != null)
                 {
                     _pendingCommand = null;
-                    Destroy(_hologram);
+                    DestroyHologram();
                 }
                 else
                     Application.Quit();
@@ -193,8 +193,16 @@ namespace Assets.Scripts
 
         void InstanciateHologram(BuildingType type)
         {
-            _hologram = Instantiate(GameMap.MapFeaturePrefabCollection[type]);
-            _hologramMeshRenderer = _hologram.GetComponent<MeshRenderer>();
+            _hologram.instance = Instantiate(GameMap.MapFeaturePrefabCollection[type]);
+            _hologramMeshRenderer = _hologram.instance.GetComponent<MeshRenderer>();
+            _hologram.type = type;
+        }
+
+        void DestroyHologram()
+        {
+            Destroy(_hologram.instance);
+            _hologram.instance = null;
+            _hologram.type = BuildingType.None;
         }
 
         void ShowBuildingInfo(GridCell cell)
