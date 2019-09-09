@@ -22,25 +22,21 @@ namespace Assets.Scripts.UI
             ResourceManager.ResourceChangedEventHandler += ResourceUpdate; // subscribe to ResourceManager
 
             // initialize buildings
-            foreach (BuildingData bd in _db.AllBuildings)
+            foreach (BuildingData data in _db.AllBuildings)
             {
                 BuildingButtonUI buttonUI = Instantiate(_buildingElementPrefab, Resources).GetComponent<BuildingButtonUI>();
-                buttonUI.Title.text = bd.Name;
-                buttonUI.BuildingType = bd.Type;
+                buttonUI.Title.text = data.Name;
+                buttonUI.BuildingType = data.Type;
                 buttonUI.GetComponent<Button>().onClick.AddListener(() => GameEngine.Instance.StartBuildingConstruction(buttonUI.BuildingType));
-                buttonUI.BuildButton.interactable = ResourceManager.IsEnoughResources(bd.BuildCost);
+                buttonUI.BuildButton.interactable = ResourceManager.IsEnoughResources(data.BuildCost);
                 _buttons.Add(buttonUI);
 
-                foreach (Resource r in bd.BuildCost)
+                foreach (Resource resource in data.BuildCost)
                 {
                     GameObject go = Instantiate(_resourceElementPrefab, buttonUI.Resources);
-                    ResourceElementUI resUI = go.GetComponent<ResourceElementUI>();
-                    Transform t = go.GetComponent<Transform>();
-
-                    t.localScale = new Vector3(0.6f, 0.6f);
-
-                    resUI.Amount.text = r.Quantity.ToString();
-                    resUI.Image.sprite = ResourceManager.GetResourceIcon(r.ResourceType);
+                    ResourceElementUI ui = go.GetComponent<ResourceElementUI>();
+                    ui.Amount.text = resource.Quantity.ToString();
+                    ui.Image.sprite = ResourceManager.GetResourceIcon(resource.ResourceType);
                 }
             }
         }

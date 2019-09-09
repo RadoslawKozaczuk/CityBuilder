@@ -2,7 +2,8 @@
 
 namespace Assets.Database.DataModels
 {
-    public struct VehicleData
+    // marked as read-only for optimization purposes
+    public readonly struct VehicleData
     {
         public readonly Vector2Int Size;
         public readonly VehicleType Type;
