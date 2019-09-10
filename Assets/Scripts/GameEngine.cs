@@ -57,14 +57,12 @@ namespace Assets.Scripts
         public void StartBuildingConstruction(BuildingType type)
         {
             InstanciateHologram(type);
-
             _pendingCommand = new BuildBuildingCommand(type);
         }
 
         public void StartBuildingReallocation(Building b)
         {
             InstanciateHologram(b.Type);
-
             _pendingCommand = new MoveBuildingCommand(b);
         }
 

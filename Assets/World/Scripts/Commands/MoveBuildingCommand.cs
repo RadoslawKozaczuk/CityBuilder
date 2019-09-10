@@ -1,6 +1,6 @@
 ﻿using Assets.Database;
-using Assets.Scripts.Interfaces;
 using Assets.World.DataModels;
+using Assets.World.Interfaces;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

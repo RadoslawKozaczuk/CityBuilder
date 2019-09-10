@@ -32,10 +32,14 @@ namespace Assets.World.DataModels
             }
         }
 
+        public float Speed; // for now not readonly we will see it we want to change it 
+
         internal Vehicle(VehicleType type, Vector2Int position)
         {
             Type = type;
             Position = position;
+
+            Speed = GameMap.DB[type].Speed;
 
             var instance = Object.Instantiate(GameMap.MapFeaturePrefabCollection[type]);
 

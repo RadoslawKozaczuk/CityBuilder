@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Assets.Database.DataModels
+namespace Assets.World.Tasks
 {
-    public sealed class BuildingTask
+    public sealed class BuildingTask : AbstractTask
     {
         public readonly Action ActionOnFinish;
         public readonly float TotalTime;
@@ -13,6 +13,11 @@ namespace Assets.Database.DataModels
             TotalTime = executionDelay;
             TimeLeft = executionDelay;
             ActionOnFinish = onCompleteAction;
+        }
+
+        public override void Update()
+        {
+
         }
     }
 }

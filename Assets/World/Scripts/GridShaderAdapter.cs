@@ -15,7 +15,7 @@ namespace Assets.World
 
         Texture2D _cellTexture;
         Color32[] _cellTextureData;
-        bool _isDirty = true;
+        bool _isDirty = true; // to prevent from redundant calls
 
         internal bool this[Vector2Int coord]
         {

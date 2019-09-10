@@ -4,15 +4,15 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World.Commands
 {
-    public class SelectVehicleCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
+    public class MoveVehicleCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
         public Vehicle Vehicle { get; private set; }
 
-        public SelectVehicleCommand()
+        public MoveVehicleCommand()
         {
         }
 
-        public SelectVehicleCommand(Vehicle vehicle)
+        public MoveVehicleCommand(Vehicle vehicle)
         {
             Vehicle = vehicle;
         }
@@ -60,7 +60,7 @@ namespace Assets.World.Commands
             return true;
         }
 
-        public override string ToString() => $"Select unit {Vehicle.Type.ToString()} ";
+        public override string ToString() => $"Move unit from to {Vehicle.Type.ToString()} ";
 
         /// <summary>
         /// Returns a shallow copy of the command.

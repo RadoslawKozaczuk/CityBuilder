@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.Interfaces;
+﻿using Assets.World.Interfaces;
 
 namespace Assets.World.Commands
 {

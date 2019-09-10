@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts.Interfaces
+﻿namespace Assets.World.Interfaces
 {
     interface ICloneable<T>
     {

@@ -1,6 +1,7 @@
 ﻿using Assets.Database;
 using Assets.Database.DataModels;
 using Assets.World.DataModels;
+using Assets.World.Tasks;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -20,8 +21,8 @@ namespace Assets.World
         public const float CELL_SIZE = 10f;
 
         // to circumnavigate the regular anonymous method declaration limitation
-        internal delegate void ActionRefStruct<T1>(ref GridCell cell);
-        internal delegate bool FunctionRefStruct<T1>(ref GridCell cell);
+        internal delegate void ActionRefStruct<T>(ref GridCell cell);
+        internal delegate bool FunctionRefStruct<T>(ref GridCell cell);
 
         public static MapFeaturePrefabCollection MapFeaturePrefabCollection;
 
@@ -34,18 +35,6 @@ namespace Assets.World
         public static int GridSizeX => Instance._gridSizeX;   // to bypass Range ATR only to variables appliance
         [Range(1, 100)] [SerializeField] int _gridSizeY = 16; // as well as to not break the Instance encapsulation
         public static int GridSizeY => Instance._gridSizeX; // same as above
-        #endregion
-
-        [Header("Turn on to see gizmos indicating which cells are occupied.")]
-        [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in the editor in order to make it work
-
-        readonly List<BuildingTask> _taskBuffer = new List<BuildingTask>();
-        readonly List<BuildingTask> _scheduledTasks = new List<BuildingTask>();
-        readonly GridCell[,] _cells;
-        readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
-
-        PathFinder _pathFinder;
 
         Vehicle _selectedVehicle;
         internal Vehicle SelectedVehicle
@@ -59,10 +48,23 @@ namespace Assets.World
                 _selectedVehicle = value;
             }
         }
+        #endregion
 
+        [Header("Turn on to see gizmos indicating which cells are occupied.")]
+        [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in the editor in order to make it work
+
+        readonly List<AbstractTask> _taskBuffer = new List<AbstractTask>();
+        readonly List<AbstractTask> _scheduledTasks = new List<AbstractTask>();
+        readonly GridCell[,] _cells;
+        readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
+        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
+
+        PathFinder _pathFinder;
         Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
         bool _pathIsDirty; // indicates if PathFinder should recalculate the path
         List<Vector2Int> _path;
+
+        readonly List<Vehicle> _vehicles = new List<Vehicle>();
 
         #region Unity life-cycle methods
         void Awake()
@@ -89,13 +91,14 @@ namespace Assets.World
 
             UpdateTasks();
 
-            if (EventSystem.current.IsPointerOverGameObject())
+            // update related to vehicle
+            if (SelectedVehicle == null || EventSystem.current.IsPointerOverGameObject())
             {
                 _gridShaderAdapter.ResetAllSelection();
                 return;
             }
 
-            if(!GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+            if(SelectedVehicle == null || !GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
             {
                 _gridShaderAdapter.ResetAllSelection();
                 return;
@@ -115,6 +118,9 @@ namespace Assets.World
 
             if (_path != null)
                 _gridShaderAdapter.SetData(_path, true);
+
+            if (Input.GetMouseButtonDown(0))
+                ScheduleTask(new MoveTask(_path, SelectedVehicle));
         }
 
         void LateUpdate()
@@ -152,6 +158,7 @@ namespace Assets.World
         public static void BuildVehicle(VehicleType type, Vector2Int position)
         {
             var truck = new Vehicle(type, position);
+            Instance._vehicles.Add(truck);
             MarkAreaAsOccupied(position, new Vector2Int(1, 1), truck);
         }
 
@@ -193,6 +200,16 @@ namespace Assets.World
                 ResourceManager.AddResources(b.ReallocationCost);
             else
                 ResourceManager.RemoveResources(b.ReallocationCost);
+        }
+
+        /// <summary>
+        /// Attaches vehicle to another cell effectively making that cell occupied and the source cell free.
+        /// </summary>
+        public static void MoveVehicle(Vehicle v, Vector2Int to)
+        {
+            MarkCellAsFree(v.Position);
+            v.Position = to;
+            MarkCellAsOccupied(to, v);
         }
 
         /// <summary>
@@ -278,6 +295,7 @@ namespace Assets.World
         /// Important: This method automatically applies the prefab's position offset.
         /// If you want to get the position of the middle point without the offset please use a different overload.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetMiddlePointWithOffset(Vector2Int position, BuildingType type)
             => GetMiddlePoint(position, DB[type].Size).ApplyPrefabPositionOffset(type);
 
@@ -287,6 +305,7 @@ namespace Assets.World
         /// Important: This method automatically applies the prefab's position offset.
         /// If you want to get the position of the middle point without the offset please use a different overload.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetMiddlePointWithOffset(Vector2Int position, VehicleType type)
             => GetMiddlePoint(position, DB[type].Size).ApplyPrefabPositionOffset(type);
 
@@ -332,6 +351,9 @@ namespace Assets.World
         static void MarkAreaAsOccupied(Building b)
             => Instance._cells.All(b.Position, DB[b.Type].Size, (ref GridCell c) => c.MapObject = b);
 
+        static void MarkCellAsOccupied(Vector2Int position, Vehicle v)
+            => Instance._cells[position.x, position.y].MapObject = v;
+
         /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
@@ -345,6 +367,12 @@ namespace Assets.World
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void MarkAreaAsFree(Vector2Int position, Vector2Int areaSize)
             => Instance._cells.All(position, areaSize, (ref GridCell cell) => cell.MapObject = null);
+
+        /// <summary>
+        /// Marks cell as free.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void MarkCellAsFree(Vector2Int position) => Instance._cells[position.x, position.y].MapObject = null;
 
         /// <summary>
         /// Mark cells occupied by the given building as free.
@@ -375,20 +403,23 @@ namespace Assets.World
         /// <summary>
         /// Add BuildingTask object to the task buffer.
         /// </summary>
-        public void ScheduleTask(BuildingTask task) => _taskBuffer.Add(task);
+        public void ScheduleTask(AbstractTask task) => _taskBuffer.Add(task);
 
         void UpdateTasks()
         {
             for (int i = 0; i < _scheduledTasks.Count; i++)
             {
-                BuildingTask task = _scheduledTasks[i];
-                task.TimeLeft -= Time.deltaTime;
+                AbstractTask task = _scheduledTasks[i];
+                task.Update();
 
-                if (task.TimeLeft > 0)
-                    return;
+                if(task.Completed)
+                    _scheduledTasks.RemoveAt(i--);
+                //task.TimeLeft -= Time.deltaTime;
 
-                task.ActionOnFinish();
-                _scheduledTasks.RemoveAt(i--);
+                //if (task.TimeLeft > 0)
+                //    return;
+
+                //task.ActionOnFinish();
             }
         }
 

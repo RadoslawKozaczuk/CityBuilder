@@ -15,7 +15,6 @@ namespace Assets.World
     public sealed class ResourceManager : MonoBehaviour
     {
         static ResourceManager _instance;
-
         [SerializeField] Sprite[] _resourceIcons;
 
         /// <summary>
