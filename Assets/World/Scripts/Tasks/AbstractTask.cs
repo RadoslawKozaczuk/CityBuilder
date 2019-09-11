@@ -8,6 +8,10 @@
     {
         public bool Completed;
 
+        protected bool _aborted;
+
         public abstract void Update();
+
+        public abstract void Abort();
     }
 }

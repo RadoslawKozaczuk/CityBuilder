@@ -15,6 +15,8 @@ namespace Assets.World.Tasks
             ActionOnFinish = onCompleteAction;
         }
 
+        public override void Abort() => throw new NotImplementedException();
+
         public override void Update()
         {
 

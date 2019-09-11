@@ -45,6 +45,7 @@ namespace Assets.World.Commands
 
             // unselect
             Vehicle.Selected = false;
+            _scheduledTask.Abort();
 
             return base.Undo();
         }

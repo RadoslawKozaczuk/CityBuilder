@@ -19,6 +19,13 @@ namespace Assets.World.Tasks
 
         public MoveTask(List<Vector2Int> path, Vehicle vehicle)
         {
+#if UNITY_EDITOR
+            if (path == null)
+                throw new System.ArgumentNullException("path", "path argument cannot be null");
+            else if (path.Count < 2)
+                throw new System.ArgumentNullException("path", "path argument must be of length of at least 2");
+#endif
+
             Path = new List<Vector2Int>(path);
             Vehicle = vehicle;
 
@@ -38,7 +45,7 @@ namespace Assets.World.Tasks
 
             if(_currentTime > _totalTime)
             {
-                if (Path.Count > 2)
+                if (!_aborted && Path.Count > 2)
                 {
                     _currentTime = 0;
                     Path.RemoveAt(0);
@@ -66,10 +73,17 @@ namespace Assets.World.Tasks
                 _notMovedYet = false;
             }
 
-
             offset *= proportion;
 
             Vehicle.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
+        }
+
+        public override void Abort()
+        {
+            _aborted = true;
+
+            if (_aborted)
+                return;
         }
     }
 }

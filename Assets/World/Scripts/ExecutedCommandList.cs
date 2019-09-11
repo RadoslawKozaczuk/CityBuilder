@@ -37,7 +37,7 @@ namespace Assets.World
         public static event EventHandler<ExecutedCommandListChangedEventArgs> StatusChangedEventHandler;
 
         static readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
-        static bool _isDirty;
+        static bool _isDirty = true; // true to force initial message broadcast
 
         internal static void Add(AbstractCommand command)
         {
@@ -60,7 +60,10 @@ namespace Assets.World
             int lastCmdId = _executedCommands.Count - 1;
 
             // this will also remove it from the list as every command removes itself once undo is called successfully
-            _executedCommands[lastCmdId].Undo(); 
+            _executedCommands[lastCmdId].Undo();
+            _executedCommands.RemoveAt(lastCmdId);
+
+            _isDirty = true;
         }
 
         /// <summary>
@@ -76,7 +79,7 @@ namespace Assets.World
         static string UpdateCommandListText()
         {
             var sb = new StringBuilder();
-            string shortcut = "<b>" + (Application.isEditor ? "Ctrl+Z" : "Z+X") + "</b>";
+            string shortcut = "<b>" + (Application.isEditor ? "Z+X" : "Ctrl+Z") + "</b>";
             sb.AppendLine($"Press {shortcut} to undo last command");
             sb.Append(Environment.NewLine);
             sb.AppendLine("Executed Commands:");
