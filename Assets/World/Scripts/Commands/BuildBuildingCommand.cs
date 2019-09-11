@@ -17,8 +17,8 @@ namespace Assets.World.Commands
         /// Commands GameMap to reallocate the building to the location passed in the 'to' parameter.
         /// </summary>
         public BuildBuildingCommand(BuildingType type) // type is provided in the constructor and never changes  
-        {                                                  // because in this game we always know what building we are going to build
-            Type = type;
+        {                                              // because in this game we always know what building we are going to build
+            Type = type;                               // there is none generic build command of any sort, you click on tree, house etc.
         }
 
         BuildBuildingCommand(BuildingType type, Vector2Int to, Building b, bool succeeded)
@@ -35,9 +35,8 @@ namespace Assets.World.Commands
                 return false;
 
             ConstructedBuilding = GameMap.BuildBuilding(Type, To);
-            _succeeded = true;
 
-            return true;
+            return base.Call();
         }
 
         public override bool Undo()
@@ -47,9 +46,8 @@ namespace Assets.World.Commands
 
             GameMap.RemoveBuilding(ConstructedBuilding, true);
             ConstructedBuilding = null;
-            _succeeded = false;
 
-            return true;
+            return base.Undo();
         }
 
         public override bool CheckExecutionContext()
@@ -68,16 +66,10 @@ namespace Assets.World.Commands
         public override bool CheckConditions()
         {
             if (!GameMap.IsAreaFree(To, Type))
-            {
-                Debug.Log("Returned due to area not being free");
                 return false; // not enough space
-            }
 
             if (!ResourceManager.IsEnoughResources(Type))
-            {
-                Debug.Log("Returned due to not enough resources");
                 return false; // not enough resources
-            }
 
             return true;
         }

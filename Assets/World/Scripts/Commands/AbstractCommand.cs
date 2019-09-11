@@ -2,15 +2,31 @@
 
 namespace Assets.World.Commands
 {
+    // Commands can be understood as orders given directly or indirectly by external agent (user or AI).
+    // A command may select a unit or build a building. Each command has a Undo action allowing the command's effects to be reverted.
+    // Reverting an action may mean a different thing depends on the command and the context. For example reverting a move command 
+    // stop the vehicle from moving while reverting a build command removes the building.
     public abstract class AbstractCommand : ICommand, ICloneable<AbstractCommand>
     {
-        protected readonly bool _lateEvaluation;
+        public bool Succeeded() => _succeeded;
+
         protected bool _succeeded;
 
-        public bool IsSucceeded() => _succeeded;
-        public abstract bool Call();
-        public abstract bool Undo();
+        public virtual bool Call()
+        {
+            _succeeded = true;
+            ExecutedCommandList.Add(this);
+            return true;
+        }
+
+        public virtual bool Undo()
+        {
+            _succeeded = false;
+            return true;
+        }
+
         public abstract bool CheckConditions();
+
         public abstract bool CheckExecutionContext();
 
         /// <summary>

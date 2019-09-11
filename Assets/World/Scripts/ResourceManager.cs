@@ -7,6 +7,11 @@ using UnityEngine;
 
 namespace Assets.World
 {
+    public sealed class ResourceChangedEventArgs
+    {
+        public List<Resource> Resources;
+    }
+
     /// <summary>
     /// ResourceManager is a singleton class responsible for storing resources.
     /// Subscribe to ResourceChangedEventHandler to be informed about any changes.

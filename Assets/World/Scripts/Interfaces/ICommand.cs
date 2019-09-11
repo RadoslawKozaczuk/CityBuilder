@@ -6,7 +6,7 @@
         /// Returns true if command was already executed successfully and false otherwise.
         /// Successful call of Undo method will reset the flag and make this method return false again.
         /// </summary>
-        bool IsSucceeded();
+        bool Succeeded();
 
         /// <summary>
         /// Executes command. Subsequent calls make no effect.

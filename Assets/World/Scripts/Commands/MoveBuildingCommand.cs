@@ -41,9 +41,8 @@ namespace Assets.World.Commands
                 return false;
 
             GameMap.MoveBuilding(Building, To);
-            _succeeded = true;
 
-            return true;
+            return base.Call();
         }
 
         public override bool Undo()
@@ -52,9 +51,8 @@ namespace Assets.World.Commands
                 return false;
 
             GameMap.MoveBuilding(Building, From, true);
-            _succeeded = false;
 
-            return true;
+            return base.Undo();
         }
 
         public override bool CheckExecutionContext()

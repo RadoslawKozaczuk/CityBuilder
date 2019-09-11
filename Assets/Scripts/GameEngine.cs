@@ -3,9 +3,6 @@ using Assets.Scripts.UI;
 using Assets.World;
 using Assets.World.Commands;
 using Assets.World.DataModels;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -23,8 +20,6 @@ namespace Assets.Scripts
         [SerializeField] BuildingInfoUI _buildingInfoUI;
         [SerializeField] TextMeshProUGUI _commandListText;
         
-        readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
-
         AbstractCommand _pendingCommand;
         (GameObject instance, BuildingType type) _hologram;
         MeshRenderer _hologramMeshRenderer;
@@ -33,7 +28,6 @@ namespace Assets.Scripts
         void Awake()
         {
             Instance = this;
-            UpdateCommandListText();
         }
 
         void Start()
@@ -95,39 +89,28 @@ namespace Assets.Scripts
         {
             if (Input.GetMouseButtonDown(0))
             {
-                // for testing vehicle selection
-                //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                //if(Physics.Raycast(ray, out RaycastHit hit))
-                //{
-                //    var vehicle = hit.collider.GetComponent<VehicleController>();
-                //    vehicle.SelectMe();
-                //    return;
-                //}
-
                 if (_pendingCommand != null)
                 {
                     if (_pendingCommand.Call())
                     {
-                        _executedCommands.Add(_pendingCommand.Clone());
                         _pendingCommand = null;
                         DestroyHologram();
-                        UpdateCommandListText();
                     }
                 }
-                else if (CellUnderCursorCached.HasValue)
+                else if (CellUnderCursorCached.HasValue) 
                 {
-                    if (CellUnderCursorCached.Value.IsOccupiedByVehicle)
+                    // send click info
+                    bool hitAnything = GameMap.ClickMe(out GridCell cell, out Building building);
+                    if(hitAnything)
                     {
-                        (CellUnderCursorCached.Value.MapObject as Vehicle).ToggleSelection();
-                    }
-                    else if(CellUnderCursorCached.Value.IsOccupiedByBuilding)
-                    {
-                        ShowBuildingInfo(CellUnderCursorCached.Value);
+                        if (building == null)
+                            HideBuildingInfo();
+                        else
+                            ShowBuildingInfo(CellUnderCursorCached.Value);
                     }
                     else
                     {
                         HideBuildingInfo();
-                        GameMap.HighlightCell(CellUnderCursorCached.Value.Coordinates);
                     }
                 }
             }
@@ -151,42 +134,14 @@ namespace Assets.Scripts
                 if(Application.isEditor)
                 {
                     if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.X))
-                    {
-                        int lastCmdId = _executedCommands.Count - 1;
-                        if (_executedCommands.Count > 0 && _executedCommands[lastCmdId].Undo())
-                        {
-                            _executedCommands.RemoveAt(lastCmdId);
-                            UpdateCommandListText();
-                        }
-                    }
+                        ExecutedCommandList.UndoLastCommand();
                 }
                 else
                 {
                     if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
-                    {
-                        int lastCmdId = _executedCommands.Count - 1;
-                        if (_executedCommands.Count > 0 && _executedCommands[lastCmdId].Undo())
-                        {
-                            _executedCommands.RemoveAt(lastCmdId);
-                            UpdateCommandListText();
-                        }
-                    }
+                        ExecutedCommandList.UndoLastCommand();
                 }
             }
-        }
-
-        void UpdateCommandListText()
-        {
-            var sb = new StringBuilder();
-            string shortcut = "<b>" + (Application.isEditor ? "Ctrl+Z" : "Z+X") + "</b>";
-            sb.AppendLine($"Press {shortcut} to undo last command");
-            sb.Append(Environment.NewLine);
-            sb.AppendLine("Executed Commands:");
-
-            for (int i = _executedCommands.Count - 1; i >= 0; i--)
-                sb.AppendLine("- " + _executedCommands[i]);
-
-            _commandListText.text = sb.ToString();
         }
 
         void InstanciateHologram(BuildingType type)
@@ -205,7 +160,6 @@ namespace Assets.Scripts
 
         void ShowBuildingInfo(GridCell cell)
         {
-            // TODO: temporary solution
             _buildingInfoUI.Building = (Building)cell.MapObject;
             _buildingInfoUI.gameObject.SetActive(true);
             _buildingInfoUI.gameObject.transform.position = Input.mousePosition;

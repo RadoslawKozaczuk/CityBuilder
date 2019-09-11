@@ -1,5 +1,7 @@
 ﻿using Assets.World.DataModels;
 using Assets.World.Interfaces;
+using Assets.World.Tasks;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Assets.World.Commands
@@ -8,13 +10,17 @@ namespace Assets.World.Commands
     {
         public Vehicle Vehicle { get; private set; }
 
-        public MoveVehicleCommand()
-        {
-        }
+        public readonly Vector2Int To;
 
-        public MoveVehicleCommand(Vehicle vehicle)
+        AbstractTask _scheduledTask;
+
+        /// <summary>
+        /// Move vehicle from its current position to target position.
+        /// </summary>
+        public MoveVehicleCommand(Vehicle vehicle, Vector2Int to)
         {
             Vehicle = vehicle;
+            To = to;
         }
 
         public override bool Call()
@@ -25,9 +31,11 @@ namespace Assets.World.Commands
             // select
             Vehicle.Selected = true;
 
-            _succeeded = true;
+            MoveTask task = new MoveTask(GameMap.Instance.Path, Vehicle);
+            _scheduledTask = task;
+            GameMap.ScheduleTask(task);
 
-            return true;
+            return base.Call();
         }
 
         public override bool Undo()
@@ -38,9 +46,7 @@ namespace Assets.World.Commands
             // unselect
             Vehicle.Selected = false;
 
-            _succeeded = false;
-
-            return true;
+            return base.Undo();
         }
 
         public override bool CheckExecutionContext()
@@ -60,7 +66,7 @@ namespace Assets.World.Commands
             return true;
         }
 
-        public override string ToString() => $"Move unit from to {Vehicle.Type.ToString()} ";
+        public override string ToString() => $"Move unit {Vehicle.Type.ToString()} from {Vehicle.Position} to {To}";
 
         /// <summary>
         /// Returns a shallow copy of the command.

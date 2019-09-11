@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 440132}
   - component: {fileID: 3325456}
   - component: {fileID: 2381190}
+  - component: {fileID: 217547100184084725}
+  - component: {fileID: 2035731279351840968}
   m_Layer: 0
   m_Name: SteelProduction
   m_TagString: Untagged
@@ -77,3 +79,33 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!65 &217547100184084725
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180750}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 13.924501, y: 8, z: 14.817771}
+  m_Center: {x: 0.00000023841858, y: -0.7696432, z: -0.028001308}
+--- !u!114 &2035731279351840968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ade8ea611f42f64ab4848dc14cde153, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Name: 
+  Type: 0
+  Constructed: 0
+  ProductionStarted: 0
+  AbleToReallocate: 0

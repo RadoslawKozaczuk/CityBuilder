@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Assets.World.DataModels
 {
     // this represents building object in the game
-    public sealed class Building : IMapObject
+    public sealed class Building : MonoBehaviour, IMapObject
     {
         /// <summary>
         /// Game map's coordinates.
@@ -17,30 +17,28 @@ namespace Assets.World.DataModels
         public Vector2Int Size => GameMap.DB[Type].Size;
 
         public string Name;
-        public readonly BuildingType Type;
-        public GameObject GameObject { get; set; }
+        [HideInInspector] public BuildingType Type;
         public bool Constructed = false;
         public bool ProductionStarted;
         public BuildingTask ScheduledTask;
-        public readonly bool AbleToReallocate;
+        public bool AbleToReallocate;
         public Resource? ReallocationCost;
 
-        readonly Resource _resource;
-        readonly float _productionTime;
-        readonly bool _imidiatelyStartProduction;
-        readonly bool _loopProduction;
+        Resource _resource;
+        float _productionTime;
+        bool _imidiatelyStartProduction;
+        bool _loopProduction;
 
-        internal Building(BuildingType type, Vector2Int position)
+        internal void SetData(BuildingType type, Vector2Int position)
         {
             Type = type;
 
             BuildingData data = GameMap.DB[type];
-            GameObject = Object.Instantiate(GameMap.MapFeaturePrefabCollection[type]);
-            GameObject.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
+            transform.position = GameMap.GetMiddlePointWithOffset(position, type);
 
             Position = position;
 
-            if(data.ResourceProductionData.HasValue)
+            if (data.ResourceProductionData.HasValue)
             {
                 _resource = data.ResourceProductionData.Value.Resource;
                 _productionTime = data.ResourceProductionData.Value.ProductionTime;
@@ -70,7 +68,7 @@ namespace Assets.World.DataModels
             // schedule production task
             BuildingTask task = new BuildingTask(_productionTime, AddResource);
             ScheduledTask = task;
-            GameMap.Instance.ScheduleTask(task);
+            GameMap.ScheduleTask(task);
             ProductionStarted = true;
         }
     }

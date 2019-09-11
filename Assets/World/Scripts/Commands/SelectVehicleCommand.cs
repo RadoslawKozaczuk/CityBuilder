@@ -4,13 +4,11 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World.Commands
 {
+    // select command now seems to be a bit redundant but later on when I add another way to select a vehicle 
+    // like select many or add to group etc. it should come in handy
     public class SelectVehicleCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
-        public Vehicle Vehicle { get; private set; }
-
-        public SelectVehicleCommand()
-        {
-        }
+        public readonly Vehicle Vehicle;
 
         public SelectVehicleCommand(Vehicle vehicle)
         {
@@ -25,9 +23,7 @@ namespace Assets.World.Commands
             // select
             Vehicle.Selected = true;
 
-            _succeeded = true;
-
-            return true;
+            return base.Call();
         }
 
         public override bool Undo()
@@ -38,9 +34,7 @@ namespace Assets.World.Commands
             // unselect
             Vehicle.Selected = false;
 
-            _succeeded = false;
-
-            return true;
+            return base.Undo();
         }
 
         public override bool CheckExecutionContext()

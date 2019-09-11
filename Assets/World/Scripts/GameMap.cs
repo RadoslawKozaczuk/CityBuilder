@@ -1,5 +1,5 @@
 ﻿using Assets.Database;
-using Assets.Database.DataModels;
+using Assets.World.Commands;
 using Assets.World.DataModels;
 using Assets.World.Tasks;
 using System.Collections.Generic;
@@ -9,11 +9,6 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
-    public sealed class ResourceChangedEventArgs
-    {
-        public List<Resource> Resources;
-    }
-
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MapFeaturePrefabCollection))]
     public sealed class GameMap : MonoBehaviour
@@ -62,7 +57,7 @@ namespace Assets.World
         PathFinder _pathFinder;
         Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
         bool _pathIsDirty; // indicates if PathFinder should recalculate the path
-        List<Vector2Int> _path;
+        internal List<Vector2Int> Path;
 
         readonly List<Vehicle> _vehicles = new List<Vehicle>();
 
@@ -113,14 +108,11 @@ namespace Assets.World
                 }
 
                 if(_pathIsDirty)
-                    _path = _pathFinder.FindPath(_selectedVehicle.Position, _targetCell);
+                    Path = _pathFinder.FindPath(_selectedVehicle.Position, _targetCell);
             }
 
-            if (_path != null)
-                _gridShaderAdapter.SetData(_path, true);
-
-            if (Input.GetMouseButtonDown(0))
-                ScheduleTask(new MoveTask(_path, SelectedVehicle));
+            if (Path != null)
+                _gridShaderAdapter.SetData(Path, true);
         }
 
         void LateUpdate()
@@ -129,6 +121,8 @@ namespace Assets.World
             _taskBuffer.Clear();
 
             _gridShaderAdapter.SendDataToGPU();
+
+            ExecutedCommandList.EndFrameSignal(); // if anything changes it will broadcast the new status
         }
         #endregion
 
@@ -146,25 +140,70 @@ namespace Assets.World
             _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
         }
 
-        public static void PathFinderTest(Vector2Int from, Vector2Int to)
+        /// <summary>
+        /// Returns true if the player clicked on anything belonging to the game world.
+        /// Additionally returns the building if the player clicked on that.
+        /// </summary>
+        public static bool ClickMe(out GridCell cell, out Building building)
         {
-            List<Vector2Int> path = Instance._pathFinder.FindPath(from, to);
-            ResetSelection();
-            
-            foreach(var v in path)
-                Instance._gridShaderAdapter[v] = true;
+#if UNITY_EDITOR
+            if (EventSystem.current.IsPointerOverGameObject())
+                throw new System.Exception("ClickMe should not be called if the cursor is over the UI");
+#endif
+
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (!Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // player clicked outside of the world
+                cell = new GridCell(); // dummy
+                building = null;
+                return false;
+            }
+            else
+            {
+                Collider collider = hit.collider;
+                Building b = collider.gameObject.GetComponent<Building>();
+                if (b != null)
+                {
+                    cell = Instance._cells[b.Position.x, b.Position.y];
+                    building = b;
+                    return true;
+                }
+
+                Vehicle v = collider.gameObject.GetComponent<Vehicle>();
+                if(v != null)
+                {
+                    // player clicked on a vehicle
+                    new SelectVehicleCommand(v).Call(); // call automatically puts the command in the execution command list
+
+                    cell = Instance._cells[v.Position.x, v.Position.y];
+                    building = null;
+                    return true;
+                }
+
+                // player clicked on the ground
+                GetCell(ray, out GridCell c);
+                cell = c;
+                new MoveVehicleCommand(Instance.SelectedVehicle, cell.Coordinates).Call();
+                building = null;
+                return false;
+            }
         }
 
         public static void BuildVehicle(VehicleType type, Vector2Int position)
         {
-            var truck = new Vehicle(type, position);
-            Instance._vehicles.Add(truck);
-            MarkAreaAsOccupied(position, new Vector2Int(1, 1), truck);
+            var instance = Instantiate(MapFeaturePrefabCollection[type]);
+            Vehicle vehicle = instance.GetComponent<Vehicle>();
+            vehicle.SetData(type, position);
+            Instance._vehicles.Add(vehicle);
+            MarkAreaAsOccupied(position, new Vector2Int(1, 1), vehicle);
         }
 
         public static Building BuildBuilding(BuildingType type, Vector2Int position)
         {
-            var building = new Building(type, position);
+            var instance = Instantiate(MapFeaturePrefabCollection[type]);
+            Building building = instance.GetComponent<Building>();
+            building.SetData(type, position);
             MarkAreaAsOccupied(building);
             ResourceManager.RemoveResources(type);
 
@@ -174,7 +213,7 @@ namespace Assets.World
         public static void RemoveBuilding(Building building, bool restoreResources = false)
         {
             MarkAreaAsFree(building);
-            Destroy(building.GameObject);
+            Destroy(building.gameObject);
 
             if (restoreResources)
                 ResourceManager.AddResources(building.Type);
@@ -191,7 +230,7 @@ namespace Assets.World
             MarkAreaAsFree(b);
 
             b.Position = to;
-            b.GameObject.transform.position = GetMiddlePoint(to, b.Size)
+            b.gameObject.transform.position = GetMiddlePoint(to, b.Size)
                 .ApplyPrefabPositionOffset(b.Type);
 
             MarkAreaAsOccupied(b);
@@ -403,7 +442,7 @@ namespace Assets.World
         /// <summary>
         /// Add BuildingTask object to the task buffer.
         /// </summary>
-        public void ScheduleTask(AbstractTask task) => _taskBuffer.Add(task);
+        public static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
 
         void UpdateTasks()
         {

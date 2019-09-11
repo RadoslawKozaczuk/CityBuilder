@@ -49,7 +49,7 @@ namespace Assets.World.Tasks
                 else
                 {
                     Completed = true;
-                    Vehicle.Instance.transform.position = _endPos;
+                    Vehicle.transform.position = _endPos;
                     return;
                 }
             }
@@ -69,7 +69,7 @@ namespace Assets.World.Tasks
 
             offset *= proportion;
 
-            Vehicle.Instance.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
+            Vehicle.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
         }
     }
 }

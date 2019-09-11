@@ -1,20 +1,22 @@
 ﻿using Assets.Database;
-using Assets.World.Controllers;
 using Assets.World.Interfaces;
 using UnityEngine;
 
 namespace Assets.World.DataModels
 {
     // this is a Vehicle model
-    public sealed class Vehicle : IMapObject
+    public sealed class Vehicle : MonoBehaviour, IMapObject
     {
-        public readonly VehicleType Type;
+        const float OUTLINE_VISIBLE_VALUE = 0.5f;
+        const float OUTLINE_NOT_VISIBLE_VALUE = 0.0f;
+
+        [SerializeField] Renderer _meshRenderer;
+
+        public VehicleType Type;
         /// <summary>
         /// Game map's coordinates.
         /// </summary>
         public Vector2Int Position { get; internal set; }
-        public GameObject Instance { get; }
-        public VehicleController Controller;
 
         bool _selected = false;
         public bool Selected
@@ -26,34 +28,39 @@ namespace Assets.World.DataModels
                 GameMap.Instance.SelectedVehicle = value ? (this) : null; // for now only one can be selected
 
                 if (value)
-                    Controller.TurnOutlineOn();
+                    TurnOutlineOn();
                 else
-                    Controller.TurnOutlineOff();
+                    TurnOutlineOff();
             }
         }
 
-        public float Speed; // for now not readonly we will see it we want to change it 
+        [HideInInspector] public float Speed; // for now not readonly we will see it we want to change it 
 
-        internal Vehicle(VehicleType type, Vector2Int position)
+        public void SetData(VehicleType type, Vector2Int position)
         {
             Type = type;
             Position = position;
 
             Speed = GameMap.DB[type].Speed;
-
-            var instance = Object.Instantiate(GameMap.MapFeaturePrefabCollection[type]);
-
-            // we have make a separate copy of a material for each instance to apply slightly different parameters
-            var vc = instance.GetComponent<VehicleController>();
-            Controller = vc;
-            vc.Vehicle = this;
-
-            // put in a correct place on the map
-            instance.transform.position = GameMap.GetMiddlePointWithOffset(position, type);
-
-            Instance = instance;
+            transform.position = GameMap.GetMiddlePointWithOffset(position, type);
         }
 
         public void ToggleSelection() => Selected = !Selected;
+
+        void Awake()
+        {
+            _meshRenderer.material = new Material(_meshRenderer.sharedMaterial);
+            TurnOutlineOff();
+        }
+
+        public void TurnOutlineOn()
+        {
+            _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_VISIBLE_VALUE);
+        }
+
+        public void TurnOutlineOff()
+        {
+            _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_NOT_VISIBLE_VALUE);
+        }
     }
 }
