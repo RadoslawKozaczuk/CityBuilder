@@ -37,14 +37,14 @@ namespace Assets.Scripts.UI
 
         void Update()
         {
-            if (Building.ScheduledTask == null || (Building.Constructed && !Building.ProductionStarted))
+            if (!Building.HasScheduledTask || (Building.Constructed && !Building.ProductionStarted))
             {
                 _slider.value = 0f;
                 _fill.gameObject.SetActive(false);
             }
             else
             {
-                _slider.value = 1 - Utils.Map(0, 1, 0, Building.ScheduledTask.TotalTime, Building.ScheduledTask.TimeLeft);
+                _slider.value = 1 - Utils.Map(0, 1, 0, Building.TaskTotalTime, Building.TaskTimeLeft);
                 _fill.gameObject.SetActive(true);
             }
 

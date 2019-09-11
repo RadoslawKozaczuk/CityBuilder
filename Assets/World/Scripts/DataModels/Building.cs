@@ -9,6 +9,7 @@ namespace Assets.World.DataModels
     // this represents building object in the game
     public sealed class Building : MonoBehaviour, IMapObject
     {
+        #region Properties
         /// <summary>
         /// Game map's coordinates.
         /// </summary>
@@ -16,13 +17,43 @@ namespace Assets.World.DataModels
 
         public Vector2Int Size => GameMap.DB[Type].Size;
 
+        public bool HasScheduledTask => ScheduledTask != null;
+
+        public float TaskTotalTime
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (ScheduledTask == null)
+                    throw new System.Exception("Cannot ask for TaskTotalTime if none tasks are scheduled");
+#endif
+
+                return ScheduledTask.TotalTime;
+            }
+        }
+
+        public float TaskTimeLeft
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (ScheduledTask == null)
+                    throw new System.Exception("Cannot ask for TaskTimeLeft if none tasks are scheduled");
+#endif
+
+                return ScheduledTask.TimeLeft;
+            }
+        }
+        #endregion
+
         public string Name;
         [HideInInspector] public BuildingType Type;
         public bool Constructed = false;
         public bool ProductionStarted;
-        public BuildingTask ScheduledTask;
         public bool AbleToReallocate;
         public Resource? ReallocationCost;
+
+        internal BuildingTask ScheduledTask;
 
         Resource _resource;
         float _productionTime;

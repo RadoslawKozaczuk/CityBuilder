@@ -440,9 +440,9 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Add BuildingTask object to the task buffer.
+        /// Adds task to the task buffer.
         /// </summary>
-        public static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
+        internal static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
 
         void UpdateTasks()
         {

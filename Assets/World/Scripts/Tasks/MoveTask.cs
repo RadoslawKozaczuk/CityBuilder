@@ -5,19 +5,18 @@ using UnityEngine;
 
 namespace Assets.World.Tasks
 {
-    public sealed class MoveTask : AbstractTask
+    internal sealed class MoveTask : AbstractTask
     {
-        public readonly List<Vector2Int> Path;
-        public Vehicle Vehicle;
+        internal readonly List<Vector2Int> Path;
+        internal Vehicle Vehicle;
 
         Vector3 _startPos;
         Vector3 _endPos;
         readonly float _totalTime; // in seconds
         float _currentTime; // in seconds
-
         bool _notMovedYet = true;
 
-        public MoveTask(List<Vector2Int> path, Vehicle vehicle)
+        internal MoveTask(List<Vector2Int> path, Vehicle vehicle)
         {
 #if UNITY_EDITOR
             if (path == null)
@@ -36,7 +35,7 @@ namespace Assets.World.Tasks
             _endPos = GameMap.GetCellMiddlePosition(path[1]);
         }
 
-        public override void Update()
+        internal override void Update()
         {
             if (Completed)
                 return;
@@ -78,12 +77,6 @@ namespace Assets.World.Tasks
             Vehicle.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
         }
 
-        public override void Abort()
-        {
-            _aborted = true;
-
-            if (_aborted)
-                return;
-        }
+        internal override void Abort() => _aborted = true;
     }
 }

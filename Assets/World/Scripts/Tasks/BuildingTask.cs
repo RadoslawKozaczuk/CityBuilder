@@ -2,22 +2,22 @@
 
 namespace Assets.World.Tasks
 {
-    public sealed class BuildingTask : AbstractTask
+    internal sealed class BuildingTask : AbstractTask
     {
-        public readonly Action ActionOnFinish;
-        public readonly float TotalTime;
-        public float TimeLeft;
+        internal readonly Action ActionOnFinish;
+        internal readonly float TotalTime;
+        internal float TimeLeft;
 
-        public BuildingTask(float executionDelay, Action onCompleteAction)
+        internal BuildingTask(float executionDelay, Action onCompleteAction)
         {
             TotalTime = executionDelay;
             TimeLeft = executionDelay;
             ActionOnFinish = onCompleteAction;
         }
 
-        public override void Abort() => throw new NotImplementedException();
+        internal override void Abort() => throw new NotImplementedException();
 
-        public override void Update()
+        internal override void Update()
         {
 
         }
