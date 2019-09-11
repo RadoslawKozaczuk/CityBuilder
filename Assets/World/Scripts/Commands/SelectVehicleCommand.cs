@@ -8,9 +8,9 @@ namespace Assets.World.Commands
     // like select many or add to group etc. it should come in handy
     public class SelectVehicleCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
-        public readonly Vehicle Vehicle;
+        internal readonly Vehicle Vehicle;
 
-        public SelectVehicleCommand(Vehicle vehicle)
+        internal SelectVehicleCommand(Vehicle vehicle)
         {
             Vehicle = vehicle;
         }

@@ -8,16 +8,16 @@ namespace Assets.World.Commands
 {
     public class MoveVehicleCommand : AbstractCommand, ICommand, ICloneable<AbstractCommand>
     {
-        public Vehicle Vehicle { get; private set; }
+        internal Vehicle Vehicle { get; private set; }
 
         public readonly Vector2Int To;
 
-        AbstractTask _scheduledTask;
+        MoveTask _moveTask;
 
         /// <summary>
         /// Move vehicle from its current position to target position.
         /// </summary>
-        public MoveVehicleCommand(Vehicle vehicle, Vector2Int to)
+        internal MoveVehicleCommand(Vehicle vehicle, Vector2Int to)
         {
             Vehicle = vehicle;
             To = to;
@@ -28,11 +28,8 @@ namespace Assets.World.Commands
             if (_succeeded || !CheckConditions())
                 return false;
 
-            // select
-            Vehicle.Selected = true;
-
             MoveTask task = new MoveTask(GameMap.Instance.Path, Vehicle);
-            _scheduledTask = task;
+            _moveTask = task;
             GameMap.ScheduleTask(task);
 
             return base.Call();
@@ -43,9 +40,7 @@ namespace Assets.World.Commands
             if (!_succeeded)
                 return false;
 
-            // unselect
-            Vehicle.Selected = false;
-            _scheduledTask.Abort();
+            _moveTask.Abort();
 
             return base.Undo();
         }

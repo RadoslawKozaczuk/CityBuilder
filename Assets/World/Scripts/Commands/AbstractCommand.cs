@@ -24,6 +24,7 @@ namespace Assets.World.Commands
         public virtual bool Undo()
         {
             _succeeded = false;
+            ExecutedCommandList.RemoveCommand(this);
             return true;
         }
 

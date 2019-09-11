@@ -6,17 +6,12 @@ namespace Assets.Scripts.UI
 {
     class CommandListUI : MonoBehaviour
     {
-        public TextMeshProUGUI CommandListText;
+        [SerializeField] TextMeshProUGUI _commandListText;
 
-        void Start()
-        {
-            // subscribe to ResourceManager
-            ExecutedCommandList.StatusChangedEventHandler += ResourceUpdate;
-        }
+        // subscribe to ResourceManager
+        void Start() => GameMap.StatusChangedEventHandler += ResourceUpdate;
 
-        void ResourceUpdate(object sender, ExecutedCommandListChangedEventArgs eventArgs)
-        {
-            CommandListText.text = eventArgs.CommandListText;
-        }
+        void ResourceUpdate(object _, ExecutedCommandListChangedEventArgs eventArgs) 
+            => _commandListText.text = eventArgs.CommandListText;
     }
 }

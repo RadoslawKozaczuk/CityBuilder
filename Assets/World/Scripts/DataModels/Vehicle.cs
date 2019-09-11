@@ -5,21 +5,19 @@ using UnityEngine;
 namespace Assets.World.DataModels
 {
     // this is a Vehicle model
-    public sealed class Vehicle : MonoBehaviour, IMapObject
+    internal sealed class Vehicle : MonoBehaviour, IMapObject
     {
         const float OUTLINE_VISIBLE_VALUE = 0.5f;
         const float OUTLINE_NOT_VISIBLE_VALUE = 0.0f;
 
-        [SerializeField] Renderer _meshRenderer;
-
-        public VehicleType Type;
+        #region Properties
         /// <summary>
         /// Game map's coordinates.
         /// </summary>
-        public Vector2Int Position { get; internal set; }
+        internal Vector2Int Position { get; set; }
 
         bool _selected = false;
-        public bool Selected
+        internal bool Selected
         {
             get => _selected;
             set
@@ -33,19 +31,21 @@ namespace Assets.World.DataModels
                     TurnOutlineOff();
             }
         }
+        #endregion
 
-        [HideInInspector] public float Speed; // for now not readonly we will see it we want to change it 
+        internal VehicleType Type;
+        [HideInInspector] internal float Speed; // for now not readonly we will see it we want to change it 
+        [SerializeField] Renderer _meshRenderer;
 
-        public void SetData(VehicleType type, Vector2Int position)
+        internal void SetData(VehicleType type, Vector2Int position)
         {
             Type = type;
             Position = position;
-
             Speed = GameMap.DB[type].Speed;
             transform.position = GameMap.GetMiddlePointWithOffset(position, type);
         }
 
-        public void ToggleSelection() => Selected = !Selected;
+        internal void ToggleSelection() => Selected = !Selected;
 
         void Awake()
         {
@@ -53,14 +53,8 @@ namespace Assets.World.DataModels
             TurnOutlineOff();
         }
 
-        public void TurnOutlineOn()
-        {
-            _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_VISIBLE_VALUE);
-        }
+        internal void TurnOutlineOn() => _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_VISIBLE_VALUE);
 
-        public void TurnOutlineOff()
-        {
-            _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_NOT_VISIBLE_VALUE);
-        }
+        internal void TurnOutlineOff() => _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_NOT_VISIBLE_VALUE);
     }
 }

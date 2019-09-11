@@ -134,12 +134,12 @@ namespace Assets.Scripts
                 if(Application.isEditor)
                 {
                     if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.X))
-                        ExecutedCommandList.UndoLastCommand();
+                        GameMap.UndoLastCommand();
                 }
                 else
                 {
                     if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
-                        ExecutedCommandList.UndoLastCommand();
+                        GameMap.UndoLastCommand();
                 }
             }
         }

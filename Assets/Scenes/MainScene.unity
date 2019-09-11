@@ -205,6 +205,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d4b80e825d17ca449c2049fd01095c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Building: {fileID: 0}
   _startProductionButton: {fileID: 1264411796}
   _reallocateButton: {fileID: 754746690}
   _buildingName: {fileID: 915533336}
@@ -638,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba3ee10d51b2d8d438a0ffaa7b41b643, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CommandListText: {fileID: 459269229}
+  _commandListText: {fileID: 459269229}
 --- !u!1 &587251570
 GameObject:
   m_ObjectHideFlags: 0

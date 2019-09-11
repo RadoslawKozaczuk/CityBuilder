@@ -7,15 +7,12 @@ using UnityEngine;
 
 namespace Assets.World
 {
-    public sealed class ExecutedCommandListChangedEventArgs
-    {
-        // for now it will hold everything in one formatted string
-        public string CommandListText;
-    }
-
     // wrapper class for convenience
-    public class ExecutedCommandList : IEnumerable
+    internal class ExecutedCommandList : IEnumerable
     {
+        // custom indexer for convenience
+        internal AbstractCommand this[int id] => _executedCommands[id];
+
         static ExecutedCommandList _instance;
         static ExecutedCommandList Instance
         {
@@ -27,14 +24,6 @@ namespace Assets.World
                 return _instance;
             }
         }
-
-        // custom indexer for convenience
-        internal AbstractCommand this[int id] => _executedCommands[id];
-
-        /// <summary>
-        /// Subscribe to this event to receive notifications each time executed command list status has changed.
-        /// </summary>
-        public static event EventHandler<ExecutedCommandListChangedEventArgs> StatusChangedEventHandler;
 
         static readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
         static bool _isDirty = true; // true to force initial message broadcast
@@ -51,8 +40,10 @@ namespace Assets.World
             _isDirty = true;
         }
 
+        internal static void RemoveCommand(AbstractCommand command) => _executedCommands.Remove(command);
+
         // for now it is public but maybe it should be kept in GameMap in order to provide more unified interface for external users
-        public static void UndoLastCommand()
+        internal static void UndoLastCommand()
         {
             if (_executedCommands.Count == 0)
                 return;
@@ -60,10 +51,8 @@ namespace Assets.World
             int lastCmdId = _executedCommands.Count - 1;
 
             // this will also remove it from the list as every command removes itself once undo is called successfully
-            _executedCommands[lastCmdId].Undo();
-            _executedCommands.RemoveAt(lastCmdId);
-
-            _isDirty = true;
+            if(_executedCommands[lastCmdId].Undo())
+                _isDirty = true;
         }
 
         /// <summary>
@@ -73,7 +62,7 @@ namespace Assets.World
         internal static void EndFrameSignal()
         {
             if (_isDirty)
-                BroadcastStatusChanged();
+                GameMap.BroadcastStatusChanged(UpdateCommandListText());
         }
 
         static string UpdateCommandListText()
@@ -91,10 +80,5 @@ namespace Assets.World
         }
 
         public IEnumerator GetEnumerator() => throw new NotImplementedException();
-
-        // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        static void BroadcastStatusChanged() => StatusChangedEventHandler?.Invoke(
-            _instance,
-            new ExecutedCommandListChangedEventArgs { CommandListText = UpdateCommandListText() });
     }
 }

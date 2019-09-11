@@ -2,6 +2,7 @@
 using Assets.World.Commands;
 using Assets.World.DataModels;
 using Assets.World.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -9,6 +10,12 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
+    public sealed class ExecutedCommandListChangedEventArgs
+    {
+        // for now it will hold everything in one formatted string
+        public string CommandListText;
+    }
+
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MapFeaturePrefabCollection))]
     public sealed class GameMap : MonoBehaviour
@@ -20,6 +27,11 @@ namespace Assets.World
         internal delegate bool FunctionRefStruct<T>(ref GridCell cell);
 
         public static MapFeaturePrefabCollection MapFeaturePrefabCollection;
+
+        /// <summary>
+        /// Subscribe to this event to receive notifications each time executed command list status has changed.
+        /// </summary>
+        public static event EventHandler<ExecutedCommandListChangedEventArgs> StatusChangedEventHandler;
 
         internal static GameMap Instance;
         internal static readonly Repository DB = new Repository();
@@ -190,6 +202,8 @@ namespace Assets.World
             }
         }
 
+        public static void UndoLastCommand() => ExecutedCommandList.UndoLastCommand();
+
         public static void BuildVehicle(VehicleType type, Vector2Int position)
         {
             var instance = Instantiate(MapFeaturePrefabCollection[type]);
@@ -244,7 +258,7 @@ namespace Assets.World
         /// <summary>
         /// Attaches vehicle to another cell effectively making that cell occupied and the source cell free.
         /// </summary>
-        public static void MoveVehicle(Vehicle v, Vector2Int to)
+        internal static void MoveVehicle(Vehicle v, Vector2Int to)
         {
             MarkCellAsFree(v.Position);
             v.Position = to;
@@ -461,6 +475,11 @@ namespace Assets.World
                 //task.ActionOnFinish();
             }
         }
+
+        // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
+        internal static void BroadcastStatusChanged(string commandListText) => StatusChangedEventHandler?.Invoke(
+            Instance,
+            new ExecutedCommandListChangedEventArgs { CommandListText = commandListText });
 
 #if UNITY_EDITOR
         void DebugDrawOccupied()
