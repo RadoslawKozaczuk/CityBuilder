@@ -1,7 +1,6 @@
 ﻿using Assets.Database;
 using Assets.World.Commands;
 using Assets.World.DataModels;
-using Assets.World.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -10,10 +9,9 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
-    public sealed class ExecutedCommandListChangedEventArgs
+    public sealed class DebugLogEventArgs
     {
-        // for now it will hold everything in one formatted string
-        public string CommandListText;
+        public string Log;
     }
 
     [DisallowMultipleComponent]
@@ -31,7 +29,11 @@ namespace Assets.World
         /// <summary>
         /// Subscribe to this event to receive notifications each time executed command list status has changed.
         /// </summary>
-        public static event EventHandler<ExecutedCommandListChangedEventArgs> StatusChangedEventHandler;
+        public static event EventHandler<DebugLogEventArgs> ExecutedCommandsStatusChangedEventHandler;
+        /// <summary>
+        /// Subscribe to this event to receive notifications each time tasks status has changed.
+        /// </summary>
+        public static event EventHandler<DebugLogEventArgs> TaskManagerStatusChangedEventHandler;
 
         internal static GameMap Instance;
         internal static readonly Repository DB = new Repository();
@@ -108,34 +110,10 @@ namespace Assets.World
 #endif
 
             // update related to vehicle
-            if (SelectedVehicle == null || EventSystem.current.IsPointerOverGameObject())
-            {
-                _gridShaderAdapter.ResetAllSelection();
-                return;
-            }
+            VehicleSelectionUpdate();
 
-            if(SelectedVehicle == null || !GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
-            {
-                _gridShaderAdapter.ResetAllSelection();
-                return;
-            }
-
-            if (SelectedVehicle != null)
-            {
-                if(cell.Coordinates != _targetCell)
-                {
-                    _pathIsDirty = true;
-                    _targetCell = cell.Coordinates;
-                }
-
-                if(_pathIsDirty)
-                    Path = _pathFinder.FindPath(_selectedVehicle.Position, _targetCell);
-            }
-
-            if (Path != null)
-                _gridShaderAdapter.SetData(Path, true);
-
-            TaskManager.Update();
+            // update all ongoing tasks
+            TaskManager.UpdateTasks();
         }
 
         void LateUpdate()
@@ -392,9 +370,11 @@ namespace Assets.World
         }
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        internal static void BroadcastStatusChanged(string commandListText) => StatusChangedEventHandler?.Invoke(
-            Instance,
-            new ExecutedCommandListChangedEventArgs { CommandListText = commandListText });
+        internal static void BroadcastExecutedCommandsStatusChanged(string status) 
+            => ExecutedCommandsStatusChangedEventHandler?.Invoke(Instance, new DebugLogEventArgs { Log = status });
+
+        internal static void BroadcastTaskManagerStatusChanged(string status) 
+            => TaskManagerStatusChangedEventHandler?.Invoke(Instance, new DebugLogEventArgs { Log = status });
 
         /// <summary>
         /// Mark all the cells in the given area as occupied.
@@ -450,6 +430,36 @@ namespace Assets.World
             pos.z += position.y * CELL_SIZE - Instance._localOffsetZ;
 
             return pos;
+        }
+
+        static void VehicleSelectionUpdate()
+        {
+            if (Instance.SelectedVehicle == null || EventSystem.current.IsPointerOverGameObject())
+            {
+                Instance._gridShaderAdapter.ResetAllSelection();
+                return;
+            }
+
+            if (Instance.SelectedVehicle == null || !GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
+            {
+                Instance._gridShaderAdapter.ResetAllSelection();
+                return;
+            }
+
+            if (Instance.SelectedVehicle != null)
+            {
+                if (cell.Coordinates != Instance._targetCell)
+                {
+                    Instance._pathIsDirty = true;
+                    Instance._targetCell = cell.Coordinates;
+                }
+
+                if (Instance._pathIsDirty)
+                    Instance.Path = Instance._pathFinder.FindPath(Instance._selectedVehicle.Position, Instance._targetCell);
+            }
+
+            if (Instance.Path != null)
+                Instance._gridShaderAdapter.SetData(Instance.Path, true);
         }
 
 #if UNITY_EDITOR

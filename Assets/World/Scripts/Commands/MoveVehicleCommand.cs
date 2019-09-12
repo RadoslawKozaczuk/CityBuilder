@@ -10,9 +10,11 @@ namespace Assets.World.Commands
     {
         internal Vehicle Vehicle { get; private set; }
 
-        public readonly Vector2Int To;
+        internal readonly Vector2Int From;
+        internal readonly Vector2Int To;
 
         MoveTask _moveTask;
+        MoveTask _associatedTask;
 
         /// <summary>
         /// Move vehicle from its current position to target position.
@@ -21,6 +23,7 @@ namespace Assets.World.Commands
         {
             Vehicle = vehicle;
             To = to;
+            From = vehicle.Position;
         }
 
         public override bool Call()
@@ -64,7 +67,7 @@ namespace Assets.World.Commands
             return true;
         }
 
-        public override string ToString() => $"Move unit {Vehicle.Type.ToString()} from {Vehicle.Position} to {To}";
+        public override string ToString() => $"Move unit {Vehicle.Type.ToString()} from {From} to {To}";
 
         /// <summary>
         /// Returns a shallow copy of the command.

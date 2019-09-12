@@ -16,7 +16,7 @@ namespace Assets.World.Tasks
         float _currentTime; // in seconds
         bool _notMovedYet = true;
 
-        internal MoveTask(List<Vector2Int> path, Vehicle vehicle)
+        internal MoveTask(List<Vector2Int> path, Vehicle vehicle) : base()
         {
 #if UNITY_EDITOR
             if (path == null)
@@ -24,9 +24,13 @@ namespace Assets.World.Tasks
             else if (path.Count < 2)
                 throw new System.ArgumentException("path argument must be of length of at least 2", "path");
 #endif
-            
-            // we need to check if this vehicle does not have a move task already assigned
 
+            // we need to check if this vehicle does not have a move task already assigned
+            if(vehicle.ScheduledTask != null)
+            {
+                vehicle.ScheduledTask.Abort();
+                WaitingFor = vehicle.ScheduledTask; // this task is waiting for another task before it can start
+            }
 
             Path = new List<Vector2Int>(path);
             Vehicle = vehicle;
@@ -36,12 +40,22 @@ namespace Assets.World.Tasks
 
             _startPos = GameMap.GetCellMiddlePosition(path[0]);
             _endPos = GameMap.GetCellMiddlePosition(path[1]);
+
+            vehicle.ScheduledTask = this;
         }
 
         internal override void Update()
         {
             if (Completed)
                 return;
+
+            if(WaitingFor != null)
+            {
+                if (WaitingFor.Completed)
+                    WaitingFor = null;
+                else
+                    return;
+            }
 
             _currentTime += Time.deltaTime;
 
@@ -57,7 +71,7 @@ namespace Assets.World.Tasks
                 }
                 else
                 {
-                    Completed = true;
+                    MarkAsCompleted();
                     Vehicle.transform.position = _endPos;
                     return;
                 }
@@ -80,6 +94,9 @@ namespace Assets.World.Tasks
             Vehicle.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
         }
 
-        internal override void Abort() => _aborted = true;
+        internal override string ToString()
+        {
+            return $"MoveTask ID[{Id}] from: {_startPos} to: {_endPos} time: {string.Format("{0:0.00}", _currentTime)} status: {TaskStatus}";
+        }
     }
 }

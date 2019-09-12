@@ -1,5 +1,6 @@
 ﻿using Assets.Database;
 using Assets.World.Interfaces;
+using Assets.World.Tasks;
 using UnityEngine;
 
 namespace Assets.World.DataModels
@@ -11,6 +12,8 @@ namespace Assets.World.DataModels
         const float OUTLINE_NOT_VISIBLE_VALUE = 0.0f;
 
         #region Properties
+        internal VehicleType Type { get; private set; }
+
         /// <summary>
         /// Game map's coordinates.
         /// </summary>
@@ -33,9 +36,9 @@ namespace Assets.World.DataModels
         }
         #endregion
 
-        internal VehicleType Type;
         [HideInInspector] internal float Speed; // for now not readonly, we will see if we want to change it 
         [SerializeField] Renderer _meshRenderer;
+        internal MoveTask ScheduledTask; // for now let's assume vehicle can only be given a move task
 
         void Awake()
         {

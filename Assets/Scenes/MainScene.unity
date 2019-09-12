@@ -475,7 +475,7 @@ GameObject:
   - component: {fileID: 459269229}
   - component: {fileID: 459269231}
   m_Layer: 5
-  m_Name: Command List Text
+  m_Name: Debug Info Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -639,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba3ee10d51b2d8d438a0ffaa7b41b643, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _commandListText: {fileID: 459269229}
+  _debugInfoText: {fileID: 459269229}
 --- !u!1 &587251570
 GameObject:
   m_ObjectHideFlags: 0

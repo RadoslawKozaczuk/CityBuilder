@@ -13,20 +13,9 @@ namespace Assets.World
         // custom indexer for convenience
         internal AbstractCommand this[int id] => _executedCommands[id];
 
-        static ExecutedCommandList _instance;
-        static ExecutedCommandList Instance
-        {
-            get
-            {
-                if (_instance == null)
-                    _instance = new ExecutedCommandList();
-
-                return _instance;
-            }
-        }
-
         static readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
         static bool _isDirty = true; // true to force initial message broadcast
+        static readonly StringBuilder _sb = new StringBuilder();
 
         internal static void Add(AbstractCommand command)
         {
@@ -61,21 +50,16 @@ namespace Assets.World
         internal static void EndFrameSignal()
         {
             if (_isDirty)
-                GameMap.BroadcastStatusChanged(UpdateCommandListText());
+                GameMap.BroadcastExecutedCommandsStatusChanged(UpdateCommandListText());
         }
 
         static string UpdateCommandListText()
         {
-            var sb = new StringBuilder();
-            string shortcut = "<b>" + (Application.isEditor ? "Z+X" : "Ctrl+Z") + "</b>";
-            sb.AppendLine($"Press {shortcut} to undo last command");
-            sb.Append(Environment.NewLine);
-            sb.AppendLine("Executed Commands:");
-
+            _sb.Clear();
             for (int i = _executedCommands.Count - 1; i >= 0; i--)
-                sb.AppendLine("- " + _executedCommands[i]);
+                _sb.AppendLine("- " + _executedCommands[i]);
 
-            return sb.ToString();
+            return _sb.ToString();
         }
 
         public IEnumerator GetEnumerator() => throw new NotImplementedException();

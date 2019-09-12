@@ -8,18 +8,21 @@ namespace Assets.World.Tasks
         internal readonly float TotalTime;
         internal float TimeLeft;
 
-        internal ResourceProductionTask(float executionDelay, Action onCompleteAction)
+        internal ResourceProductionTask(float executionDelay, Action onCompleteAction) : base()
         {
             TotalTime = executionDelay;
             TimeLeft = executionDelay;
             ActionOnFinish = onCompleteAction;
         }
 
-        internal override void Abort() => throw new NotImplementedException();
-
         internal override void Update()
         {
 
+        }
+
+        internal override string ToString()
+        {
+            return $"ResourceProductionTask ID[{Id}] time: {string.Format("{0:0.00}", TimeLeft)} status: {TaskStatus}";
         }
     }
 }

@@ -10,6 +10,6 @@ namespace Assets.Scripts
 
         void Awake() => _instance = this;
 
-        public static Material GetMaterial(CommonMaterials type) => _instance._commonMaterials[(int)type];
+        public static Material GetMaterial(CommonMaterial type) => _instance._commonMaterials[(int)type];
     }
 }

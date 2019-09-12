@@ -6,13 +6,32 @@
     /// </summary>
     internal abstract class AbstractTask
     {
-        internal bool Completed;
+        internal TaskStatus TaskStatus;
+        internal readonly int Id;
+        internal bool Completed { get; private set; }
 
-        protected AbstractTask _waitingFor;
+        internal AbstractTask WaitingFor;
         protected bool _aborted;
+
+        protected AbstractTask()
+        {
+            Id = TaskManager.GetFirstFreeTaskId();
+        }
+
+        protected internal void Abort()
+        {
+            _aborted = true;
+            TaskStatus = TaskStatus.Aborting;
+        }
 
         internal abstract void Update();
 
-        internal abstract void Abort();
+        internal new abstract string ToString();
+
+        protected void MarkAsCompleted()
+        {
+            Completed = true;
+            TaskStatus = TaskStatus.Completed;
+        }
     }
 }

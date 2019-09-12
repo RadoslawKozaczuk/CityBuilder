@@ -7,13 +7,13 @@ namespace Assets.World
     /// This class helps you handle communication with the GPU by exposing human-friendly interface.
     /// Just set the flags of the cells you want to highlight to true and voilà.
     /// You can access the flags just like you would normally access an array.
-    /// Important: To actually apply the data, call SendDataToGPUTo method (preferably at the end of a frame).
+    /// Important: To actually apply the data, call SendDataToGPU method (preferably at the end of a frame).
     /// </summary>
     sealed class GridShaderAdapter
     {
         const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything >0.5f (>127) as selected
 
-        // custom index to allow convenient access
+        // custom indexer to allow convenient access
         internal bool this[Vector2Int coord]
         {
             get => _cellTextureData[coord.y * GameMap.GridSizeY + coord.x].r == SELECTED_CELL_INDICATOR;

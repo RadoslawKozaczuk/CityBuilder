@@ -77,8 +77,8 @@ namespace Assets.Scripts
                 _hologram.instance.SetActive(true);
 
                 _hologramMeshRenderer.material = MaterialCollection.GetMaterial(_pendingCommand.CheckConditions()
-                    ? CommonMaterials.HolographicGreen
-                    : CommonMaterials.HolographicRed);
+                    ? CommonMaterial.HolographicGreen
+                    : CommonMaterial.HolographicRed);
 
                 _hologram.instance.transform.position = GameMap.GetMiddlePointWithOffset(
                     CellUnderCursorCached.Value.Coordinates, _hologram.type);

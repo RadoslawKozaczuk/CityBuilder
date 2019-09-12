@@ -12,11 +12,11 @@ namespace Assets.Scripts
 
         void Start()
         {
-            _commonShaders[(int)CommonShaders.Standard] = Shader.Find("Standard");
-            _commonShaders[(int)CommonShaders.OutlineAlways] = Shader.Find("Custom/Outline_Always");
-            _commonShaders[(int)CommonShaders.OutlineNormal] = Shader.Find("Custom/Outline_Normal");
+            _commonShaders[(int)CommonShader.Standard] = Shader.Find("Standard");
+            _commonShaders[(int)CommonShader.OutlineAlways] = Shader.Find("Custom/Outline_Always");
+            _commonShaders[(int)CommonShader.OutlineNormal] = Shader.Find("Custom/Outline_Normal");
         }
 
-        public static Shader GetShader(CommonMaterials type) => _instance._commonShaders[(int)type];
+        public static Shader GetShader(CommonMaterial type) => _instance._commonShaders[(int)type];
     }
 }
