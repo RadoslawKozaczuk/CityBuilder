@@ -42,7 +42,6 @@ namespace Assets.World
 
         internal static void RemoveCommand(AbstractCommand command) => _executedCommands.Remove(command);
 
-        // for now it is public but maybe it should be kept in GameMap in order to provide more unified interface for external users
         internal static void UndoLastCommand()
         {
             if (_executedCommands.Count == 0)
@@ -57,7 +56,7 @@ namespace Assets.World
 
         /// <summary>
         /// Used for synchronization with Unity life cycle.
-        /// This is necessary to call this method in any Update method.
+        /// This is necessary to call this method in any Update method but not more than once per frame.
         /// </summary>
         internal static void EndFrameSignal()
         {

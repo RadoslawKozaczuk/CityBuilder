@@ -5,13 +5,14 @@ namespace Assets.World.DataModels
 {
     public struct GridCell
     {
-        // for convenience
+        #region Properties
         public bool IsOccupied => MapObject != null;
         public bool IsOccupiedByBuilding => MapObject != null && MapObject is Building;
         public bool IsOccupiedByVehicle => MapObject != null && MapObject is Vehicle;
+        #endregion
 
         /// <summary>
-        /// Object that is occupied that cell. It may be anything from a car to a car.
+        /// The object that occupies that cell. It may be anything from a car, through a tree to a building.
         /// </summary>
         public IMapObject MapObject { get; internal set; }
 

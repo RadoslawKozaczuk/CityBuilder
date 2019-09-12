@@ -39,8 +39,8 @@ namespace Assets.World
         #region Properties
         [Header("These parameters are applied only at the start of the game.")]
         [Range(1, 100)] [SerializeField] int _gridSizeX = 16;
-        public static int GridSizeX => Instance._gridSizeX;   // to bypass Range ATR only to variables appliance
-        [Range(1, 100)] [SerializeField] int _gridSizeY = 16; // as well as to not break the Instance encapsulation
+        public static int GridSizeX => Instance._gridSizeX;   // to bypass Range attribute only to variables appliance
+        [Range(1, 100)] [SerializeField] int _gridSizeY = 16; // as well as to not break the Instance encapsulation (readonly)
         public static int GridSizeY => Instance._gridSizeX; // same as above
 
         Vehicle _selectedVehicle;
@@ -57,6 +57,8 @@ namespace Assets.World
         }
         #endregion
 
+        internal List<Vector2Int> Path;
+
         [Header("Turn on to see gizmos indicating which cells are occupied.")]
         [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in the editor in order to make it work
 
@@ -64,14 +66,12 @@ namespace Assets.World
         readonly List<AbstractTask> _scheduledTasks = new List<AbstractTask>();
         readonly GridCell[,] _cells;
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // grid shader params
+        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // responsible for cell highlighting
+        readonly List<Vehicle> _vehicles = new List<Vehicle>();
 
         PathFinder _pathFinder;
         Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
         bool _pathIsDirty; // indicates if PathFinder should recalculate the path
-        internal List<Vector2Int> Path;
-
-        readonly List<Vehicle> _vehicles = new List<Vehicle>();
 
         #region Unity life-cycle methods
         void Awake()
@@ -83,8 +83,6 @@ namespace Assets.World
             Material material = gameObject.GetComponent<MeshRenderer>().material;
             material.SetInt("_GridSizeX", _gridSizeX);
             material.SetInt("_GridSizeY", _gridSizeY);
-
-            _gridShaderAdapter.InitializeCellTexture();
 
             _pathFinder = new PathFinder(Instance._cells);
         }
@@ -132,7 +130,7 @@ namespace Assets.World
             _scheduledTasks.AddRange(_taskBuffer);
             _taskBuffer.Clear();
 
-            _gridShaderAdapter.SendDataToGPU();
+            _gridShaderAdapter.SendDataToGPU(); // applies grid highlighting
 
             ExecutedCommandList.EndFrameSignal(); // if anything changes it will broadcast the new status
         }
@@ -154,7 +152,7 @@ namespace Assets.World
 
         /// <summary>
         /// Returns true if the player clicked on anything belonging to the game world.
-        /// Additionally returns the building if the player clicked on that.
+        /// Additionally returns the building if the player clicked on such.
         /// </summary>
         public static bool ClickMe(out GridCell cell, out Building building)
         {
@@ -253,16 +251,6 @@ namespace Assets.World
                 ResourceManager.AddResources(b.ReallocationCost);
             else
                 ResourceManager.RemoveResources(b.ReallocationCost);
-        }
-
-        /// <summary>
-        /// Attaches vehicle to another cell effectively making that cell occupied and the source cell free.
-        /// </summary>
-        internal static void MoveVehicle(Vehicle v, Vector2Int to)
-        {
-            MarkCellAsFree(v.Position);
-            v.Position = to;
-            MarkCellAsOccupied(to, v);
         }
 
         /// <summary>
@@ -398,6 +386,26 @@ namespace Assets.World
             || position.y < 0 || position.y + DB[type].Size.y > Instance._gridSizeY;
 
         /// <summary>
+        /// Attaches vehicle to another cell effectively making that cell occupied and the source cell free.
+        /// </summary>
+        internal static void MoveVehicle(Vehicle v, Vector2Int to)
+        {
+            MarkCellAsFree(v.Position);
+            v.Position = to;
+            MarkCellAsOccupied(to, v);
+        }
+
+        /// <summary>
+        /// Adds task to the task buffer.
+        /// </summary>
+        internal static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
+
+        // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
+        internal static void BroadcastStatusChanged(string commandListText) => StatusChangedEventHandler?.Invoke(
+            Instance,
+            new ExecutedCommandListChangedEventArgs { CommandListText = commandListText });
+
+        /// <summary>
         /// Mark all the cells in the given area as occupied.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -453,11 +461,6 @@ namespace Assets.World
             return pos;
         }
 
-        /// <summary>
-        /// Adds task to the task buffer.
-        /// </summary>
-        internal static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
-
         void UpdateTasks()
         {
             for (int i = 0; i < _scheduledTasks.Count; i++)
@@ -475,11 +478,6 @@ namespace Assets.World
                 //task.ActionOnFinish();
             }
         }
-
-        // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
-        internal static void BroadcastStatusChanged(string commandListText) => StatusChangedEventHandler?.Invoke(
-            Instance,
-            new ExecutedCommandListChangedEventArgs { CommandListText = commandListText });
 
 #if UNITY_EDITOR
         void DebugDrawOccupied()

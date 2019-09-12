@@ -53,7 +53,7 @@ namespace Assets.World.DataModels
         public bool AbleToReallocate;
         public Resource? ReallocationCost;
 
-        internal BuildingTask ScheduledTask;
+        internal ResourceProductionTask ScheduledTask;
 
         Resource _resource;
         float _productionTime;
@@ -97,7 +97,7 @@ namespace Assets.World.DataModels
         public void StartProduction()
         {
             // schedule production task
-            BuildingTask task = new BuildingTask(_productionTime, AddResource);
+            ResourceProductionTask task = new ResourceProductionTask(_productionTime, AddResource);
             ScheduledTask = task;
             GameMap.ScheduleTask(task);
             ProductionStarted = true;

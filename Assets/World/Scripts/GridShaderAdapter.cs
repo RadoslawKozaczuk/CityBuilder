@@ -11,12 +11,9 @@ namespace Assets.World
     /// </summary>
     sealed class GridShaderAdapter
     {
-        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything >0.5 as selected
+        const byte SELECTED_CELL_INDICATOR = 200; // this number is arbitrary - grid shader recognizes everything >0.5f (>127) as selected
 
-        Texture2D _cellTexture;
-        Color32[] _cellTextureData;
-        bool _isDirty = true; // to prevent from redundant calls
-
+        // custom index to allow convenient access
         internal bool this[Vector2Int coord]
         {
             get => _cellTextureData[coord.y * GameMap.GridSizeY + coord.x].r == SELECTED_CELL_INDICATOR;
@@ -27,24 +24,24 @@ namespace Assets.World
             }
         }
 
-        internal void InitializeCellTexture()
+        readonly Texture2D _cellTexture;
+        readonly Color32[] _cellTextureData;
+        bool _isDirty = true; // to prevent from redundant calls, initially set to true to reset the shader
+
+        internal GridShaderAdapter()
         {
-            if (!_cellTexture)
+            // each pixel corresponds to one cell
+            _cellTexture = new Texture2D(GameMap.GridSizeX, GameMap.GridSizeY, TextureFormat.RGBA32, false, true)
             {
-                // each pixel corresponds to one cell
-                _cellTexture = new Texture2D(GameMap.GridSizeX, GameMap.GridSizeY, TextureFormat.RGBA32, false, true)
-                {
-                    filterMode = FilterMode.Point, // we don't want to blend cell data, so we use point filtering
-                    wrapModeU = TextureWrapMode.Clamp, // the data shouldn't wrap
-                    wrapModeV = TextureWrapMode.Clamp  // the data shouldn't wrap
-                };
+                filterMode = FilterMode.Point, // we don't want to blend cell data, so we use point filtering
+                wrapModeU = TextureWrapMode.Clamp, // the data shouldn't wrap
+                wrapModeV = TextureWrapMode.Clamp  // the data shouldn't wrap
+            };
 
-                // make it globally known as _CellData
-                Shader.SetGlobalTexture("_CellData", _cellTexture);
-            }
+            // make it globally known as _CellData
+            Shader.SetGlobalTexture("_CellData", _cellTexture);
 
-            if (_cellTextureData == null)
-                _cellTextureData = new Color32[GameMap.GridSizeX * GameMap.GridSizeY];
+            _cellTextureData = new Color32[GameMap.GridSizeX * GameMap.GridSizeY];
 
             SendDataToGPU();
         }
@@ -52,8 +49,11 @@ namespace Assets.World
         internal void SetData(List<Vector2Int> data, bool resetPreviousData = false)
         {
 #if UNITY_EDITOR
-            if (data == null || data.Count == 0)
-                throw new System.ArgumentException($"Data send to GridShaderAdapter is {(data == null ? "null" : "empty")}. " 
+            if (data == null)
+                throw new System.ArgumentNullException("data", "Data send to GridShaderAdapter is null. "
+                    + "If you intended to reset the selection use ResetAllSelection method instead.");
+            else if (data.Count == 0)
+                throw new System.ArgumentException("Data send to GridShaderAdapter is empty" 
                     + "If you intended to reset the selection use ResetAllSelection method instead.");
 #endif
 

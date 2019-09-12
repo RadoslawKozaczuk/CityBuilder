@@ -18,6 +18,11 @@ namespace Assets.Database.DataModels
         public BuildingData(string name, Vector2Int size, List<Resource> cost, BuildingType type, 
             ResourceProductionData? rpd, bool ableToReallocate, Resource? reallocationCost)
         {
+#if UNITY_EDITOR
+            if (size.x <= 0 || size.y <= 0)
+                throw new System.ArgumentException("building dimensions cannot be lower than 1", "size");
+#endif
+
             Name = name;
             Size = size;
             BuildCost = cost;

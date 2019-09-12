@@ -55,8 +55,8 @@ namespace Assets.World.Commands
 
         public override bool CheckConditions()
         {
-            // is player's vehicle 
-            // is selectable etc.
+            // is player's vehicle?
+            // is selectable? can move? etc.
 
             // for now always true
             return true;

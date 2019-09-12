@@ -4,9 +4,11 @@ using UnityEngine;
 
 namespace Assets.World
 {
-    // Breadth First Search
+    // Utilizes the Breadth First Search approach
     internal sealed class PathFinder
     {
+        // we use tuples extensively here as we need data to be logically tied together 
+        // but at the same time we don't want to bother ourselves with dedicated structures
         readonly (int xOffset, int yOffset)[] _directions = { (0, 1), (1, 0), (0, -1), (-1, 0) };
         readonly (int fromX, int fromY)[,] _cameFrom;
         readonly GridCell[,] _cells;

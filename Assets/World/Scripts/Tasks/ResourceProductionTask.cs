@@ -2,13 +2,13 @@
 
 namespace Assets.World.Tasks
 {
-    internal sealed class BuildingTask : AbstractTask
+    internal sealed class ResourceProductionTask : AbstractTask
     {
         internal readonly Action ActionOnFinish;
         internal readonly float TotalTime;
         internal float TimeLeft;
 
-        internal BuildingTask(float executionDelay, Action onCompleteAction)
+        internal ResourceProductionTask(float executionDelay, Action onCompleteAction)
         {
             TotalTime = executionDelay;
             TimeLeft = executionDelay;

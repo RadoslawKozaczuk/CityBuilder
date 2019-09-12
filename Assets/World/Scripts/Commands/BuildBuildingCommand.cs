@@ -58,7 +58,10 @@ namespace Assets.World.Commands
             if (!GameMap.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition), out GridCell cell))
                 return false; // cursor is not over the Grid
 
-            To = cell.Coordinates; // we need to feel to with current data so check condition can proceed
+            To = cell.Coordinates; // we need to fill 'To' with current data so CheckConditions can proceed
+
+            if (GameMap.IsAreaOutOfBounds(To, Type))
+                return false; // target area out of map
 
             return true;
         }

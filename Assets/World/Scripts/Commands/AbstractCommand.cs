@@ -3,10 +3,10 @@
 namespace Assets.World.Commands
 {
     /// <summary>
-    /// Commands can be understood as orders given directly or indirectly by an external agent (user or AI).
+    /// Commands can be understood as orders given directly or indirectly by an external agent (player or AI).
     /// A command may, for example, select a unit or build a building. Each command has an Undo action allowing its effects to be reverted.
     /// Reverting a command may mean a different thing depends on the command and the context. For example, reverting a move command 
-    /// simply stops the vehicle from moving while reverting a build command removes the building and gives back resources.
+    /// simply stops the vehicle from moving while reverting a build command removes the building and gives back the resources.
     /// </summary>
     public abstract class AbstractCommand : ICommand, ICloneable<AbstractCommand>
     {

@@ -34,8 +34,14 @@ namespace Assets.World.DataModels
         #endregion
 
         internal VehicleType Type;
-        [HideInInspector] internal float Speed; // for now not readonly we will see it we want to change it 
+        [HideInInspector] internal float Speed; // for now not readonly, we will see if we want to change it 
         [SerializeField] Renderer _meshRenderer;
+
+        void Awake()
+        {
+            _meshRenderer.material = new Material(_meshRenderer.sharedMaterial);
+            TurnOutlineOff();
+        }
 
         internal void SetData(VehicleType type, Vector2Int position)
         {
@@ -46,12 +52,6 @@ namespace Assets.World.DataModels
         }
 
         internal void ToggleSelection() => Selected = !Selected;
-
-        void Awake()
-        {
-            _meshRenderer.material = new Material(_meshRenderer.sharedMaterial);
-            TurnOutlineOff();
-        }
 
         internal void TurnOutlineOn() => _meshRenderer.material.SetFloat("_OutlineWidth", OUTLINE_VISIBLE_VALUE);
 

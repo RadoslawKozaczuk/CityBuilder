@@ -21,7 +21,7 @@ namespace Assets.World
                 || leftBotCell.y + areaSize.y > GameMap.GridSizeY + 1)
                 throw new System.ArgumentException($"Area arguments passed to 'Any' extension method are out of bounds.");
             else if(func == null)
-                throw new System.ArgumentException($"Function passed to 'Any' extension method cannot be null.");
+                throw new System.ArgumentNullException("func", $"Function passed to 'Any' extension method cannot be null.");
 #endif
 
             for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
@@ -46,8 +46,9 @@ namespace Assets.World
                 || leftBotCell.y + areaSize.y > GameMap.GridSizeY + 1)
                 throw new System.ArgumentException($"Area arguments passed to 'All' extension method are out of bounds.");
             else if (action == null)
-                throw new System.ArgumentException($"Action passed to 'All' extension method cannot be null.");
+                throw new System.ArgumentNullException("action", $"Action passed to 'All' extension method cannot be null.");
 #endif
+
             for (int i = leftBotCell.x; i < leftBotCell.x + areaSize.x; i++)
                 for (int j = leftBotCell.y; j < leftBotCell.y + areaSize.y; j++)
                     action(ref cells[i, j]);
