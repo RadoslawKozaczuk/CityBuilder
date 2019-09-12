@@ -13,7 +13,9 @@ namespace Assets.World
         public string Log;
     }
 
-    public sealed partial class GameMap
+    [DisallowMultipleComponent]
+    [RequireComponent(typeof(MapFeaturePrefabCollection))]
+    public sealed partial class GameMap : MonoBehaviour
     {
         public const float CELL_SIZE = 10f;
 

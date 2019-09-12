@@ -7,8 +7,6 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
-    [DisallowMultipleComponent]
-    [RequireComponent(typeof(MapFeaturePrefabCollection))]
     public sealed partial class GameMap : MonoBehaviour
     {
         // to circumnavigate the regular anonymous method declaration limitation
