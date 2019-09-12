@@ -99,7 +99,7 @@ namespace Assets.World.DataModels
             // schedule production task
             ResourceProductionTask task = new ResourceProductionTask(_productionTime, AddResource);
             ScheduledTask = task;
-            GameMap.ScheduleTask(task);
+            TaskManager.ScheduleTask(task);
             ProductionStarted = true;
         }
     }

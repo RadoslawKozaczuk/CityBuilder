@@ -28,9 +28,11 @@ namespace Assets.World.Commands
             if (_succeeded || !CheckConditions())
                 return false;
 
+            // the previous task (if any) has to be aborted
+
             MoveTask task = new MoveTask(GameMap.Instance.Path, Vehicle);
             _moveTask = task;
-            GameMap.ScheduleTask(task);
+            TaskManager.ScheduleTask(task);
 
             return base.Call();
         }

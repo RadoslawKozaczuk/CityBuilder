@@ -62,16 +62,28 @@ namespace Assets.World
         [Header("Turn on to see gizmos indicating which cells are occupied.")]
         [SerializeField] bool _debugDrawOccupied; // gizmos need to be turned on in the editor in order to make it work
 
-        readonly List<AbstractTask> _taskBuffer = new List<AbstractTask>();
-        readonly List<AbstractTask> _scheduledTasks = new List<AbstractTask>();
         readonly GridCell[,] _cells;
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
-        readonly GridShaderAdapter _gridShaderAdapter = new GridShaderAdapter(); // responsible for cell highlighting
+        GridShaderAdapter _gridShaderAdapter; // responsible for cell highlighting
         readonly List<Vehicle> _vehicles = new List<Vehicle>();
 
         PathFinder _pathFinder;
         Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
         bool _pathIsDirty; // indicates if PathFinder should recalculate the path
+
+        // This constructor will be called by Unity Engine.
+        // We need private constructor in order to be able to mark these variables as read-only
+        // in order to allow compiler to perform extra optimizations, this is especially important in case of cells array.
+        GameMap()
+        {
+            _cells = new GridCell[_gridSizeX, _gridSizeY];
+            for (int i = 0; i < _gridSizeX; i++)
+                for (int j = 0; j < _gridSizeY; j++)
+                    _cells[i, j] = new GridCell(i, j);
+
+            _localOffsetX = _gridSizeX * CELL_SIZE / 2;
+            _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
+        }
 
         #region Unity life-cycle methods
         void Awake()
@@ -85,6 +97,7 @@ namespace Assets.World
             material.SetInt("_GridSizeY", _gridSizeY);
 
             _pathFinder = new PathFinder(Instance._cells);
+            _gridShaderAdapter = new GridShaderAdapter();
         }
 
         void Update()
@@ -93,8 +106,6 @@ namespace Assets.World
             if (_debugDrawOccupied)
                 DebugDrawOccupied();
 #endif
-
-            UpdateTasks();
 
             // update related to vehicle
             if (SelectedVehicle == null || EventSystem.current.IsPointerOverGameObject())
@@ -123,32 +134,17 @@ namespace Assets.World
 
             if (Path != null)
                 _gridShaderAdapter.SetData(Path, true);
+
+            TaskManager.Update();
         }
 
         void LateUpdate()
         {
-            _scheduledTasks.AddRange(_taskBuffer);
-            _taskBuffer.Clear();
-
             _gridShaderAdapter.SendDataToGPU(); // applies grid highlighting
 
             ExecutedCommandList.EndFrameSignal(); // if anything changes it will broadcast the new status
         }
         #endregion
-
-        // This constructor will be called by Unity Engine.
-        // We need private constructor in order to be able to mark these variables as read-only
-        // in order to allow compiler to perform extra optimizations, this is especially important in case of cells array 
-        GameMap()
-        {
-            _cells = new GridCell[_gridSizeX, _gridSizeY];
-            for (int i = 0; i < _gridSizeX; i++)
-                for (int j = 0; j < _gridSizeY; j++)
-                    _cells[i, j] = new GridCell(i, j);
-
-            _localOffsetX = _gridSizeX * CELL_SIZE / 2;
-            _localOffsetZ = _gridSizeY * CELL_SIZE / 2;
-        }
 
         /// <summary>
         /// Returns true if the player clicked on anything belonging to the game world.
@@ -232,8 +228,8 @@ namespace Assets.World
         }
 
         /// <summary>
-        /// Moves building located from its current position to target cell.
-        /// Last parameter allows you to specify whether the reallocation cost of the building 
+        /// Moves building from its current position to the target cell.
+        /// Last parameter allows us to specify whether the reallocation cost of the building 
         /// should be added or subtracted from player's resources.
         /// This can be useful, for example, for implementing undo operation.
         /// </summary>
@@ -372,8 +368,8 @@ namespace Assets.World
         /// Additional parameter allow us to omit certain building from the check.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit)
-            => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && cell.MapObject != omit);
+        public static bool IsAreaFree(Vector2Int position, Vector2Int size, Building omit) // used ReferenceEquals to suppress 'possible unintended reference comparison' warning
+            => !Instance._cells.Any(position, size, (ref GridCell cell) => cell.IsOccupied && !ReferenceEquals(cell.MapObject, omit));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAreaOutOfBounds(Vector2Int position, Vector2Int areaSize)
@@ -394,11 +390,6 @@ namespace Assets.World
             v.Position = to;
             MarkCellAsOccupied(to, v);
         }
-
-        /// <summary>
-        /// Adds task to the task buffer.
-        /// </summary>
-        internal static void ScheduleTask(AbstractTask task) => Instance._taskBuffer.Add(task);
 
         // we call the event - if there is no subscribers we will get a null exception error therefore we use a safe call (null check)
         internal static void BroadcastStatusChanged(string commandListText) => StatusChangedEventHandler?.Invoke(
@@ -459,24 +450,6 @@ namespace Assets.World
             pos.z += position.y * CELL_SIZE - Instance._localOffsetZ;
 
             return pos;
-        }
-
-        void UpdateTasks()
-        {
-            for (int i = 0; i < _scheduledTasks.Count; i++)
-            {
-                AbstractTask task = _scheduledTasks[i];
-                task.Update();
-
-                if(task.Completed)
-                    _scheduledTasks.RemoveAt(i--);
-                //task.TimeLeft -= Time.deltaTime;
-
-                //if (task.TimeLeft > 0)
-                //    return;
-
-                //task.ActionOnFinish();
-            }
         }
 
 #if UNITY_EDITOR

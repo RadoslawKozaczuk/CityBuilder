@@ -22,8 +22,11 @@ namespace Assets.World.Tasks
             if (path == null)
                 throw new System.ArgumentNullException("path", "path argument cannot be null");
             else if (path.Count < 2)
-                throw new System.ArgumentNullException("path", "path argument must be of length of at least 2");
+                throw new System.ArgumentException("path argument must be of length of at least 2", "path");
 #endif
+            
+            // we need to check if this vehicle does not have a move task already assigned
+
 
             Path = new List<Vector2Int>(path);
             Vehicle = vehicle;

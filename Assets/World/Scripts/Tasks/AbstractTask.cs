@@ -8,6 +8,7 @@
     {
         internal bool Completed;
 
+        protected AbstractTask _waitingFor;
         protected bool _aborted;
 
         internal abstract void Update();
