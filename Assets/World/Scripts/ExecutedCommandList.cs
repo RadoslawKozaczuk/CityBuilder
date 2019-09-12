@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 
 namespace Assets.World
 {
@@ -14,8 +13,8 @@ namespace Assets.World
         internal AbstractCommand this[int id] => _executedCommands[id];
 
         static readonly List<AbstractCommand> _executedCommands = new List<AbstractCommand>();
-        static bool _isDirty = true; // true to force initial message broadcast
         static readonly StringBuilder _sb = new StringBuilder();
+        static bool _isDirty = true; // true to force initial message broadcast
 
         internal static void Add(AbstractCommand command)
         {

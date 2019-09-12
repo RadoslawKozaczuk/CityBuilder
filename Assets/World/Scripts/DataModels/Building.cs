@@ -10,6 +10,8 @@ namespace Assets.World.DataModels
     public sealed class Building : MonoBehaviour, IMapObject
     {
         #region Properties
+        [HideInInspector] public BuildingType Type { get; private set; }
+
         /// <summary>
         /// Game map's coordinates.
         /// </summary>
@@ -47,7 +49,6 @@ namespace Assets.World.DataModels
         #endregion
 
         public string Name;
-        [HideInInspector] public BuildingType Type;
         public bool Constructed = false;
         public bool ProductionStarted;
         public bool AbleToReallocate;

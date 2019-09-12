@@ -21,8 +21,7 @@ namespace Assets.Scripts
         [SerializeField] TextMeshProUGUI _commandListText;
         
         AbstractCommand _pendingCommand;
-        (GameObject instance, BuildingType type) _hologram;
-        MeshRenderer _hologramMeshRenderer;
+        (GameObject instance, BuildingType type, MeshRenderer renderer) _hologram;
 
         #region Unity life-cycle methods
         void Awake()
@@ -76,7 +75,7 @@ namespace Assets.Scripts
 
                 _hologram.instance.SetActive(true);
 
-                _hologramMeshRenderer.material = MaterialCollection.GetMaterial(_pendingCommand.CheckConditions()
+                _hologram.renderer.material = MaterialCollection.GetMaterial(_pendingCommand.CheckConditions()
                     ? CommonMaterial.HolographicGreen
                     : CommonMaterial.HolographicRed);
 
@@ -147,7 +146,7 @@ namespace Assets.Scripts
         void InstanciateHologram(BuildingType type)
         {
             _hologram.instance = Instantiate(GameMap.MapFeaturePrefabCollection[type]);
-            _hologramMeshRenderer = _hologram.instance.GetComponent<MeshRenderer>();
+            _hologram.renderer = _hologram.instance.GetComponent<MeshRenderer>();
             _hologram.type = type;
         }
 

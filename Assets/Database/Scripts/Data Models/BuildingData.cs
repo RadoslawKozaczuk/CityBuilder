@@ -20,7 +20,7 @@ namespace Assets.Database.DataModels
         {
 #if UNITY_EDITOR
             if (size.x <= 0 || size.y <= 0)
-                throw new System.ArgumentException("building dimensions cannot be lower than 1", "size");
+                throw new System.ArgumentException("Building dimensions cannot be lower than 1", "size");
 #endif
 
             Name = name;
