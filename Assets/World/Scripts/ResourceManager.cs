@@ -158,11 +158,10 @@ namespace Assets.World
         /// </summary>
         internal static void RemoveResources(Resource resource)
         {
+#if UNITY_EDITOR
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
-            {
-                Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
-                return;
-            }
+                throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
+#endif
 
             // update value
             _instance._playerResources[(int)resource.ResourceType] -= resource.Quantity;
@@ -182,11 +181,10 @@ namespace Assets.World
             ResourceType resourceType = resource.Value.ResourceType;
             int quantity = resource.Value.Quantity;
 
+#if UNITY_EDITOR
             if (_instance._playerResources[(int)resourceType] < quantity)
-            {
-                Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
-                return;
-            }
+                throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
+#endif
 
             // update value
             _instance._playerResources[(int)resourceType] -= quantity;
@@ -206,11 +204,10 @@ namespace Assets.World
         /// </summary>
         static void RemoveResourceNoEventCall(Resource resource)
         {
+#if UNITY_EDITOR
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
-            {
-                Debug.LogError("ResourceManager was ask to remove more resources than it has. Resource quantity cannot be a negative number.");
-                return;
-            }
+                throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
+#endif
 
             _instance._playerResources[(int)resource.ResourceType] -= resource.Quantity;
         }
