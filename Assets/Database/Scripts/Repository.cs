@@ -8,7 +8,7 @@ namespace Assets.Database
     // repository encapsulates our database
     // in real life it may also add some extra logic if necessary
     // this extra logic may for example create some data transformation
-    public class Repository
+    public class Repository : IRepository
     {
         // custom indexers for convenience
         public BuildingData this[BuildingType type] => _db.ReadBuilding((int)type);

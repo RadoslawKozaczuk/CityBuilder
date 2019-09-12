@@ -16,6 +16,10 @@ namespace Assets.World
         static readonly StringBuilder _sb = new StringBuilder();
         static bool _isDirty = true; // true to force initial message broadcast
 
+#if UNITY_EDITOR
+        static int _lastFrame = int.MinValue; // safety mechanism
+#endif
+
         internal static void Add(AbstractCommand command)
         {
             _executedCommands.Add(command);
@@ -48,6 +52,12 @@ namespace Assets.World
         /// </summary>
         internal static void EndFrameSignal()
         {
+#if UNITY_EDITOR
+            if (_lastFrame == UnityEngine.Time.frameCount)
+                throw new System.Exception("ExecutedCommandList's EndFrameSignal method was called more than once per frame.");
+            _lastFrame = UnityEngine.Time.frameCount;
+#endif
+
             if (_isDirty)
                 GameMap.BroadcastExecutedCommandsStatusChanged(UpdateCommandListText());
         }
