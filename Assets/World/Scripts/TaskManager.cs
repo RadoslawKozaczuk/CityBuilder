@@ -53,7 +53,7 @@ namespace Assets.World
         static internal List<AbstractTask> FindAll(Type type)
         {
 #if UNITY_EDITOR
-            if (type.IsSubclassOf(typeof(AbstractTask)))
+            if (!type.IsSubclassOf(typeof(AbstractTask)))
                 throw new System.ArgumentException("Only types derived from AbstractTask are allowed.", "type");
 #endif
 
