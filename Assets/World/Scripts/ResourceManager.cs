@@ -158,7 +158,7 @@ namespace Assets.World
         /// </summary>
         internal static void RemoveResources(Resource resource)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
                 throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
 #endif
@@ -181,7 +181,7 @@ namespace Assets.World
             ResourceType resourceType = resource.Value.ResourceType;
             int quantity = resource.Value.Quantity;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_instance._playerResources[(int)resourceType] < quantity)
                 throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
 #endif
@@ -204,7 +204,7 @@ namespace Assets.World
         /// </summary>
         static void RemoveResourceNoEventCall(Resource resource)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_instance._playerResources[(int)resource.ResourceType] < resource.Quantity)
                 throw new System.ArgumentException("Resource quantity cannot be a negative number.", "resource");
 #endif

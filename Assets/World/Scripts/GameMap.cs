@@ -42,7 +42,7 @@ namespace Assets.World
         /// </summary>
         public static bool ClickMe(out GridCell cell, out Building building)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (EventSystem.current.IsPointerOverGameObject())
                 throw new System.Exception("ClickMe should not be called if the cursor is over the UI");
 #endif
@@ -204,7 +204,7 @@ namespace Assets.World
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetMiddlePoint(Vector2Int position, Vector2Int areaSize)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (IsAreaOutOfBounds(position, areaSize))
                 throw new System.ArgumentException("Invalid argument(s). Part of the area is out of the map.");
 #endif

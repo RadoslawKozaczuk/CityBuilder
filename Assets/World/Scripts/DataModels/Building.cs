@@ -25,7 +25,7 @@ namespace Assets.World.DataModels
         {
             get
             {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (ScheduledTask == null)
                     throw new System.Exception("Cannot ask for TaskTotalTime if none tasks are scheduled");
 #endif
@@ -38,7 +38,7 @@ namespace Assets.World.DataModels
         {
             get
             {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (ScheduledTask == null)
                     throw new System.Exception("Cannot ask for TaskTimeLeft if none tasks are scheduled");
 #endif

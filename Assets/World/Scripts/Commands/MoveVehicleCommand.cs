@@ -31,7 +31,7 @@ namespace Assets.World.Commands
             if (_succeeded || !CheckConditions())
                 return false;
 
-            MoveTask task = new MoveTask(GameMap.Instance.Path, Vehicle);
+            MoveTask task = new MoveTask(From, To, GameMap.Instance.Path, Vehicle);
             _moveTask = task;
             TaskManager.ScheduleTask(task);
 

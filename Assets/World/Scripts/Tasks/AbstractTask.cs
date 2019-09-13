@@ -6,11 +6,10 @@
     /// </summary>
     internal abstract class AbstractTask
     {
-        internal TaskStatus TaskStatus;
+        internal TaskStatus Status;
         internal readonly int Id;
-        internal bool Completed { get; private set; }
-
         internal AbstractTask WaitingFor;
+
         protected bool _aborted;
 
         protected AbstractTask()
@@ -18,20 +17,35 @@
             Id = TaskManager.GetFirstFreeTaskId();
         }
 
+        internal void Start() => Status = TaskStatus.Ongoing;
+
         protected internal void Abort()
         {
             _aborted = true;
-            TaskStatus = TaskStatus.Aborting;
+            Status = Status == TaskStatus.Pending ? TaskStatus.Completed : TaskStatus.Aborting;
         }
 
         internal abstract void Update();
 
         internal new abstract string ToString();
 
-        protected void MarkAsCompleted()
+        protected bool IsCompletedOrPending()
         {
-            Completed = true;
-            TaskStatus = TaskStatus.Completed;
+            if (Status == TaskStatus.Completed)
+                return true;
+
+            if (WaitingFor != null)
+            {
+                if (WaitingFor.Status == TaskStatus.Completed)
+                {
+                    WaitingFor = null;
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

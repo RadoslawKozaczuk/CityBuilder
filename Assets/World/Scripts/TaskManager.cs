@@ -12,7 +12,7 @@ namespace Assets.World
         static readonly List<AbstractTask> _scheduledTasks = new List<AbstractTask>();
         static readonly StringBuilder _sb = new StringBuilder(); // for debug log only
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         static int _lastFrame = int.MinValue; // safety mechanism
 #endif
 
@@ -21,7 +21,7 @@ namespace Assets.World
         /// </summary>
         static internal void UpdateTasks()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_lastFrame == UnityEngine.Time.frameCount)
                 throw new System.Exception("TaskManager's Update method was called more than once per frame.");
             _lastFrame = UnityEngine.Time.frameCount;
@@ -32,14 +32,8 @@ namespace Assets.World
                 AbstractTask task = _scheduledTasks[i];
                 task.Update();
 
-                if (task.Completed)
+                if (task.Status == TaskStatus.Completed)
                     _scheduledTasks.RemoveAt(i--);
-                //task.TimeLeft -= Time.deltaTime;
-
-                //if (task.TimeLeft > 0)
-                //    return;
-
-                //task.ActionOnFinish();
             }
 
             _scheduledTasks.AddRange(_taskBuffer);
@@ -52,7 +46,7 @@ namespace Assets.World
 
         static internal List<AbstractTask> FindAll(Type type)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (!type.IsSubclassOf(typeof(AbstractTask)))
                 throw new System.ArgumentException("Only types derived from AbstractTask are allowed.", "type");
 #endif

@@ -16,7 +16,7 @@ namespace Assets.Database.DataModels
 
         public VehicleData(Vector2Int size, VehicleType type, float speed)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (size.x <= 0 || size.y <= 0)
                 throw new System.ArgumentException("Vehicle dimensions cannot be lower than 1.", "size");
 #endif

@@ -13,7 +13,7 @@ namespace Assets.World
         /// </summary>
         internal static bool Any(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.FunctionRefStruct<GridCell> func)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (leftBotCell.x < 0 || leftBotCell.x >= GameMap.GridSizeX 
                 || leftBotCell.y < 0 || leftBotCell.y >= GameMap.GridSizeY
                 || areaSize.x < 1 || areaSize.y < 1
@@ -38,7 +38,7 @@ namespace Assets.World
         /// </summary>
         internal static void All(this GridCell[,] cells, Vector2Int leftBotCell, Vector2Int areaSize, GameMap.ActionRefStruct<GridCell> action)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (leftBotCell.x < 0 || leftBotCell.x >= GameMap.GridSizeX
                 || leftBotCell.y < 0 || leftBotCell.y >= GameMap.GridSizeY
                 || areaSize.x < 1 || areaSize.y < 1

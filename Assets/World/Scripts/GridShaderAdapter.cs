@@ -48,7 +48,7 @@ namespace Assets.World
 
         internal void SetData(List<Vector2Int> data, bool resetPreviousData = false)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (data == null)
                 throw new System.ArgumentNullException("data", "Data send to GridShaderAdapter is null. "
                     + "If you intended to reset the selection use ResetAllSelection method instead.");

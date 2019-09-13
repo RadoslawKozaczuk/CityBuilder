@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace Assets.World
 {
-    public sealed partial class GameMap : MonoBehaviour
+    public sealed partial class GameMap
     {
         // to circumnavigate the regular anonymous method declaration limitation
         internal delegate void ActionRefStruct<T>(ref GridCell cell);
@@ -38,7 +38,7 @@ namespace Assets.World
         readonly float _localOffsetX, _localOffsetZ; // to allow designers to put the plane in an arbitrary position in the world space
         readonly List<Vehicle> _vehicles = new List<Vehicle>();
         GridShaderAdapter _gridShaderAdapter; // responsible for cell highlighting
-        PathFinder _pathFinder;
+        internal PathFinder PathFinder;
         Vector2Int _targetCell; // this value has not meaning if SelectedVehicle is null
         bool _pathIsDirty; // indicates if PathFinder should recalculate the path
 
@@ -67,13 +67,13 @@ namespace Assets.World
             material.SetInt("_GridSizeX", _gridSizeX);
             material.SetInt("_GridSizeY", _gridSizeY);
 
-            _pathFinder = new PathFinder(Instance._cells);
+            PathFinder = new PathFinder(Instance._cells);
             _gridShaderAdapter = new GridShaderAdapter();
         }
 
         void Update()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_debugDrawOccupied)
                 DebugDrawOccupied();
 #endif
@@ -188,14 +188,14 @@ namespace Assets.World
                 }
 
                 if (Instance._pathIsDirty)
-                    Instance.Path = Instance._pathFinder.FindPath(Instance._selectedVehicle.Position, Instance._targetCell);
+                    Instance.Path = Instance.PathFinder.FindPath(Instance._selectedVehicle.Position, Instance._targetCell);
             }
 
             if (Instance.Path != null)
                 Instance._gridShaderAdapter.SetData(Instance.Path, true);
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void DebugDrawOccupied()
         {
             for (int x = 0; x < _gridSizeX; x++)

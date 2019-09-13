@@ -7,28 +7,35 @@ namespace Assets.World.Tasks
 {
     internal sealed class MoveTask : AbstractTask
     {
-        internal readonly List<Vector2Int> Path;
+        internal List<Vector2Int> Path;
         internal Vehicle Vehicle;
 
-        Vector3 _startPos;
-        Vector3 _endPos;
+        Vector2Int _from; // from may be changed if the task is waiting for another one
+        readonly Vector2Int _to;
+
+        Vector3 _startWorldPos;
+        Vector3 _endWorldPos;
         readonly float _totalTime; // in seconds
         float _currentTime; // in seconds
         bool _notMovedYet = true;
 
-        internal MoveTask(List<Vector2Int> path, Vehicle vehicle) : base()
+        internal MoveTask(Vector2Int from, Vector2Int to, List<Vector2Int> path, Vehicle vehicle) : base()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (path == null)
                 throw new System.ArgumentNullException("path", "path argument cannot be null");
             else if (path.Count < 2)
                 throw new System.ArgumentException("path argument must be of length of at least 2", "path");
 #endif
 
+            _from = from;
+            _to = to;
+
             // we need to check if this vehicle does not have a move task already assigned
             if(vehicle.ScheduledTask != null)
             {
                 vehicle.ScheduledTask.Abort();
+                Status = TaskStatus.Pending;
                 WaitingFor = vehicle.ScheduledTask; // this task is waiting for another task before it can start
             }
 
@@ -38,23 +45,32 @@ namespace Assets.World.Tasks
             _totalTime = GameMap.CELL_SIZE / Vehicle.Speed; // how long in seconds it takes to move from one cell to another
             _currentTime = 0;
 
-            _startPos = GameMap.GetCellMiddlePosition(path[0]);
-            _endPos = GameMap.GetCellMiddlePosition(path[1]);
+            _startWorldPos = GameMap.GetCellMiddlePosition(path[0]);
+            _endWorldPos = GameMap.GetCellMiddlePosition(path[1]);
 
             vehicle.ScheduledTask = this;
         }
 
         internal override void Update()
         {
-            if (Completed)
+            if (Status == TaskStatus.Completed)
                 return;
 
-            if(WaitingFor != null)
+            if (WaitingFor != null)
             {
-                if (WaitingFor.Completed)
+                if (WaitingFor.Status == TaskStatus.Completed)
+                {
                     WaitingFor = null;
-                else
+                    Status = TaskStatus.Ongoing;
+                    // przekalkulowac droge
+                    _from = Vehicle.Position;
+                    Path = GameMap.Instance.PathFinder.FindPath(_from, _to);
+                    _startWorldPos = GameMap.GetCellMiddlePosition(Path[0]);
+                    _endWorldPos = GameMap.GetCellMiddlePosition(Path[1]);
                     return;
+                }
+
+                return;
             }
 
             _currentTime += Time.deltaTime;
@@ -65,20 +81,20 @@ namespace Assets.World.Tasks
                 {
                     _currentTime = 0;
                     Path.RemoveAt(0);
-                    _startPos = GameMap.GetCellMiddlePosition(Path[0]);
-                    _endPos = GameMap.GetCellMiddlePosition(Path[1]);
+                    _startWorldPos = GameMap.GetCellMiddlePosition(Path[0]);
+                    _endWorldPos = GameMap.GetCellMiddlePosition(Path[1]);
                     _notMovedYet = true;
                 }
                 else
                 {
-                    MarkAsCompleted();
-                    Vehicle.transform.position = _endPos;
+                    Status = TaskStatus.Completed;
+                    Vehicle.transform.position = _endWorldPos;
                     return;
                 }
             }
 
             // to use SIMD
-            float2 offset = new float2(_endPos.x - _startPos.x, _endPos.z - _startPos.z);
+            float2 offset = new float2(_endWorldPos.x - _startWorldPos.x, _endWorldPos.z - _startWorldPos.z);
             // offset will be always +/- CELL_SIZE and 0
 
             float proportion = _currentTime / _totalTime;
@@ -91,12 +107,12 @@ namespace Assets.World.Tasks
 
             offset *= proportion;
 
-            Vehicle.transform.position = new Vector3(_startPos.x + offset.x, _startPos.y, _startPos.z + offset.y);
+            Vehicle.transform.position = new Vector3(_startWorldPos.x + offset.x, _startWorldPos.y, _startWorldPos.z + offset.y);
         }
 
         internal override string ToString()
         {
-            return $"MoveTask ID[{Id}] from: {_startPos} to: {_endPos} time: {string.Format("{0:0.00}", _currentTime)} status: {TaskStatus}";
+            return $"MoveTask ID[{Id}] from: {_from} to: {_to} time: {string.Format("{0:0.00}", _currentTime)} status: {Status}";
         }
     }
 }

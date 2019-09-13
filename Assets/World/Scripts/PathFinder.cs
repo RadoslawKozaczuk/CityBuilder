@@ -16,7 +16,7 @@ namespace Assets.World
 
         internal PathFinder(GridCell[,] cells)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (cells.GetLength(0) != GameMap.GridSizeX || cells.GetLength(1) != GameMap.GridSizeY)
                 throw new System.ArgumentException($"Cells array must be of size {GameMap.GridSizeX}x {GameMap.GridSizeX}");
 #endif

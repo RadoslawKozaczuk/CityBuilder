@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Assets.World.Tasks
 {
@@ -17,12 +18,20 @@ namespace Assets.World.Tasks
 
         internal override void Update()
         {
+            if (IsCompletedOrPending())
+                return;
 
+            TimeLeft -= Time.deltaTime;
+
+            if (TimeLeft > 0)
+                return;
+
+            ActionOnFinish();
         }
 
         internal override string ToString()
         {
-            return $"ResourceProductionTask ID[{Id}] time: {string.Format("{0:0.00}", TimeLeft)} status: {TaskStatus}";
+            return $"ResourceProductionTask ID[{Id}] time: {string.Format("{0:0.00}", TimeLeft)} status: {Status}";
         }
     }
 }
