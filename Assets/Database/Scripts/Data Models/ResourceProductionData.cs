@@ -8,13 +8,13 @@
         /// In seconds.
         /// </summary>
         public readonly float ProductionTime;
-        public readonly bool StartImidiately, Loop;
+        public readonly bool StartImmediately, Loop;
 
-        public ResourceProductionData(Resource resource, float productionTime, bool startImidiately, bool loop)
+        public ResourceProductionData(Resource resource, float productionTime, bool startImmediately, bool loop)
         {
             Resource = resource;
             ProductionTime = productionTime;
-            StartImidiately = startImidiately;
+            StartImmediately = startImmediately;
             Loop = loop;
         }
     }

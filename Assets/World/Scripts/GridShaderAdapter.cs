@@ -54,7 +54,7 @@ namespace Assets.World
                     + "If you intended to reset the selection use ResetAllSelection method instead.");
             else if (data.Count == 0)
                 throw new System.ArgumentException("Data send to GridShaderAdapter is empty." 
-                    + "If you intended to reset the selection use ResetAllSelection method instead.");
+                    + "If you intended to reset the selection use ResetAllSelection method instead.", "data");
 #endif
 
             if (resetPreviousData)

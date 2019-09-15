@@ -1,19 +1,21 @@
-﻿using System;
+﻿using Assets.World.DataModels;
 using UnityEngine;
 
 namespace Assets.World.Tasks
 {
     internal sealed class ResourceProductionTask : AbstractTask
     {
-        internal readonly Action ActionOnFinish;
+        internal readonly Building Building;
         internal readonly float TotalTime;
         internal float TimeLeft;
 
-        internal ResourceProductionTask(float executionDelay, Action onCompleteAction) : base()
+        internal ResourceProductionTask(Building building) : base()
         {
-            TotalTime = executionDelay;
-            TimeLeft = executionDelay;
-            ActionOnFinish = onCompleteAction;
+            Building = building;
+            TotalTime = building.ProductionTime;
+            TimeLeft = building.ProductionTime;
+
+            building.ProductionStarted = true;
         }
 
         internal override void Update()
@@ -26,12 +28,19 @@ namespace Assets.World.Tasks
             if (TimeLeft > 0)
                 return;
 
-            ActionOnFinish();
+            ResourceManager.AddResources(Building.Resource);
+
+            if (Building.LoopProduction)
+                TimeLeft = Building.ProductionTime;
+            else
+            {
+                Status = TaskStatus.Completed;
+                Building.ProductionStarted = false;
+            }
         }
 
-        internal override string ToString()
-        {
-            return $"ResourceProductionTask ID[{Id}] time: {string.Format("{0:0.00}", TimeLeft)} status: {Status}";
-        }
+        internal override string ToString() 
+            => $"[{Id}] ResourceProduction, time: {string.Format("{0:0.00}", TimeLeft)} "
+                + $"resource: {Building.Resource.ResourceType.ToString()}[{Building.Resource.Quantity}] status: {Status}";
     }
 }

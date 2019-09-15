@@ -80,7 +80,8 @@ namespace Assets.World
                 // player clicked on the ground
                 GetCell(ray, out GridCell c);
                 cell = c;
-                new MoveVehicleCommand(Instance.SelectedVehicle, cell.Coordinates).Call();
+                if(Instance.SelectedVehicle != null)
+                    new MoveVehicleCommand(Instance.SelectedVehicle, cell.Coordinates).Call();
                 building = null;
                 return false;
             }

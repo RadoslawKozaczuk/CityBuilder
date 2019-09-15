@@ -22,6 +22,7 @@ namespace Assets.World.Commands
 
             // select
             Vehicle.Selected = true;
+            GameMap.Instance.SelectedVehicle = Vehicle;
 
             return base.Call();
         }

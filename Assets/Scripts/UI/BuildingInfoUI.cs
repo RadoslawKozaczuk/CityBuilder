@@ -37,7 +37,7 @@ namespace Assets.Scripts.UI
 
         void Update()
         {
-            if (!Building.HasScheduledTask || (Building.Constructed && !Building.ProductionStarted))
+            if (!Building.HasScheduledTask || !Building.ProductionStarted)
             {
                 _slider.value = 0f;
                 _fill.gameObject.SetActive(false);
@@ -48,11 +48,8 @@ namespace Assets.Scripts.UI
                 _fill.gameObject.SetActive(true);
             }
 
-            _buildingName.text = Building.Constructed
-                ? Building.Name
-                : "Building " + Building.Name;
-
-            _startProductionButton.interactable = Building.Constructed && !Building.ProductionStarted;
+            _buildingName.text = Building.Name;
+            _startProductionButton.interactable = !Building.ProductionStarted;
         }
 
         public void StartProduction()

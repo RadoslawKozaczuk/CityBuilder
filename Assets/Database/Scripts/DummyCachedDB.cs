@@ -86,7 +86,7 @@ namespace Assets.Database
                     new Resource(ResourceType.Gold, 50))
                 };
 
-            _vehiclesTable = new VehicleData[] { new VehicleData(new Vector2Int(1, 1), VehicleType.Truck, 10f) };
+            _vehiclesTable = new VehicleData[] { new VehicleData(new Vector2Int(1, 1), VehicleType.Truck, 2f) };
         }
 
         public int CreateBuilding(BuildingData data) 

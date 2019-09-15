@@ -1,5 +1,6 @@
 ﻿using Assets.World.DataModels;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -13,8 +14,8 @@ namespace Assets.World.Tasks
         Vector2Int _from; // from may be changed if the task is waiting for another one
         readonly Vector2Int _to;
 
-        Vector3 _startWorldPos;
-        Vector3 _endWorldPos;
+        Vector3 _currentStartPos;
+        Vector3 _currentEndPos;
         readonly float _totalTime; // in seconds
         float _currentTime; // in seconds
         bool _notMovedYet = true;
@@ -45,8 +46,8 @@ namespace Assets.World.Tasks
             _totalTime = GameMap.CELL_SIZE / Vehicle.Speed; // how long in seconds it takes to move from one cell to another
             _currentTime = 0;
 
-            _startWorldPos = GameMap.GetCellMiddlePosition(path[0]);
-            _endWorldPos = GameMap.GetCellMiddlePosition(path[1]);
+            _currentStartPos = GameMap.GetCellMiddlePosition(path[0]);
+            _currentEndPos = GameMap.GetCellMiddlePosition(path[1]);
 
             vehicle.ScheduledTask = this;
         }
@@ -62,12 +63,10 @@ namespace Assets.World.Tasks
                 {
                     WaitingFor = null;
                     Status = TaskStatus.Ongoing;
-                    // przekalkulowac droge
                     _from = Vehicle.Position;
                     Path = GameMap.Instance.PathFinder.FindPath(_from, _to);
-                    _startWorldPos = GameMap.GetCellMiddlePosition(Path[0]);
-                    _endWorldPos = GameMap.GetCellMiddlePosition(Path[1]);
-                    return;
+                    _currentStartPos = GameMap.GetCellMiddlePosition(Path[0]);
+                    _currentEndPos = GameMap.GetCellMiddlePosition(Path[1]);
                 }
 
                 return;
@@ -81,24 +80,30 @@ namespace Assets.World.Tasks
                 {
                     _currentTime = 0;
                     Path.RemoveAt(0);
-                    _startWorldPos = GameMap.GetCellMiddlePosition(Path[0]);
-                    _endWorldPos = GameMap.GetCellMiddlePosition(Path[1]);
+                    _currentStartPos = GameMap.GetCellMiddlePosition(Path[0]);
+                    _currentEndPos = GameMap.GetCellMiddlePosition(Path[1]);
                     _notMovedYet = true;
                 }
                 else
                 {
                     Status = TaskStatus.Completed;
-                    Vehicle.transform.position = _endWorldPos;
+                    Vehicle.transform.position = _currentEndPos;
                     return;
                 }
             }
 
+            ChangeVehiclePosition();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void ChangeVehiclePosition()
+        {
             // to use SIMD
-            float2 offset = new float2(_endWorldPos.x - _startWorldPos.x, _endWorldPos.z - _startWorldPos.z);
+            float2 offset = new float2(_currentEndPos.x - _currentStartPos.x, _currentEndPos.z - _currentStartPos.z);
             // offset will be always +/- CELL_SIZE and 0
 
             float proportion = _currentTime / _totalTime;
-            if(_notMovedYet && proportion > 0.5f)
+            if (_notMovedYet && proportion > 0.5f)
             {
                 // move occupied
                 GameMap.MoveVehicle(Vehicle, Path[1]);
@@ -106,13 +111,10 @@ namespace Assets.World.Tasks
             }
 
             offset *= proportion;
-
-            Vehicle.transform.position = new Vector3(_startWorldPos.x + offset.x, _startWorldPos.y, _startWorldPos.z + offset.y);
+            Vehicle.transform.position = new Vector3(_currentStartPos.x + offset.x, _currentStartPos.y, _currentStartPos.z + offset.y);
         }
 
-        internal override string ToString()
-        {
-            return $"MoveTask ID[{Id}] from: {_from} to: {_to} time: {string.Format("{0:0.00}", _currentTime)} status: {Status}";
-        }
+        internal override string ToString() 
+            => $"MoveTask ID[{Id}] from: {_from} to: {_to} time: {string.Format("{0:0.00}", _currentTime)} status: {Status}";
     }
 }

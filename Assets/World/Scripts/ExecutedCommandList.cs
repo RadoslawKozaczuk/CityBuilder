@@ -48,7 +48,7 @@ namespace Assets.World
 
         /// <summary>
         /// Used for synchronization with Unity life cycle.
-        /// This is necessary to call this method in any Update method but not more than once per frame.
+        /// It is necessary to call this method in any Update method but not more than once per frame.
         /// </summary>
         internal static void EndFrameSignal()
         {

@@ -46,20 +46,22 @@ namespace Assets.World.DataModels
                 return ScheduledTask.TimeLeft;
             }
         }
+
+        internal bool LoopProduction { get; private set; }
+
+        internal Resource Resource { get; private set; }
+
+        internal float ProductionTime { get; private set; }
         #endregion
 
         public string Name;
-        public bool Constructed = false;
         public bool ProductionStarted;
         public bool AbleToReallocate;
         public Resource? ReallocationCost;
 
         internal ResourceProductionTask ScheduledTask;
-
-        Resource _resource;
-        float _productionTime;
-        bool _imidiatelyStartProduction;
-        bool _loopProduction;
+        
+        bool _immediatelyStartProduction;
 
         internal void SetData(BuildingType type, Vector2Int position)
         {
@@ -72,36 +74,26 @@ namespace Assets.World.DataModels
 
             if (data.ResourceProductionData.HasValue)
             {
-                _resource = data.ResourceProductionData.Value.Resource;
-                _productionTime = data.ResourceProductionData.Value.ProductionTime;
-                _imidiatelyStartProduction = data.ResourceProductionData.Value.StartImidiately;
-                _loopProduction = data.ResourceProductionData.Value.Loop;
+                Resource = data.ResourceProductionData.Value.Resource;
+                ProductionTime = data.ResourceProductionData.Value.ProductionTime;
+                _immediatelyStartProduction = data.ResourceProductionData.Value.StartImmediately;
+                LoopProduction = data.ResourceProductionData.Value.Loop;
             }
 
             Name = data.Name;
             AbleToReallocate = data.AbleToReallocate;
             ReallocationCost = data.ReallocationCost;
 
-            if (_imidiatelyStartProduction)
-                StartProduction();
-        }
-
-        public void AddResource()
-        {
-            ResourceManager.AddResources(_resource);
-            ProductionStarted = false;
-
-            if (_loopProduction)
+            if (_immediatelyStartProduction)
                 StartProduction();
         }
 
         public void StartProduction()
         {
             // schedule production task
-            ResourceProductionTask task = new ResourceProductionTask(_productionTime, AddResource);
+            var task = new ResourceProductionTask(this);
             ScheduledTask = task;
             TaskManager.ScheduleTask(task);
-            ProductionStarted = true;
         }
     }
 }
