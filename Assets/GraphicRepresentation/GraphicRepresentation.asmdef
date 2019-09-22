@@ -1,0 +1,17 @@
+{
+    "name": "GraphicRepresentation",
+    "references": [
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:cf0ad477e09c30546b68c299cacbebe3",
+        "GUID:bc3c37b7feba50746883e8a5bdf80c7a"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
